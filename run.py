@@ -4,7 +4,7 @@ from clend.bot import TheCleaner
 
 
 try:
-    import uvloop
+    import uvloop  # type: ignore
 except ImportError:
     pass
 else:
