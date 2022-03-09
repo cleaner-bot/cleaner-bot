@@ -1,0 +1,229 @@
+import typing
+
+import hikari
+
+from .guild import CleanerGuild
+from ..shared.channel_perms import permissions_for
+from ..shared.event import IActionChallenge, IActionNickname, IAnnouncement, IDelete
+
+
+PERM_BAN = hikari.Permissions.ADMINISTRATOR | hikari.Permissions.BAN_MEMBERS
+PERM_KICK = hikari.Permissions.ADMINISTRATOR | hikari.Permissions.KICK_MEMBERS
+PERM_TIMEOUT = hikari.Permissions.ADMINISTRATOR | hikari.Permissions.MODERATE_MEMBERS
+PERM_NICK = hikari.Permissions.ADMINISTRATOR | hikari.Permissions.MANAGE_NICKNAMES
+PERM_MOD = hikari.Permissions.ADMINISTRATOR | hikari.Permissions.MANAGE_GUILD
+PERM_SEND = hikari.Permissions.SEND_MESSAGES | hikari.Permissions.VIEW_CHANNEL
+
+
+def action_challenge(
+    cguild: CleanerGuild, member: hikari.Member, reason: str, block: bool = False
+) -> IActionChallenge:
+    guild = member.get_guild()
+    if guild is None or member.id == guild.owner_id:
+        return IActionChallenge(
+            guild_id=member.guild_id,
+            user_id=member.id,
+            reason=reason,
+            block=block,
+            can_ban=False,
+            can_kick=False,
+            can_timeout=False,
+            can_role=False,
+            take_role=False,
+            role_id=0,
+        )
+
+    role: typing.Optional[hikari.Role] = None
+
+    me = guild.get_my_member()
+    my_perms = 0
+    if me is not None:
+        for role in me.get_roles():
+            my_perms |= role.permissions
+
+    his_perms = 0
+    for role in member.get_roles():
+        his_perms |= role.permissions
+
+    above_role = False
+    toprole_me = None
+    if me is not None:
+        toprole_me = me.get_top_role()
+        toprole_member = member.get_top_role()
+        if toprole_me is not None and toprole_member is not None:
+            above_role = toprole_me.position > toprole_member.position
+
+    role = None
+    if cguild.config.challenge_interactive_enabled:
+        role_id = cguild.config.challenge_interactive_role
+        role = guild.get_role(role_id)
+
+    can_timeout = (
+        his_perms & hikari.Permissions.ADMINISTRATOR == 0
+        and my_perms & PERM_TIMEOUT > 0
+    )
+    can_role = (
+        role is not None
+        and me is not None
+        and toprole_me is not None
+        and toprole_me.position > role.position
+    )
+    action = IActionChallenge(
+        guild_id=guild.id,
+        user_id=member.id,
+        reason=reason,
+        block=block,
+        can_ban=above_role and my_perms & PERM_BAN > 0,
+        can_kick=above_role and my_perms & PERM_KICK > 0,
+        can_timeout=can_timeout,
+        can_role=can_role,
+        take_role=cguild.config.challenge_interactive_take_role,
+        role_id=role.id if role else 0,
+    )
+
+    return action
+
+
+def action_nickname(member: hikari.Member, reason: str) -> IActionNickname:
+    guild = member.get_guild()
+    if guild is None or member.id == guild.owner_id:
+        return IActionNickname(
+            guild_id=member.guild_id,
+            user_id=member.id,
+            reason=reason,
+            can_reset=False,
+        )
+
+    me = guild.get_my_member()
+    my_perms = 0
+    if me is not None:
+        for role in me.get_roles():
+            my_perms |= role.permissions
+
+    above_role = False
+    if me is not None:
+        toprole_me = me.get_top_role()
+        toprole_member = member.get_top_role()
+        if toprole_me is not None and toprole_member is not None:
+            above_role = toprole_me.position > toprole_member.position
+
+    action = IActionNickname(
+        guild_id=guild.id,
+        user_id=member.id,
+        reason=reason,
+        can_reset=above_role and my_perms & PERM_NICK > 0,
+    )
+
+    return action
+
+
+def action_delete(
+    member: hikari.Member, message: hikari.Message, reason: str
+) -> IDelete:
+    guild = member.get_guild()
+    if guild is None:
+        return IDelete(
+            guild_id=member.guild_id,
+            user_id=member.id,
+            reason=reason,
+            channel_id=message.channel_id,
+            message_id=message.id,
+            can_delete=False,
+        )
+
+    me = guild.get_my_member()
+    channel = guild.get_channel(message.channel_id)
+
+    if me is None or channel is None:
+        return IDelete(
+            guild_id=member.guild_id,
+            user_id=member.id,
+            reason=reason,
+            channel_id=message.channel_id,
+            message_id=message.id,
+            can_delete=False,
+        )
+
+    my_perms = 0
+    for role in me.get_roles():
+        my_perms |= role.permissions
+
+    perms = permissions_for(me, channel)
+    can_delete = (
+        perms & (hikari.Permissions.ADMINISTRATOR | hikari.Permissions.MANAGE_MESSAGES)
+        > 0
+    )
+    if can_delete:
+        can_delete = (
+            perms & (hikari.Permissions.ADMINISTRATOR | hikari.Permissions.VIEW_CHANNEL)
+            > 0
+        )
+
+    return IDelete(
+        guild_id=guild.id,
+        user_id=member.id,
+        reason=reason,
+        channel_id=channel.id,
+        message_id=message.id,
+        can_delete=can_delete,
+    )
+
+
+def announcement(
+    channel: hikari.TextableGuildChannel, announcement: str, delete_after: float
+):
+    # TODO: use once hikari-py/hikari#1057 lands in stable
+    # guild = channel.get_guild()
+    if isinstance(channel.app, hikari.CacheAware):
+        guild = channel.app.cache.get_guild(channel.guild_id)
+    else:
+        guild = None
+
+    if guild is None:
+        return IAnnouncement(
+            guild_id=channel.guild_id,
+            channel_id=channel.id,
+            can_send=False,
+            announcement=announcement,
+            delete_after=delete_after,
+        )
+
+    me = guild.get_my_member()
+
+    if me is None:
+        return IAnnouncement(
+            guild_id=channel.guild_id,
+            channel_id=channel.id,
+            can_send=False,
+            announcement=announcement,
+            delete_after=delete_after,
+        )
+
+    perms = permissions_for(me, channel)
+
+    can_send = perms & PERM_SEND > 0
+    if perms & hikari.Permissions.ADMINISTRATOR:
+        can_send = True
+
+    return IAnnouncement(
+        guild_id=channel.guild_id,
+        channel_id=channel.id,
+        can_send=can_send,
+        announcement=announcement,
+        delete_after=delete_after,
+    )
+
+
+def is_moderator(cguild: CleanerGuild, member: hikari.Member) -> bool:
+    if member.guild_id == 903845468725977091:
+        return False  # TODO: remove debug guild
+    guild = member.get_guild()
+    if member.is_bot or (guild is not None and member.id == guild.owner_id):
+        return True
+    modroles = set(cguild.config.overview_modroles)
+    for role in member.get_roles():
+        if role.id in modroles:
+            return True
+        elif role.permissions | PERM_MOD:
+            return True
+    return False

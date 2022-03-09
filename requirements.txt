@@ -1,0 +1,5 @@
+hikari==2.0.0.dev107
+python-Levenshtein==0.12.2
+coredis>=2.3,<2.4
+quickjs>=1.16,<1.17
+emoji>=1.6,<1.7
