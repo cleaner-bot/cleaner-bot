@@ -1,7 +1,7 @@
 hikari==2.0.0.dev107
 python-Levenshtein==0.12.2
 coredis>=2.3,<2.4
-quickjs>=1.16,<1.17
+quickjs>=1.16,<1.18
 emoji>=1.6,<1.7
 git+ssh://git@github.com/cleaner-bot/expirepy.git#egg=expirepy
 git+ssh://git@github.com/cleaner-bot/cleaner-config#egg=cleaner_conf
