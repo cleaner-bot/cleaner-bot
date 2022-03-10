@@ -4,7 +4,7 @@ import os
 import dotenv
 dotenv.load_dotenv()
 
-from clend.bot import TheCleaner
+from clend.bot import TheCleaner  # noqa: E402
 
 
 try:
@@ -15,6 +15,10 @@ else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
-bot = TheCleaner(token=os.getenv("SECRET_BOT_TOKEN"))
+token = os.getenv("SECRET_BOT_TOKEN")
+if token is None:
+    print("Token not found.")
+    exit(1)
+bot = TheCleaner(token=token)
 bot.load_extension("clend.dev")
 bot.run()
