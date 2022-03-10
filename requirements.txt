@@ -3,7 +3,7 @@ python-Levenshtein==0.12.2
 coredis>=2.3,<2.4
 quickjs>=1.16,<1.18
 emoji>=1.6,<1.8
-dotenv>=0.19,<0.20
+python-dotenv>=0.19,<0.20
 expirepy@git+ssh://git@github.com/cleaner-bot/expirepy.git
 cleaner_conf@git+ssh://git@github.com/cleaner-bot/cleaner-config
 cleaner_data@git+ssh://git@github.com/cleaner-bot/cleaner-data
