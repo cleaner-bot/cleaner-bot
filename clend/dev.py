@@ -23,14 +23,17 @@ class DevExtension:
             "clend.http",
         ]
         self.listeners = [
-            (hikari.StartedEvent, self.on_started),
             (hikari.GuildMessageCreateEvent, self.on_message_create),
         ]
         self.dependencies = []
 
-    async def on_started(self, event: hikari.StartedEvent):
+    def on_load(self):
         for ext in self.extensions:
             self.bot.load_extension(ext)
+    
+    def on_unload(self):
+        for ext in self.extensions:
+            self.bot.unload_extension(ext)
 
     async def on_message_create(self, event: hikari.GuildMessageCreateEvent):
         if event.author_id not in DEVELOPERS:
@@ -74,10 +77,7 @@ class DevExtension:
         await msg.edit(f"Reloaded {len(self.extensions)} extensions!")
 
     async def handle_stop(self, event: hikari.GuildMessageCreateEvent):
-        msg = await event.message.respond("Unloading all extensions...")
-        for ext in self.extensions:
-            self.bot.unload_extension(ext)
-        await msg.edit(f"Unloaded {len(self.extensions)} extensions!\nBye!")
+        await event.message.respond("Bye!")
         await self.bot.bot.close()
 
 

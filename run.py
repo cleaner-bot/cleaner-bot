@@ -21,5 +21,5 @@ if token is None:
     print("Token not found.")
     exit(1)
 bot = TheCleaner(token=token)
-bot.load_extension("clend.dev")
+bot.load_extension("clend.entry")
 bot.run()

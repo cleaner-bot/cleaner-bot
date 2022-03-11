@@ -6,6 +6,11 @@ import coredis  # type: ignore
 import hikari
 
 
+DEVELOPERS = {
+    633993042755452932,
+}
+
+
 class TheCleaner:
     extensions: dict[str, typing.Any]
 
@@ -63,3 +68,7 @@ class TheCleaner:
                             break
 
         self.load_extension(module)
+
+    @staticmethod
+    def is_developer(user_id: int) -> bool:
+        return user_id in DEVELOPERS
