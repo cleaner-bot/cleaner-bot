@@ -27,7 +27,7 @@ class EntryExtension:
         ]
 
     def should_reload_module(self, module: str):
-        if module == "clend.bot" or module == __name__:
+        if module == "clend" or module == "clend.bot" or module == __name__:
             return False
         for mod_to_remove in MODULES_TO_RELOAD:
             if module.startswith(mod_to_remove):
