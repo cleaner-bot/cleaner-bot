@@ -1,13 +1,16 @@
+from unittest import mock
+
 import random
 import string
-import types
+from types import SimpleNamespace
 
 from clend.guild.components.mitigations.token import detection
 
 
 def use_detection(data):
-    guild = types.SimpleNamespace(config=types.SimpleNamespace(slowmode_exceptions=[]))
-    messages = [types.SimpleNamespace(content=x, channel_id=0) for x in data]
+    guild = mock.Mock()
+    guild.get_config.return_value = SimpleNamespace(slowmode_exceptions=[])
+    messages = [SimpleNamespace(content=x, channel_id=0) for x in data]
     return detection(messages[0], messages[1:], guild)
 
 
