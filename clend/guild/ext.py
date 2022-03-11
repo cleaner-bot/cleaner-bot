@@ -15,7 +15,7 @@ from ..shared.event import IGuildEvent, IGuildSettingsAvailable, IAction
 
 
 WORKERS = 4
-ComponentListener = typing.Callable[[IGuildEvent, CleanerGuild], None | IAction]
+ComponentListener = typing.Callable[[IGuildEvent, CleanerGuild], None | list[IAction]]
 logger = logging.getLogger(__name__)
 
 
@@ -155,8 +155,5 @@ class GuildWorker(threading.Thread):
         if http is None:
             logger.warn("action required but http extension is not loaded")
         else:
-            if isinstance(data, IAction):
-                http.queue.put(data)
-            else:
-                for item in data:
-                    http.queue.put(item)
+            for item in data:
+                http.queue.put(item)

@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import typing
 
 import hikari
@@ -13,38 +12,43 @@ class IGuildSettingsAvailable(typing.NamedTuple):
     guild_id: int
 
 
-@dataclass
-class IAction:
-    guild_id: int
+class IAction(typing.Protocol):
+    @property
+    def guild_id(self) -> int: ...
     user_id: int
     reason: str
 
 
-@dataclass
-class IActionChallenge(IAction):
+class IActionChallenge(typing.NamedTuple):
+    guild_id: int
+    user_id: int
     block: bool
     can_ban: bool
     can_kick: bool
     can_timeout: bool
     can_role: bool
     take_role: bool
-    role_id: int = 0
+    role_id: int
+    reason: str
 
 
-@dataclass
-class IDelete(IAction):
+class IDelete(typing.NamedTuple):
+    guild_id: int
+    user_id: int
     channel_id: int
     message_id: int
     can_delete: bool
+    reason: str
 
 
-@dataclass
-class IActionNickname(IAction):
+class IActionNickname(typing.NamedTuple):
+    guild_id: int
+    user_id: int
     can_reset: bool
+    reason: str
 
 
-@dataclass
-class IAnnouncement:
+class IAnnouncement(typing.NamedTuple):
     guild_id: int
     channel_id: int
     can_send: bool
@@ -52,8 +56,7 @@ class IAnnouncement:
     delete_after: float
 
 
-@dataclass
-class ILog:
+class ILog(typing.NamedTuple):
     guild_id: int
     message: str
     referenced_message: typing.Optional[hikari.Message]

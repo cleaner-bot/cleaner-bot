@@ -27,7 +27,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
     if matched_rule is None:
         return
 
-    return [
+    return (
         action_delete(
             event.member,
             event.message,
@@ -39,7 +39,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
             f"firewall {matched_rule.name}",
             block=matched_action == 1,
         ),
-    ]
+    )
 
 
 listeners = [

@@ -33,9 +33,9 @@ def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
         return
 
     action = action_challenge(guild, event.member, "discord-impersonation")
-    action.can_role = False
-    action.can_timeout = False
-    return action
+    if action.can_role or action.can_timeout:
+        action = action._replace(can_role=False, can_timeout=False)
+    return action,
 
 
 listeners = [

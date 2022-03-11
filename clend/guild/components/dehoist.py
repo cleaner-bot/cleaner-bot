@@ -14,7 +14,7 @@ def on_member_update(event: hikari.MemberUpdateEvent, guild: CleanerGuild):
     if is_moderator(guild, event.member):
         return
 
-    return action_nickname(event.member, "dehoist")
+    return action_nickname(event.member, "dehoist"),
 
 
 listeners = [
