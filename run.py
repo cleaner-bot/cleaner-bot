@@ -1,8 +1,9 @@
 import asyncio
+from pathlib import Path
 import os
 
-import dotenv
-dotenv.load_dotenv()
+from dotenv import load_dotenv
+load_dotenv(Path("~/.cleaner/secrets").expanduser())
 
 from clend.bot import TheCleaner  # noqa: E402
 
