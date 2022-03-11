@@ -24,7 +24,6 @@ class GuildExtension:
     callbacks: dict[typing.Type[IGuildEvent], list[ComponentListener]]
     workers: typing.Optional[list[GuildWorker]] = None
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
-    dependencies: list[str]
 
     def __init__(self, bot: TheCleaner) -> None:
         self.bot = bot
@@ -32,13 +31,6 @@ class GuildExtension:
         self.listeners = [
             (hikari.GuildJoinEvent, self.on_new_guild),
             (hikari.GuildAvailableEvent, self.on_new_guild),
-        ]
-        self.dependencies = [
-            "clend.guild",
-            "expirepy",
-            "cleaner_conf",
-            "cleaner_data",
-        ]
 
         from .components import components
 

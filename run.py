@@ -3,6 +3,7 @@ from pathlib import Path
 import os
 
 from dotenv import load_dotenv
+
 load_dotenv(Path("~/.cleaner/secrets").expanduser())
 
 from clend.bot import TheCleaner  # noqa: E402

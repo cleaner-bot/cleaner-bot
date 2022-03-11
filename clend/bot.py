@@ -1,5 +1,4 @@
 import importlib
-import sys
 import typing
 
 import coredis  # type: ignore
@@ -52,22 +51,6 @@ class TheCleaner:
         for event, callback in ext.listeners:
             self.bot.unsubscribe(event, callback)
         del self.extensions[module]
-
-    def reload_extension(self, module: str):
-        dependencies = self.extensions[module].dependencies
-        self.unload_extension(module)
-
-        if dependencies:
-            for mod in tuple(sys.modules.keys()):
-                if mod in dependencies:
-                    del sys.modules[mod]
-                else:
-                    for dependency in dependencies:
-                        if mod.startswith(dependency):
-                            del sys.modules[mod]
-                            break
-
-        self.load_extension(module)
 
     @staticmethod
     def is_developer(user_id: int) -> bool:

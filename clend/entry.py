@@ -8,14 +8,11 @@ from .bot import TheCleaner
 
 
 logger = logging.getLogger(__name__)
-MODULES_TO_RELOAD = (
-    "clend", "cleaner_", "expirepy", "Levenshtein", "emoji"
-)
+MODULES_TO_RELOAD = ("clend", "cleaner_", "expirepy", "Levenshtein", "emoji")
 
 
 class EntryExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
-    dependencies: list[str]
 
     def __init__(self, bot: TheCleaner) -> None:
         self.bot = bot
@@ -28,8 +25,7 @@ class EntryExtension:
             (hikari.StoppingEvent, self.on_stopping),
             (hikari.GuildMessageCreateEvent, self.on_message_create),
         ]
-        self.dependencies = []
-    
+
     def should_reload_module(self, module: str):
         if module == "clend.bot" or module == __name__:
             return False
@@ -49,11 +45,15 @@ class EntryExtension:
         before = set(sys.modules.keys())
         self.bot.load_extension("clend.dev")
         after = set(sys.modules.keys())
+
+        for module in before:
+            if self.should_reload_module(module):
+                logger.warning(f"static module is marked as reloadable: {module}")
+
         for module in after - before:
             if self.should_reload_module(module) is None:
                 logger.warning(f"dynamic module that is not reloaded: {module}")
-            
-    
+
     async def on_stopping(self, event: hikari.StoppingEvent):
         self.bot.unload_extension("clend.dev")
 
@@ -82,10 +82,12 @@ class EntryExtension:
                     self.bot.unload_extension(extension)
                 except Exception as e:
                     ext_errors += 1
-                    logger.error(f"error while unloading extension: {extension}", exc_info=e)
+                    logger.error(
+                        f"error while unloading extension: {extension}", exc_info=e
+                    )
                 else:
                     ext_unloaded += 1
-        
+
         mod_removed = 0
         for module in tuple(sys.modules):
             if self.should_reload_module(module):
@@ -97,14 +99,13 @@ class EntryExtension:
             self.load_dev()
         except Exception as e:
             load_dev_error = True
-            logger.error(f"Error while loading clend.dev", exc_info=e)
+            logger.error("Error while loading clend.dev", exc_info=e)
 
         await msg.edit(
             f"Unloaded {ext_unloaded} extensions ({ext_errors} errors)\n"
             f"Removed {mod_removed} modules from sys.modules.\n"
             f"Error while loading clend.dev: {'yes' if load_dev_error else 'no'}"
         )
-
 
 
 extension = EntryExtension

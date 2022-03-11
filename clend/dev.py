@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-import sys
+import logging
 import typing
 
 import hikari
@@ -7,41 +7,43 @@ import hikari
 from .bot import TheCleaner
 
 
-DEVELOPERS = {
-    633993042755452932,
-}
+logger = logging.getLogger()
 
 
 class DevExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
-    dependencies: list[str]
 
     def __init__(self, bot: TheCleaner) -> None:
         self.bot = bot
         self.extensions = [
+            "clend.conf",
             "clend.guild",
             "clend.http",
         ]
         self.listeners = [
             (hikari.GuildMessageCreateEvent, self.on_message_create),
         ]
-        self.dependencies = []
 
     def on_load(self):
         for ext in self.extensions:
-            self.bot.load_extension(ext)
-    
+            if ext in self.bot.extensions:
+                logger.warning(f"loading already loaded extension: {ext}")
+            else:
+                # TODO: error handler + reporter
+                self.bot.load_extension(ext)
+
     def on_unload(self):
         for ext in self.extensions:
-            self.bot.unload_extension(ext)
+            if ext in self.bot.extensions:
+                self.bot.unload_extension(ext)
+            else:
+                logger.warning(f"extension was never loaded: {ext}")
 
     async def on_message_create(self, event: hikari.GuildMessageCreateEvent):
-        if event.author_id not in DEVELOPERS:
+        if not self.bot.is_developer(event.author_id):
             return
         if event.content == "clean!ping":
             await self.handle_ping(event)
-        elif event.content == "clean!reload-all":
-            await self.handle_reload_all(event)
         elif event.content == "clean!stop":
             await self.handle_stop(event)
 
@@ -66,15 +68,6 @@ class DevExtension:
                 color=0xE74C3C,
             )
         )
-
-    async def handle_reload_all(self, event: hikari.GuildMessageCreateEvent):
-        msg = await event.message.respond("Reloading all extensions...")
-        for mod in tuple(sys.modules.keys()):
-            if mod.startswith("clend"):
-                del sys.modules[mod]
-        for ext in self.extensions:
-            self.bot.reload_extension(ext)
-        await msg.edit(f"Reloaded {len(self.extensions)} extensions!")
 
     async def handle_stop(self, event: hikari.GuildMessageCreateEvent):
         await event.message.respond("Bye!")

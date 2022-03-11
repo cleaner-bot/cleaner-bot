@@ -14,13 +14,11 @@ class GuildData(typing.NamedTuple):
 
 class ConfigExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
-    dependencies: list[str]
     _guilds: dict[int, GuildData]
 
     def __init__(self, bot: TheCleaner):
         self.bot = bot
         self.listeners = []
-        self.dependencies = ["cleaner_conf"]
 
         self._guilds = {}
 
