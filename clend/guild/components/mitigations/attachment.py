@@ -22,12 +22,15 @@ def detection(
     if not message.attachments or len(messages) + 1 < THRESHOLD:
         return
 
+    config = guild.get_config()
+    slowmode_exceptions = set() if config is None else set(config.slowmode_exceptions)
+
     attachs = 0.0
     attachs_sizes = {k.size for k in message.attachments}
     for old_message in messages:
         if all(attach.size not in attachs_sizes for attach in old_message.attachments):
             continue
-        is_exception = old_message.channel_id in guild.config.slowmode_exceptions
+        is_exception = old_message.channel_id in slowmode_exceptions
         value = 0.2 if is_exception else 1
         attachs += value
 

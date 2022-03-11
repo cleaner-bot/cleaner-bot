@@ -27,8 +27,11 @@ def detection(
 ):
     if not message.content or len(messages) < THRESHOLD_USER:
         return
-    user_score = guild_score = 0.0
 
+    config = guild.get_config()
+    slowmode_exceptions = set() if config is None else set(config.slowmode_exceptions)
+
+    user_score = guild_score = 0.0
     current_match_ratio = 1.0
     for old_message in messages:
         if not old_message.content:
@@ -40,7 +43,7 @@ def detection(
         if r < current_match_ratio:
             current_match_ratio = r
 
-        is_exception = old_message.channel_id in guild.config.slowmode_exceptions
+        is_exception = old_message.channel_id in slowmode_exceptions
         score = 0.1 if is_exception else 1
 
         guild_score += score

@@ -28,12 +28,15 @@ def detection(
     if not message.content or len(messages) < MIN_DATA:
         return
 
+    config = guild.get_config()
+    slowmode_exceptions = set() if config is None else set(config.slowmode_exceptions)
+
     all_tokens = set(normalize(message.content, remove_urls=False).split())
     scores = []
     for old_message in messages:
         if not old_message.content:
             continue
-        is_exception = old_message.channel_id in guild.config.slowmode_exceptions
+        is_exception = old_message.channel_id in slowmode_exceptions
         tokens = set(normalize(old_message.content, remove_urls=False).split())
         score = len(all_tokens & tokens) / len(all_tokens)
         scores.append((score, tokens, 0.1 if is_exception else 1))

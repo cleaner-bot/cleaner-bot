@@ -25,7 +25,8 @@ impersonation_words = {
 
 
 def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
-    if not guild.config.overview_discordimpersonation_enabled:
+    config = guild.get_config()
+    if config is None or not config.overview_discordimpersonation_enabled:
         return
     name = normalize_unicode(event.member.display_name)
     words = name.split()
@@ -35,7 +36,7 @@ def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
     action = action_challenge(guild, event.member, "discord-impersonation")
     if action.can_role or action.can_timeout:
         action = action._replace(can_role=False, can_timeout=False)
-    return action,
+    return (action,)
 
 
 listeners = [

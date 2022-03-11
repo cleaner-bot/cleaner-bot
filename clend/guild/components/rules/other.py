@@ -12,9 +12,12 @@ emoji_regex = re.compile(r"(<a?:[^\s:]+:\d+>)|(:[^\s:]+:)")
 
 
 def emoji_mass(message: hikari.Message, guild: CleanerGuild) -> bool:
-    if not message.content or message.channel_id in guild.config.slowmode_exceptions:
+    config = guild.get_config()
+    if not message.content or (
+        config is not None and message.channel_id in config.slowmode_exceptions
+    ):
         return False
-    content = emoji.demojize(message.content)
+    content = emoji.demojize(message.content)  # TODO: check tweemoji
     emojis = emoji_regex.findall(content)
     return len(emojis) >= 7
 

@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import asyncio
 import logging
 import threading
 import typing
 import queue
 
-from cleaner_conf import entitlements, config
 import hikari
 
 from .guild import CleanerGuild
@@ -28,9 +26,7 @@ class GuildExtension:
     def __init__(self, bot: TheCleaner) -> None:
         self.bot = bot
         self.guilds = {}
-        self.listeners = [
-            (hikari.GuildJoinEvent, self.on_new_guild),
-            (hikari.GuildAvailableEvent, self.on_new_guild),
+        self.listeners = []
 
         from .components import components
 
@@ -46,9 +42,6 @@ class GuildExtension:
         self.workers = [GuildWorker(self) for _ in range(WORKERS)]
         for worker in self.workers:
             worker.start()
-        # ensure guilds are cached after reload
-        for guild_id in self.bot.bot.cache.get_guilds_view().keys():
-            asyncio.ensure_future(self.get_guild(guild_id))
 
     def on_unload(self):
         if self.workers:
@@ -56,50 +49,14 @@ class GuildExtension:
                 worker.queue.put(None)
 
     def send_event(self, data: IGuildEvent):
-        if data.guild_id not in self.guilds or self.workers is None:
+        if self.workers is None:
             return False
         worker = self.workers[data.guild_id % WORKERS]
         worker.queue.put(data)
         return True
 
     async def dispatch(self, event: IGuildEvent):
-        if event.guild_id not in self.guilds:
-            await self.get_guild(event.guild_id)
         self.send_event(event)
-
-    async def on_new_guild(
-        self, event: hikari.GuildJoinEvent | hikari.GuildAvailableEvent
-    ):
-        await self.get_guild(event.guild_id)  # ensure the guild is cached
-
-    async def get_guild(self, guild_id: int):
-        guild = self.guilds.get(guild_id, None)
-        if guild is not None:
-            return guild
-        logger.info(f"caching guild: {guild_id}")
-        self.guilds[guild_id] = guild = CleanerGuild(guild_id)
-
-        database = self.bot.database
-        for key, value in entitlements.items():
-            db = await database.get(f"guild:{guild_id}:entitlement:{key}")
-            if db is None:
-                db = value.default
-            else:
-                db = value.from_string(db.decode())
-
-            setattr(guild.entitlements, key, db)
-
-        for key, value in config.items():
-            db = await database.get(f"guild:{guild_id}:config:{key}")
-            if db is None:
-                db = value.default
-            else:
-                db = value.from_string(db.decode())
-
-            setattr(guild.config, key, db)
-
-        guild.settings_loaded = True
-        self.send_event(IGuildSettingsAvailable(guild_id))
 
 
 class GuildWorker(threading.Thread):
@@ -117,15 +74,18 @@ class GuildWorker(threading.Thread):
             if event is None:
                 break
 
-            guild = self.ext.guilds.get(event.guild_id)
+            guild = self.ext.guilds.get(event.guild_id, None)
             if guild is None:
-                logger.warn(f"received event for non-cached guild {event.guild_id}")
-                continue
+                guild_id = event.guild_id
+                self.ext.guilds[guild_id] = guild = CleanerGuild(guild_id, self.ext.bot)
+                if guild.get_config() is not None:
+                    guild.settings_loaded = True
 
             if isinstance(event, IGuildSettingsAvailable):
                 while not guild.event_queue.empty():
                     event = guild.event_queue.get_nowait()
                     self.event(event, guild)
+                guild.settings_loaded = True
             elif not guild.settings_loaded:
                 guild.event_queue.put(event)
             else:

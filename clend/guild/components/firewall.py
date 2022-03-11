@@ -6,13 +6,14 @@ from ..helper import action_delete, action_challenge, is_moderator
 
 
 def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild):
-    if event.member is None or is_moderator(guild, event.member):
+    config = guild.get_config()
+    if event.member is None or is_moderator(guild, event.member) or config is None:
         return
 
     matched_rule = matched_action = None
     for rule in firewall_rules:
         config_name = rule.name.replace(".", "_")
-        action = getattr(guild.config, f"rules_{config_name}")
+        action = getattr(config, f"rules_{config_name}")
         if action == 0:
             continue
         elif matched_rule is not None and action < 2:

@@ -19,6 +19,7 @@ def action_challenge(
     cguild: CleanerGuild, member: hikari.Member, reason: str, block: bool = False
 ) -> IActionChallenge:
     guild = member.get_guild()
+    config = cguild.get_config()
     if guild is None or member.id == guild.owner_id:
         return IActionChallenge(
             guild_id=member.guild_id,
@@ -54,8 +55,8 @@ def action_challenge(
             above_role = toprole_me.position > toprole_member.position
 
     role = None
-    if cguild.config.challenge_interactive_enabled:
-        role_id = cguild.config.challenge_interactive_role
+    if config is not None and config.challenge_interactive_enabled:
+        role_id = config.challenge_interactive_role
         role = guild.get_role(role_id)
 
     can_timeout = (
@@ -76,7 +77,7 @@ def action_challenge(
         can_kick=above_role and my_perms & PERM_KICK > 0,
         can_timeout=can_timeout,
         can_role=can_role,
-        take_role=cguild.config.challenge_interactive_take_role,
+        take_role=True if config is None else config.challenge_interactive_take_role,
         role_id=role.id if role else 0,
         reason=reason,
     )
@@ -220,10 +221,12 @@ def is_moderator(cguild: CleanerGuild, member: hikari.Member) -> bool:
     guild = member.get_guild()
     if member.is_bot or (guild is not None and member.id == guild.owner_id):
         return True
-    modroles = set(cguild.config.overview_modroles)
-    for role in member.get_roles():
-        if role.id in modroles:
-            return True
-        elif role.permissions | PERM_MOD:
-            return True
+    config = cguild.get_config()
+    if config is not None:
+        modroles = set(config.overview_modroles)
+        for role in member.get_roles():
+            if role.id in modroles:
+                return True
+            elif role.permissions | PERM_MOD:
+                return True
     return False

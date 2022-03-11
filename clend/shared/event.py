@@ -5,7 +5,8 @@ import hikari
 
 class IGuildEvent(typing.Protocol):
     @property
-    def guild_id(self) -> int: ...
+    def guild_id(self) -> int:
+        ...
 
 
 class IGuildSettingsAvailable(typing.NamedTuple):
@@ -14,7 +15,9 @@ class IGuildSettingsAvailable(typing.NamedTuple):
 
 class IAction(typing.Protocol):
     @property
-    def guild_id(self) -> int: ...
+    def guild_id(self) -> int:
+        ...
+
     user_id: int
     reason: str
 

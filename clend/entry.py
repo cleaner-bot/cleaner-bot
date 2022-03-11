@@ -34,7 +34,11 @@ class EntryExtension:
                 return True
         mod = sys.modules.get(module, None)
         if mod is not None:
-            if hasattr(mod, "__file__") and "site-packages" in mod.__file__:
+            if (
+                hasattr(mod, "__file__")
+                and mod.__file__ is not None
+                and "site-packages" in mod.__file__
+            ):
                 return None
         return False
 

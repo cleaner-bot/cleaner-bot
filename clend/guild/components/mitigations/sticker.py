@@ -22,12 +22,15 @@ def detection(
     if not message.stickers or len(messages) + 1 < THRESHOLD:
         return
 
+    config = guild.get_config()
+    slowmode_exceptions = set() if config is None else set(config.slowmode_exceptions)
+
     stickers = 0.0
     stickers_ids = {int(k.id) for k in message.stickers}
     for old_message in messages:
         if all(sticker.id not in stickers_ids for sticker in old_message.stickers):
             continue
-        is_exception = old_message.channel_id in guild.config.slowmode_exceptions
+        is_exception = old_message.channel_id in slowmode_exceptions
         value = 0.2 if is_exception else 1
         stickers += value
 
