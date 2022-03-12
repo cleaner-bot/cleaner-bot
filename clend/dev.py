@@ -7,7 +7,7 @@ import hikari
 from .bot import TheCleaner
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class DevExtension:
