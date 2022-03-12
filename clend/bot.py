@@ -1,4 +1,5 @@
 import importlib
+import logging
 import typing
 
 import coredis  # type: ignore
@@ -27,6 +28,7 @@ class TheCleaner:
         self.bot = hikari.GatewayBot(
             token=token, intents=intents, cache_settings=cache_settings
         )
+        logging.getLogger("clend").setLevel(logging.DEBUG)
         self.database = coredis.StrictRedis()
 
         self.extensions = {}
