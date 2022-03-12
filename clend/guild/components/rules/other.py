@@ -17,7 +17,7 @@ def emoji_mass(message: hikari.Message, guild: CleanerGuild) -> bool:
         config is not None and message.channel_id in config.slowmode_exceptions
     ):
         return False
-    content = emoji.demojize(message.content)  # TODO: check tweemoji
+    content = emoji.demojize(message.content)
     emojis = emoji_regex.findall(content)
     return len(emojis) >= 7
 

@@ -21,6 +21,13 @@ token = os.getenv("SECRET_BOT_TOKEN")
 if token is None:
     print("Token not found.")
     exit(1)
+
+
+sentry_dsn = os.getenv("SECRET_SENTRY_DSN")
+if sentry_dsn is not None:
+    import sentry_sdk
+    sentry_sdk.init(dsn=sentry_dsn)
+
 bot = TheCleaner(token=token)
 bot.load_extension("clend.entry")
 bot.run()

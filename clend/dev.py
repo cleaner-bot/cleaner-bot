@@ -29,13 +29,18 @@ class DevExtension:
             if ext in self.bot.extensions:
                 logger.warning(f"loading already loaded extension: {ext}")
             else:
-                # TODO: error handler + reporter
-                self.bot.load_extension(ext)
+                try:
+                    self.bot.load_extension(ext)
+                except Exception as e:
+                    logger.exception(f"An error occured while loading extension: {ext}", exc_info=e)
 
     def on_unload(self):
         for ext in self.extensions:
             if ext in self.bot.extensions:
-                self.bot.unload_extension(ext)
+                try:
+                    self.bot.unload_extension(ext)
+                except Exception as e:
+                    logger.exception(f"An error occured while unloading extension: {ext}", exc_info=e)
             else:
                 logger.warning(f"extension was never loaded: {ext}")
 

@@ -1,5 +1,6 @@
 import base64
 from dataclasses import dataclass
+import logging
 import time
 import typing
 
@@ -9,6 +10,9 @@ from .mitigations import mitigations, mitigationsd
 from ..guild import CleanerGuild
 from ..helper import action_delete, action_challenge, announcement, is_moderator
 from ...shared.event import IGuildEvent
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass()
@@ -82,7 +86,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
     for old_message in messages:
         if mit.match(mitigation, old_message):
             if old_message.member is None:
-                pass  # TODO: add a warning
+                logger.warning("encountered an old message without member")
             else:
                 actions.append(action_delete(old_message.member, old_message, name))
 
