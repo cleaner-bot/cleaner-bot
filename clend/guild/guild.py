@@ -42,11 +42,13 @@ class CleanerGuild:
     def get_config(self) -> Config | None:
         conf = self.bot.extensions.get("clend.conf", None)
         if conf is None:
-            return logger.warning("unable to find clend.conf extension")
+            logger.warning("unable to find clend.conf extension")
+            return None
         return conf.get_config(self.id)
 
     def get_entitlements(self) -> Entitlements | None:
         conf = self.bot.extensions.get("clend.conf", None)
         if conf is None:
-            return logger.warning("unable to find clend.conf extension")
+            logger.warning("unable to find clend.conf extension")
+            return None
         return conf.get_entitlements(self.id)

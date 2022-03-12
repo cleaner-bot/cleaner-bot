@@ -26,6 +26,7 @@ if token is None:
 sentry_dsn = os.getenv("SECRET_SENTRY_DSN")
 if sentry_dsn is not None:
     import sentry_sdk
+
     sentry_sdk.init(dsn=sentry_dsn)
 
 bot = TheCleaner(token=token)
