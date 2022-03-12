@@ -5,7 +5,8 @@ import logging
 
 import hikari
 
-from cleaner_conf import Config, config, Entitlements, entitlements
+from cleaner_conf.guild.config import Config, config
+from cleaner_conf.guild.entitlements import Entitlements, entitlements
 
 from ..bot import TheCleaner
 from ..shared.event import IGuildSettingsAvailable

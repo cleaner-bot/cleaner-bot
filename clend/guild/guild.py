@@ -3,7 +3,8 @@ import time
 import typing
 import queue
 
-from cleaner_conf import Config, Entitlements
+from cleaner_conf.guild.config import Config
+from cleaner_conf.guild.entitlements import Entitlements
 from expirepy import ExpiringList, ExpiringSum
 
 from ..bot import TheCleaner
