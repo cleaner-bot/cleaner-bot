@@ -1,6 +1,7 @@
 import hikari
 from Levenshtein import ratio  # type: ignore
 
+from cleaner_data.auto.phishing_embed_thumbnail import data as banned_thumbnails
 from cleaner_data.domains import is_domain_whitelisted, is_domain_blacklisted
 from cleaner_data.phishing_content import get_highest_phishing_match
 from cleaner_data.url import get_urls, has_url
@@ -48,12 +49,6 @@ def phishing_domain_heuristic(message: hikari.Message, guild):
                     return True
 
     return False
-
-
-banned_thumbnails = {
-    "https://discord.com/assets/652f40427e1f5186ad54836074898279.png",
-    "https://nebanueban.hb.bizmrg.com/qwqwe12qw.webp",
-}
 
 
 def phishing_embed(message: hikari.Message, guild):
