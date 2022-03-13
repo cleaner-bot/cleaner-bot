@@ -118,9 +118,10 @@ class HTTPService:
             self.member_edit[ev.guild_id] = self.member_edit.get(ev.guild_id, 0) + 1
 
             message = "log_challenge_role"
-            await self.bot.bot.rest.add_role_to_member(
-                ev.guild_id, ev.user_id, ev.role_id
-            )
+            routine = self.bot.bot.rest.remove_role_from_member
+            if ev.take_role:
+                routine = self.bot.bot.rest.add_role_to_member
+            await routine(ev.guild_id, ev.user_id, ev.role_id)
 
         elif can_kick:
             message = "log_challenge_kick"
