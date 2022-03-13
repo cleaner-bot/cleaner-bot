@@ -1,15 +1,15 @@
 import hikari
 from Levenshtein import ratio  # type: ignore
 
-from cleaner_data.domains import is_whitelisted, is_blacklisted
-from cleaner_data.phishing_content import get_highest_match
+from cleaner_data.domains import is_domain_whitelisted, is_domain_blacklisted
+from cleaner_data.phishing_content import get_highest_phishing_match
 from cleaner_data.url import get_urls, has_url
 
 
 def phishing_content(message: hikari.Message, guild):
     if not message.content or not has_url(message.content):
         return
-    match = get_highest_match(message.content)
+    match = get_highest_phishing_match(message.content)
     return match > 0.9
 
 
@@ -18,7 +18,7 @@ def phishing_domain_blacklisted(message: hikari.Message, guild):
         return
     for url in get_urls(message.content):
         hostname = url.split("/")[2]
-        if is_blacklisted(hostname):
+        if is_domain_blacklisted(hostname):
             return True
     return False
 
@@ -38,7 +38,7 @@ def phishing_domain_heuristic(message: hikari.Message, guild):
         return False
     for url in get_urls(message.content):
         hostname = url.split("/")[2]
-        if is_whitelisted(hostname):
+        if is_domain_whitelisted(hostname):
             continue
         for part in hostname.replace("-", ".").split("."):
             for banned in suspicious_parts:
@@ -63,7 +63,7 @@ def phishing_embed(message: hikari.Message, guild):
             continue
         hostname = url.split("/")[2]
         if (
-            not is_whitelisted(hostname)
+            not is_domain_whitelisted(hostname)
             and embed.thumbnail
             and embed.thumbnail.url in banned_thumbnails
         ):
