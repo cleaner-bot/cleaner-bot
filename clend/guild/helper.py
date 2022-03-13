@@ -4,7 +4,12 @@ import hikari
 
 from .guild import CleanerGuild
 from ..shared.channel_perms import permissions_for
-from ..shared.event import IActionChallenge, IActionNickname, IAnnouncement, IDelete
+from ..shared.event import (
+    IActionChallenge,
+    IActionNickname,
+    IActionAnnouncement,
+    IActionDelete,
+)
 
 
 PERM_BAN = hikari.Permissions.ADMINISTRATOR | hikari.Permissions.BAN_MEMBERS
@@ -120,29 +125,31 @@ def action_nickname(member: hikari.Member, reason: str) -> IActionNickname:
 
 def action_delete(
     member: hikari.Member, message: hikari.Message, reason: str
-) -> IDelete:
+) -> IActionDelete:
     guild = member.get_guild()
     if guild is None:
-        return IDelete(
+        return IActionDelete(
             guild_id=member.guild_id,
             user_id=member.id,
             channel_id=message.channel_id,
             message_id=message.id,
             can_delete=False,
             reason=reason,
+            message=message,
         )
 
     me = guild.get_my_member()
     channel = guild.get_channel(message.channel_id)
 
     if me is None or channel is None:
-        return IDelete(
+        return IActionDelete(
             guild_id=member.guild_id,
             user_id=member.id,
             channel_id=message.channel_id,
             message_id=message.id,
             can_delete=False,
             reason=reason,
+            message=message,
         )
 
     my_perms = 0
@@ -160,19 +167,20 @@ def action_delete(
             > 0
         )
 
-    return IDelete(
+    return IActionDelete(
         guild_id=guild.id,
         user_id=member.id,
         channel_id=channel.id,
         message_id=message.id,
         can_delete=can_delete,
         reason=reason,
+        message=message,
     )
 
 
 def announcement(
     channel: hikari.TextableGuildChannel, announcement: str, delete_after: float
-):
+) -> IActionAnnouncement:
     # TODO: use once hikari-py/hikari#1057 lands in stable
     # guild = channel.get_guild()
     if isinstance(channel.app, hikari.CacheAware):
@@ -181,7 +189,7 @@ def announcement(
         guild = None
 
     if guild is None:
-        return IAnnouncement(
+        return IActionAnnouncement(
             guild_id=channel.guild_id,
             channel_id=channel.id,
             can_send=False,
@@ -192,7 +200,7 @@ def announcement(
     me = guild.get_my_member()
 
     if me is None:
-        return IAnnouncement(
+        return IActionAnnouncement(
             guild_id=channel.guild_id,
             channel_id=channel.id,
             can_send=False,
@@ -206,7 +214,7 @@ def announcement(
     if perms & hikari.Permissions.ADMINISTRATOR:
         can_send = True
 
-    return IAnnouncement(
+    return IActionAnnouncement(
         guild_id=channel.guild_id,
         channel_id=channel.id,
         can_send=can_send,
@@ -216,7 +224,7 @@ def announcement(
 
 
 def is_moderator(cguild: CleanerGuild, member: hikari.Member) -> bool:
-    if member.guild_id == 903845468725977091:
+    if member.guild_id == 903845468725977091 and not member.is_bot:
         return False  # TODO: remove debug guild
     guild = member.get_guild()
     if member.is_bot or (guild is not None and member.id == guild.owner_id):

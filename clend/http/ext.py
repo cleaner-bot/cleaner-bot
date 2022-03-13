@@ -1,33 +1,35 @@
+import asyncio
 import threading
-import queue
 import typing
 
 import hikari
+import janus
 
 from .http import HTTPService
 from ..bot import TheCleaner
+from ..shared.event import IGuildEvent
+from ..shared.protect import protect
 
 
 class HTTPExtension(threading.Thread):
-    queue: queue.Queue
+    queue: janus.Queue[IGuildEvent]
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
 
     def __init__(self, bot: TheCleaner) -> None:
         super().__init__()
         self.bot = bot
-        self.queue = queue.Queue()
         self.listeners = []
-        self.http = HTTPService()
+        self.http = HTTPService(self.bot)
+        self.queue = self.http.main_queue
+        self.tasks = None
 
     def on_load(self):
-        self.start()
+        self.tasks = [
+            asyncio.create_task(protect(self.http.ind)),
+            asyncio.create_task(protect(self.http.logd)),
+        ]
 
     def on_unload(self):
-        self.queue.put(None)
-
-    def run(self):
-        while True:
-            event = self.queue.get()
-            if event is None:
-                break
-            print("http", event)
+        if self.tasks is not None:
+            for task in self.tasks:
+                task.cancel()

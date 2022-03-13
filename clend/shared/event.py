@@ -35,13 +35,14 @@ class IActionChallenge(typing.NamedTuple):
     reason: str
 
 
-class IDelete(typing.NamedTuple):
+class IActionDelete(typing.NamedTuple):
     guild_id: int
     user_id: int
     channel_id: int
     message_id: int
     can_delete: bool
     reason: str
+    message: typing.Optional[hikari.Message]
 
 
 class IActionNickname(typing.NamedTuple):
@@ -51,7 +52,7 @@ class IActionNickname(typing.NamedTuple):
     reason: str
 
 
-class IAnnouncement(typing.NamedTuple):
+class IActionAnnouncement(typing.NamedTuple):
     guild_id: int
     channel_id: int
     can_send: bool

@@ -70,7 +70,6 @@ class GuildWorker(threading.Thread):
     def run(self) -> None:
         while True:
             event: IGuildEvent = self.queue.get()
-            print(event)
             if event is None:
                 break
 
@@ -105,7 +104,7 @@ class GuildWorker(threading.Thread):
 
         http = self.ext.bot.extensions.get("clend.http", None)
         if http is None:
-            logger.warn("action required but http extension is not loaded")
+            logger.warning("action required but http extension is not loaded")
         else:
             for item in data:
-                http.queue.put(item)
+                http.queue.sync_q.put(item)

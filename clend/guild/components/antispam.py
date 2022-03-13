@@ -92,9 +92,12 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
 
     actions.append(action_delete(event.member, event.message, name))
     actions.append(action_challenge(guild, event.member, name, block=True))
-    channel = event.get_channel()
-    if channel is not None:
-        actions.append(announcement(channel, f"mitigation.announcement.{mit.name}", 30))
+    if mit.ttl > 0:
+        channel = event.get_channel()
+        if channel is not None:
+            actions.append(
+                announcement(channel, f"mitigation.announcement.{mit.name}", mit.ttl)
+            )
 
     return actions
 

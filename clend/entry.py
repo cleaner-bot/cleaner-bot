@@ -8,7 +8,16 @@ from .bot import TheCleaner
 
 
 logger = logging.getLogger(__name__)
-MODULES_TO_RELOAD = ("clend", "cleaner_", "expirepy", "Levenshtein", "emoji")
+MODULES_TO_RELOAD = (
+    "clend",
+    "cleaner_",
+    "expirepy",
+    "Levenshtein",
+    "emoji",
+    "janus",
+    "typing_extensions",
+    "pkg_resources",
+)
 
 
 class EntryExtension:

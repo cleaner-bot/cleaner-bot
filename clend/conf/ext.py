@@ -11,6 +11,7 @@ from cleaner_conf.guild.entitlements import Entitlements, entitlements
 from ..bot import TheCleaner
 from ..shared.event import IGuildSettingsAvailable
 from ..shared.sub import listen as pubsub_listen, Message
+from ..shared.protect import protect
 
 
 logger = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ class ConfigExtension:
                 logger.debug(f"scheduled config:fetch_guild({guild_id})")
                 asyncio.create_task(self.fetch_guild(guild_id))
 
-        self.task = asyncio.create_task(self.updated())
+        self.task = asyncio.create_task(protect(self.updated))
 
     def on_unload(self):
         if self.task is not None:
@@ -120,13 +121,6 @@ class ConfigExtension:
             del self._guilds[event.guild_id]
 
     async def updated(self):
-        while True:
-            try:
-                await self._updated()
-            except Exception as e:
-                logger.exception("Exception occured during updated", exc_info=e)
-
-    async def _updated(self):
         pubsub = self.bot.database.pubsub()
         await pubsub.subscribe("pubsub:config-update")
         async for event in pubsub_listen(pubsub):

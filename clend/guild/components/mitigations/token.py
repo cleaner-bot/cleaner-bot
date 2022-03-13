@@ -32,6 +32,8 @@ def detection(
     slowmode_exceptions = set() if config is None else set(config.slowmode_exceptions)
 
     all_tokens = set(normalize(message.content, remove_urls=False).split())
+    if not all_tokens:
+        return
     scores = []
     for old_message in messages:
         if not old_message.content:
