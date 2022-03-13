@@ -8,20 +8,20 @@ logger = logging.getLogger(__name__)
 
 
 class Message(typing.NamedTuple):
-    data: str
-    channel: str
+    data: bytes
+    channel: bytes
     is_pattern: bool
 
 
 class Subscribe(typing.NamedTuple):
-    data: str
-    channel: str
+    data: int
+    channel: bytes
     is_pattern: bool
 
 
 class Unsubscribe(typing.NamedTuple):
-    data: str
-    channel: str
+    data: int
+    channel: bytes
     is_pattern: bool
 
 
