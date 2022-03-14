@@ -287,7 +287,6 @@ class ChallengeExtension:
         if config.challenge_interactive_take_role:
             routine = self.bot.bot.rest.remove_role_from_member
 
-        # TODO: error handler
         await routine(guild.id, int(user_id), config.challenge_interactive_role)
 
     async def send_embed(self, channel_id: int, guild_id: int):
