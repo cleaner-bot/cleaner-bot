@@ -4,6 +4,7 @@ import hashlib
 import logging
 
 import hikari
+from hikari.internal.time import utc_datetime
 
 from cleaner_conf.guild.config import Config
 
@@ -36,19 +37,40 @@ class ChallengeExtension:
         interaction = event.interaction
         if not isinstance(interaction, hikari.ComponentInteraction):
             return
+        elif not interaction.custom_id.startswith("challenge"):
+            return
+        
+        age = (utc_datetime() - interaction.created_at).total_seconds()
+        if age > 3:
+            logger.error(f"received interaction that is older than 3s ({age:.3f}s)")
+        elif age > 1:
+            logger.warning(f"received interaction that is older than 1s ({age:.3f}s)")
+        else:
+            logger.debug(f"got interaction with age {age:.3f}s")
+
+        try:
+            await self.create_flow(interaction)
+        except Exception as e:
+            logger.exception("Error occured during component interaction", exc_info=e)
+            await interaction.create_initial_response(
+                hikari.ResponseType.MESSAGE_CREATE,
+                content=(
+                    "**Internal error**: Something went wrong on our end.\n"
+                    "**Please contact support!**"
+                ),
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+
+    async def create_flow(self, interaction: hikari.ComponentInteraction):
         guild = interaction.get_guild()
         if guild is None:
-            return
-
-        custom_id = interaction.custom_id.split("/")
-        if custom_id[0] != "challenge":
             return
 
         config = self.get_config(guild.id)
         if config is None:
             logger.warning(f"uncached guild settings: {guild.id}")
             url = "https://cleaner.leodev.xyz/discord"
-            component = event.app.rest.build_action_row()
+            component = self.bot.bot.rest.build_action_row()
             (
                 component.add_button(hikari.ButtonStyle.LINK, url)
                 .set_label("Support")
@@ -58,7 +80,7 @@ class ChallengeExtension:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=(
-                    "Something went wrong on our end. We have no information "
+                    "**Internal error**: We have no information "
                     "about the server you are in.\n"
                     "**Please contact support!**"
                 ),
@@ -126,7 +148,7 @@ class ChallengeExtension:
         me = guild.get_my_member()
         if me is None:
             url = "https://cleaner.leodev.xyz/discord"
-            component = event.app.rest.build_action_row()
+            component = self.bot.bot.rest.build_action_row()
             (
                 component.add_button(hikari.ButtonStyle.LINK, url)
                 .set_label("Support")
@@ -189,7 +211,7 @@ class ChallengeExtension:
 
         url = f"https://cleaner.leodev.xyz/challenge?flow={flow}"
 
-        component = event.app.rest.build_action_row()
+        component = self.bot.bot.rest.build_action_row()
         (
             component.add_button(hikari.ButtonStyle.LINK, url)
             .set_label("Solve challenge")
