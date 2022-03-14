@@ -11,6 +11,7 @@ from cleaner_conf.guild.config import Config
 from expirepy import ExpiringSet, ExpiringDict
 
 from ..bot import TheCleaner
+from ..shared.channel_perms import permissions_for
 from ..shared.event import (
     IActionChallenge,
     IActionNickname,
@@ -22,6 +23,7 @@ from ..shared.event import (
 
 
 logger = logging.getLogger(__name__)
+REQUIRED_TO_SEND = hikari.Permissions.VIEW_CHANNEL | hikari.Permissions.SEND_MESSAGES
 
 
 class HTTPService:
@@ -244,16 +246,31 @@ class HTTPService:
                         )
 
                 config = self.get_config(guild_id)
-                channel = 919380927602384926  # TODO: change channel
+                channel_id = 919380927602384926  # TODO: change channel
                 if (
                     config is not None
                     and config.logging_enabled
                     and config.logging_channel > 0
                 ):
-                    channel = config.logging_channel  # TODO: verify channel is in guild
+                    the_channel_id = config.logging_channel
+                    guild = self.bot.bot.cache.get_guild(guild_id)
+                    if guild is not None:
+                        me = guild.get_my_member()
+                        if me is not None:
+                            channel = guild.get_channel(the_channel_id)
+                            if channel is not None and isinstance(
+                                channel, hikari.TextableGuildChannel
+                            ):
+                                my_perms = permissions_for(me, channel)
+                                if my_perms & hikari.Permissions.ADMINISTRATOR:
+                                    channel_id = the_channel_id
+                                elif my_perms & REQUIRED_TO_SEND == REQUIRED_TO_SEND:
+                                    channel_id = the_channel_id
+                                    if my_perms & hikari.Permissions.EMBED_LINKS == 0:
+                                        embed = hikari.UNDEFINED
 
                 sends.append(
-                    self.bot.bot.rest.create_message(channel, message, embed=embed)
+                    self.bot.bot.rest.create_message(channel_id, message, embed=embed)
                 )
 
             for guild_id in tuple(guilds.keys()):
