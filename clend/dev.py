@@ -57,8 +57,6 @@ class DevExtension:
             await self.handle_ping(event)
         elif event.content == "clean!stop":
             await self.handle_stop(event)
-        elif event.content == "clean!test":
-            await self.handle_test(event)
 
     async def handle_ping(self, event: hikari.GuildMessageCreateEvent):
         sent = datetime.utcnow().replace(tzinfo=timezone.utc)
@@ -85,16 +83,6 @@ class DevExtension:
     async def handle_stop(self, event: hikari.GuildMessageCreateEvent):
         await event.message.respond("Bye!")
         await self.bot.bot.close()
-
-    async def handle_test(self, event: hikari.GuildMessageCreateEvent):
-        # TODO: remove
-        component = event.app.rest.build_action_row()
-        (
-            component.add_button(hikari.ButtonStyle.PRIMARY, "challenge")
-            .set_label("verify")
-            .add_to_container()
-        )
-        await event.message.respond("verify", component=component)
 
 
 extension = DevExtension

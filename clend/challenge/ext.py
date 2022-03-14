@@ -1,7 +1,8 @@
 import asyncio
-import typing
 import hashlib
+import json
 import logging
+import typing
 
 import hikari
 from hikari.internal.time import utc_datetime
@@ -9,11 +10,13 @@ from hikari.internal.time import utc_datetime
 from cleaner_conf.guild.config import Config
 
 from ..bot import TheCleaner
-from ..shared.protect import protect
+from ..shared.channel_perms import permissions_for
+from ..shared.protect import protect, protected_call
 from ..shared.sub import listen as pubsub_listen, Message
 
 
 logger = logging.getLogger(__name__)
+REQUIRED_TO_SEND = hikari.Permissions.VIEW_CHANNEL | hikari.Permissions.SEND_MESSAGES
 
 
 class ChallengeExtension:
@@ -232,57 +235,112 @@ class ChallengeExtension:
     async def verifyd(self):
         pubsub = self.bot.database.pubsub()
         await pubsub.subscribe("pubsub:challenge-verify")
+        await pubsub.subscribe("pubsub:challenge-send")
         async for event in pubsub_listen(pubsub):
             if not isinstance(event, Message):
                 continue
-
-            flow = event.data.decode()
-
-            logger.debug(f"flow has been solved: {flow}")
-
-            user_id = await self.bot.database.get(f"challenge:flow:{flow}:user")
-            guild_id = await self.bot.database.get(f"challenge:flow:{flow}:guild")
-
-            guild = self.bot.bot.cache.get_guild(int(guild_id))
-            if guild is None:
-                logger.warning(f"uncached guild: {guild_id}")
-                continue
-            config = self.get_config(guild.id)
-
-            if config is None:
-                logger.warning("uncached guild settings")
-                continue
-
-            role = guild.get_role(config.challenge_interactive_role)
-            if role is None or role.is_managed:
-                continue
-
-            me = guild.get_my_member()
-            if me is None:
-                continue
-
-            top_role = me.get_top_role()
-            if top_role is not None and role.position >= top_role.position:
-                continue
-
-            for my_role in me.get_roles():
-                if my_role.permissions & hikari.Permissions.ADMINISTRATOR:
-                    break
-                elif my_role.permissions & hikari.Permissions.MANAGE_ROLES:
-                    break
+            
+            if event.channel == b"pubsub:challenge-verify":
+                flow = event.data.decode()
+                asyncio.create_task(protected_call(self.verify_flow(flow)))
             else:
-                continue
+                data = json.loads(event.data)
+                asyncio.create_task(protected_call(self.send_embed(data["channel"], data["guild"])))
 
-            routine = self.bot.bot.rest.add_role_to_member
-            if config.challenge_interactive_take_role:
-                routine = self.bot.bot.rest.remove_role_from_member
+    async def verify_flow(self, flow: str):
+        logger.debug(f"flow has been solved: {flow}")
 
-            # TODO: error handler
-            await routine(guild.id, int(user_id), config.challenge_interactive_role)
+        user_id = await self.bot.database.get(f"challenge:flow:{flow}:user")
+        guild_id = await self.bot.database.get(f"challenge:flow:{flow}:guild")
+
+        guild = self.bot.bot.cache.get_guild(int(guild_id))
+        if guild is None:
+            logger.warning(f"uncached guild: {guild_id}")
+            return
+        config = self.get_config(guild.id)
+
+        if config is None:
+            logger.warning(f"uncached guild settings: {guild_id}")
+            return
+
+        role = guild.get_role(config.challenge_interactive_role)
+        if role is None or role.is_managed:
+            return
+
+        me = guild.get_my_member()
+        if me is None:
+            return
+
+        top_role = me.get_top_role()
+        if top_role is not None and role.position >= top_role.position:
+            return
+
+        for my_role in me.get_roles():
+            if my_role.permissions & hikari.Permissions.ADMINISTRATOR:
+                break
+            elif my_role.permissions & hikari.Permissions.MANAGE_ROLES:
+                break
+        else:
+            return
+
+        routine = self.bot.bot.rest.add_role_to_member
+        if config.challenge_interactive_take_role:
+            routine = self.bot.bot.rest.remove_role_from_member
+
+        # TODO: error handler
+        await routine(guild.id, int(user_id), config.challenge_interactive_role)
+
+    async def send_embed(self, channel_id: int, guild_id: int):
+        channel = self.bot.bot.cache.get_guild_channel(channel_id)
+        if channel is None or not isinstance(channel, hikari.TextableGuildChannel):
+            return
+        
+        if channel.guild_id != guild_id:
+            return
+
+        guild = self.bot.bot.cache.get_guild(guild_id)
+        if guild is None:
+            logger.warning(f"uncached guild: {guild_id}")
+            return
+
+        config = self.get_config(guild_id)
+        if config is None:
+            logger.warning(f"uncached guild settings: {guild_id}")
+            return
+        
+
+        me = guild.get_my_member()
+        if me is None:
+            return
+        
+        perms = permissions_for(me, channel)
+        if perms & hikari.Permissions.ADMINISTRATOR == 0 and perms & REQUIRED_TO_SEND != REQUIRED_TO_SEND:
+            return
+        component = self.bot.bot.rest.build_action_row()
+        (
+            component.add_button(hikari.ButtonStyle.PRIMARY, "challenge")
+            .set_label("Verify")
+            .add_to_container()
+        )
+        (
+            component.add_button(hikari.ButtonStyle.LINK, "https://cleaner.leodev.xyz/legal/privacy")
+            .set_label("Privacy Policy")
+            .add_to_container()
+        )
+
+        embed = hikari.Embed(
+            title="Verification required",
+            description=(
+                "Please verify that you are not a robot.\n"
+                "Start by clicking on the button below."
+            )
+        )
+        await channel.send(embed=embed, component=component)
 
     def get_config(self, guild_id: int) -> typing.Optional[Config]:
         conf = self.bot.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")
             return None
+
         return conf.get_config(guild_id)
