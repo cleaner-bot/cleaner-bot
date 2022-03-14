@@ -239,13 +239,15 @@ class ChallengeExtension:
         async for event in pubsub_listen(pubsub):
             if not isinstance(event, Message):
                 continue
-            
+
             if event.channel == b"pubsub:challenge-verify":
                 flow = event.data.decode()
                 asyncio.create_task(protected_call(self.verify_flow(flow)))
             else:
                 data = json.loads(event.data)
-                asyncio.create_task(protected_call(self.send_embed(data["channel"], data["guild"])))
+                asyncio.create_task(
+                    protected_call(self.send_embed(data["channel"], data["guild"]))
+                )
 
     async def verify_flow(self, flow: str):
         logger.debug(f"flow has been solved: {flow}")
@@ -293,7 +295,7 @@ class ChallengeExtension:
         channel = self.bot.bot.cache.get_guild_channel(channel_id)
         if channel is None or not isinstance(channel, hikari.TextableGuildChannel):
             return
-        
+
         if channel.guild_id != guild_id:
             return
 
@@ -306,14 +308,16 @@ class ChallengeExtension:
         if config is None:
             logger.warning(f"uncached guild settings: {guild_id}")
             return
-        
 
         me = guild.get_my_member()
         if me is None:
             return
-        
+
         perms = permissions_for(me, channel)
-        if perms & hikari.Permissions.ADMINISTRATOR == 0 and perms & REQUIRED_TO_SEND != REQUIRED_TO_SEND:
+        if (
+            perms & hikari.Permissions.ADMINISTRATOR == 0
+            and perms & REQUIRED_TO_SEND != REQUIRED_TO_SEND
+        ):
             return
         component = self.bot.bot.rest.build_action_row()
         (
@@ -322,7 +326,9 @@ class ChallengeExtension:
             .add_to_container()
         )
         (
-            component.add_button(hikari.ButtonStyle.LINK, "https://cleaner.leodev.xyz/legal/privacy")
+            component.add_button(
+                hikari.ButtonStyle.LINK, "https://cleaner.leodev.xyz/legal/privacy"
+            )
             .set_label("Privacy Policy")
             .add_to_container()
         )
@@ -332,7 +338,7 @@ class ChallengeExtension:
             description=(
                 "Please verify that you are not a robot.\n"
                 "Start by clicking on the button below."
-            )
+            ),
         )
         await channel.send(embed=embed, component=component)
 
