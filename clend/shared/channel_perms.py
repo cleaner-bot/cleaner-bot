@@ -2,7 +2,7 @@ import hikari
 
 
 def permissions_for(member: hikari.Member, channel: hikari.GuildChannel):
-    permissions = 0
+    permissions = hikari.Permissions.NONE
     for role in member.get_roles():
         permissions |= role.permissions
 
@@ -14,8 +14,8 @@ def permissions_for(member: hikari.Member, channel: hikari.GuildChannel):
         permissions &= ~overwrite_everyone.deny
         permissions |= overwrite_everyone.allow
 
-    allow = 0
-    deny = 0
+    allow = hikari.Permissions.NONE
+    deny = hikari.Permissions.NONE
     for role_id in member.role_ids:
         overwrite_role = channel.permission_overwrites.get(role_id)
         if overwrite_role:

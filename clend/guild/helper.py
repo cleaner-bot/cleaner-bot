@@ -42,12 +42,12 @@ def action_challenge(
     role: typing.Optional[hikari.Role] = None
 
     me = guild.get_my_member()
-    my_perms = 0
+    my_perms = hikari.Permissions.NONE
     if me is not None:
         for role in me.get_roles():
             my_perms |= role.permissions
 
-    his_perms = 0
+    his_perms = hikari.Permissions.NONE
     for role in member.get_roles():
         his_perms |= role.permissions
 
@@ -101,7 +101,7 @@ def action_nickname(member: hikari.Member, reason: str) -> IActionNickname:
         )
 
     me = guild.get_my_member()
-    my_perms = 0
+    my_perms = hikari.Permissions.NONE
     if me is not None:
         for role in me.get_roles():
             my_perms |= role.permissions
@@ -152,7 +152,7 @@ def action_delete(
             message=message,
         )
 
-    my_perms = 0
+    my_perms = hikari.Permissions.NONE
     for role in me.get_roles():
         my_perms |= role.permissions
 
