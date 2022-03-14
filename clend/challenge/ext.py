@@ -39,7 +39,7 @@ class ChallengeExtension:
             return
         elif not interaction.custom_id.startswith("challenge"):
             return
-        
+
         age = (utc_datetime() - interaction.created_at).total_seconds()
         if age > 3:
             logger.error(f"received interaction that is older than 3s ({age:.3f}s)")
