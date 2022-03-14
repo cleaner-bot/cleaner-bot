@@ -24,3 +24,10 @@ async def protect(coro, *args, **kwargs):
             last_failure = now
         else:
             break
+
+
+async def protected_call(coro):
+    try:
+        return await coro
+    except Exception as e:
+        logger.exception("Error in protected call", exc_info=e)

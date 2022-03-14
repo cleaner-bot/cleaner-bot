@@ -20,6 +20,7 @@ class DevExtension:
             "clend.http",
             "clend.guild",
             "clend.challenge",
+            "clend.sync",
         ]
         self.listeners = [
             (hikari.GuildMessageCreateEvent, self.on_message_create),
