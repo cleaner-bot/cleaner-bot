@@ -137,7 +137,6 @@ class ChallengeExtension:
             )
         elif role.is_managed:
             act = "take" if config.challenge_interactive_take_role else "give"
-            # TODO: make a help desk article
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=(
@@ -172,7 +171,6 @@ class ChallengeExtension:
         top_role = me.get_top_role()
         if top_role is not None and role.position >= top_role.position:
             act = "take" if config.challenge_interactive_take_role else "give"
-            # TODO: make a help desk article
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=(
