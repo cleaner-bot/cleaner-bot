@@ -124,6 +124,7 @@ class HTTPService:
             if ev.take_role:
                 routine = self.bot.bot.rest.add_role_to_member
             await routine(ev.guild_id, ev.user_id, ev.role_id)
+            # TODO: add forced challenge flag
 
         elif can_kick:
             message = "log_challenge_kick"
