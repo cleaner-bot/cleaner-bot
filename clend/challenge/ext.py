@@ -142,7 +142,20 @@ class ChallengeExtension:
                 content=(
                     f"I can not {act} the role {role.mention} because it is "
                     f"managed (e.g. a bot role, the server booster role, or "
-                    f"part of a different integration)"
+                    f"part of a different integration)\n"
+                    f"Contact server staff and inform them to select a "
+                    f"non-managed role."
+                ),
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+        elif role.position == 0:
+            act = "take" if config.challenge_interactive_take_role else "give"
+            return await interaction.create_initial_response(
+                hikari.ResponseType.MESSAGE_CREATE,
+                content=(
+                    f"I can not {act} the role everyone role."
+                    f"Contact server staff and inform them to select a "
+                    f"role that is not the everyone role."
                 ),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
@@ -264,7 +277,7 @@ class ChallengeExtension:
             return
 
         role = guild.get_role(config.challenge_interactive_role)
-        if role is None or role.is_managed:
+        if role is None or role.is_managed or role.position == 0:
             return
 
         me = guild.get_my_member()
