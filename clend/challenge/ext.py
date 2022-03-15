@@ -2,12 +2,14 @@ import asyncio
 import hashlib
 import json
 import logging
+import math
 import typing
 
 import hikari
 from hikari.internal.time import utc_datetime
 
 from cleaner_conf.guild.config import Config
+from cleaner_conf.guild.entitlements import Entitlements
 
 from ..bot import TheCleaner
 from ..shared.channel_perms import permissions_for
@@ -19,12 +21,54 @@ logger = logging.getLogger(__name__)
 REQUIRED_TO_SEND = hikari.Permissions.VIEW_CHANNEL | hikari.Permissions.SEND_MESSAGES
 
 
+def calculate_risk_score(user: hikari.User) -> float:
+    age = (utc_datetime() - user.created_at).total_seconds() / 86400
+    ground = 9
+    risk = ground / math.sqrt(age + (ground - 1) * ground) - 0.1
+    if user.avatar_hash is None:
+        risk += 0.17
+    else:
+        risk -= 0.04
+    if user.flags & (
+        hikari.UserFlag.HYPESQUAD_BALANCE
+        | hikari.UserFlag.HYPESQUAD_BRAVERY
+        | hikari.UserFlag.HYPESQUAD_BRILLIANCE
+    ):
+        risk -= 0.01
+    if user.flags & hikari.UserFlag.EARLY_SUPPORTER:
+        risk -= 0.05
+    if user.flags & (
+        hikari.UserFlag.PARTNERED_SERVER_OWNER
+        | hikari.UserFlag.EARLY_VERIFIED_DEVELOPER
+    ):
+        risk -= 0.1
+    if user.flags & (
+        hikari.UserFlag.DISCORD_CERTIFIED_MODERATOR
+        | hikari.UserFlag.HYPESQUAD_EVENTS
+        | hikari.UserFlag.DISCORD_EMPLOYEE
+    ):
+        risk = 0
+    return max(0, min(1, risk))
+
+
+def get_min_risk(config: Config, entitlements: Entitlements) -> typing.Optional[float]:
+    level = config.challenge_interactive_level
+    if level < 2 and entitlements.challenge_interactive_join_risk < entitlements.plan:
+        level = 2
+
+    if level == 0:
+        return config.challenge_interactive_joinrisk_custom
+    return [None, 1, 0.7, 0.3, 0][level - 1]
+
+
 class ChallengeExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
 
     def __init__(self, bot: TheCleaner):
         self.bot = bot
         self.listeners = [
+            (hikari.MemberCreateEvent, self.on_member_create),
+            (hikari.MemberUpdateEvent, self.on_member_update),
             (hikari.InteractionCreateEvent, self.on_interaction_create),
         ]
         self.task = None
@@ -35,6 +79,74 @@ class ChallengeExtension:
     def on_unload(self):
         if self.task is not None:
             self.task.cancel()
+
+    async def on_member_create(self, event: hikari.MemberCreateEvent):
+        if event.user.is_bot or event.member.is_pending is True:
+            return
+        await self.member_joined(event.member)
+
+    async def on_member_update(self, event: hikari.MemberUpdateEvent):
+        old_member = event.old_member
+        if (
+            event.user.is_bot
+            or event.member.is_pending is not False
+            or (old_member is not None and old_member.is_pending is False)
+        ):
+            return
+        await self.member_joined(event.member)
+
+    async def member_joined(self, member: hikari.Member):
+        config = self.get_config(member.guild_id)
+        entitlements = self.get_entitlements(member.guild_id)
+        if config is None or entitlements is None:
+            logging.warning(f"uncached guild settings: {member.guild_id}")
+            return
+
+        if (
+            not config.challenge_interactive_enabled
+            or not config.challenge_interactive_take_role
+        ):
+            return
+
+        min_risk = get_min_risk(config, entitlements)
+        if min_risk is None:  # its off
+            return
+
+        actual_risk = calculate_risk_score(member.user)
+        if actual_risk < min_risk:
+            return
+
+        guild = member.get_guild()
+        if guild is None:
+            return  # this should never happen
+
+        role = guild.get_role(config.challenge_interactive_role)
+        if (
+            role is None
+            or role.is_managed
+            or role.position == 0
+            or role in member.role_ids
+        ):
+            return
+
+        me = guild.get_my_member()
+        if me is None:
+            return
+
+        top_role = me.get_top_role()
+        if top_role is not None and role.position >= top_role.position:
+            return
+
+        for my_role in me.get_roles():
+            if my_role.permissions & hikari.Permissions.ADMINISTRATOR:
+                break
+            elif my_role.permissions & hikari.Permissions.MANAGE_ROLES:
+                break
+        else:
+            return
+
+        await member.add_role(role)
+        # TODO: add log
 
     async def on_interaction_create(self, event: hikari.InteractionCreateEvent):
         interaction = event.interaction
@@ -65,12 +177,14 @@ class ChallengeExtension:
             )
 
     async def create_flow(self, interaction: hikari.ComponentInteraction):
+        database = self.bot.database
         guild = interaction.get_guild()
         if guild is None:
             return
 
         config = self.get_config(guild.id)
-        if config is None:
+        entitlements = self.get_entitlements(guild.id)
+        if config is None or entitlements is None:
             logger.warning(f"uncached guild settings: {guild.id}")
             url = "https://cleaner.leodev.xyz/discord"
             component = self.bot.bot.rest.build_action_row()
@@ -122,6 +236,14 @@ class ChallengeExtension:
                 content="You are already verified.",
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
+
+        forced_challenge = await database.exists(f"guild:{guild.id}:user:{member.id}:challenge")
+        challenge = True
+
+        if not forced_challenge:
+            min_risk = get_min_risk(config, entitlements)
+            actual_risk = calculate_risk_score(member.user)
+            challenge = min_risk is not None and actual_risk >= min_risk
 
         role = guild.get_role(config.challenge_interactive_role)
         if role is None:
@@ -211,37 +333,49 @@ class ChallengeExtension:
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
-        flow = hashlib.sha256(interaction.id.to_bytes(8, "big")).hexdigest()
-        logger.debug(
-            f"created flow for {interaction.user.id}@{interaction.guild_id}: {flow}"
-        )
+        if challenge:
+            flow = hashlib.sha256(interaction.id.to_bytes(8, "big")).hexdigest()
+            logger.debug(
+                f"created flow for {interaction.user.id}@{interaction.guild_id}: {flow}"
+            )
 
-        await self.bot.database.set(
-            f"challenge:flow:{flow}:user", interaction.user.id, ex=300
-        )
-        await self.bot.database.set(
-            f"challenge:flow:{flow}:guild", interaction.guild_id, ex=300
-        )
+            await self.bot.database.set(
+                f"challenge:flow:{flow}:user", interaction.user.id, ex=300
+            )
+            await self.bot.database.set(
+                f"challenge:flow:{flow}:guild", interaction.guild_id, ex=300
+            )
 
-        url = f"https://cleaner.leodev.xyz/challenge?flow={flow}"
+            url = f"https://cleaner.leodev.xyz/challenge?flow={flow}"
 
-        component = self.bot.bot.rest.build_action_row()
-        (
-            component.add_button(hikari.ButtonStyle.LINK, url)
-            .set_label("Solve challenge")
-            .add_to_container()
-        )
+            component = self.bot.bot.rest.build_action_row()
+            (
+                component.add_button(hikari.ButtonStyle.LINK, url)
+                .set_label("Solve challenge")
+                .add_to_container()
+            )
 
-        await interaction.create_initial_response(
-            hikari.ResponseType.MESSAGE_CREATE,
-            content=(
-                "Click the button below and follow the instructions on "
-                "the website to verify.\n"
-                "*You have 5 minutes before the link becomes invalid*"
-            ),
-            component=component,
-            flags=hikari.MessageFlag.EPHEMERAL,
-        )
+            await interaction.create_initial_response(
+                hikari.ResponseType.MESSAGE_CREATE,
+                content=(
+                    "Click the button below and follow the instructions on "
+                    "the website to verify.\n"
+                    "*You have 5 minutes before the link becomes invalid*"
+                ),
+                component=component,
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+        else:
+            await interaction.create_initial_response(
+                hikari.ResponseType.MESSAGE_CREATE,
+                content="You have been verified!",
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+
+            if config.challenge_interactive_take_role:
+                await member.remove_role(role)
+            else:
+                await member.add_role(role)
 
     async def verifyd(self):
         pubsub = self.bot.database.pubsub()
@@ -304,9 +438,11 @@ class ChallengeExtension:
 
     async def send_embed(self, channel_id: int, guild_id: int):
         channel = self.bot.bot.cache.get_guild_channel(channel_id)
+        print(channel, guild_id)
         if channel is None or not isinstance(channel, hikari.TextableGuildChannel):
             return
 
+        print(channel.id, channel.guild_id, guild_id, channel.guild_id == guild_id)
         if channel.guild_id != guild_id:
             return
 
@@ -360,3 +496,11 @@ class ChallengeExtension:
             return None
 
         return conf.get_config(guild_id)
+
+    def get_entitlements(self, guild_id: int) -> typing.Optional[Entitlements]:
+        conf = self.bot.extensions.get("clend.conf", None)
+        if conf is None:
+            logger.warning("unable to find clend.conf extension")
+            return None
+
+        return conf.get_entitlements(guild_id)
