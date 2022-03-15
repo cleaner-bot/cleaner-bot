@@ -210,7 +210,7 @@ class ChallengeExtension:
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=(
                     "Interactive challenges have been disabled by the server "
-                    "staff on the Dashboard."
+                    "staff."
                 ),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
