@@ -237,7 +237,9 @@ class ChallengeExtension:
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
-        forced_challenge = await database.exists(f"guild:{guild.id}:user:{member.id}:challenge")
+        forced_challenge = await database.exists(
+            f"guild:{guild.id}:user:{member.id}:challenge"
+        )
         challenge = True
 
         if not forced_challenge:
