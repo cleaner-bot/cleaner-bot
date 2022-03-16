@@ -3,6 +3,7 @@ from . import (
     dehoist,
     discord_impersonation,
     firewall,
+    log,
     slowmode,
 )
 
@@ -12,5 +13,6 @@ components = [
     dehoist,
     discord_impersonation,
     firewall,
+    log,
     slowmode,
 ]
