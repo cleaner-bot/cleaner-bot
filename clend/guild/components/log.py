@@ -8,7 +8,7 @@ from ...shared.event import ILog, Translateable
 
 def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
     config = guild.get_config()
-    if not config.logging_enabled or not config.logging_option_join:
+    if config is None or not config.logging_enabled or not config.logging_option_join:
         return
     age = event.member.joined_at - event.member.created_at
     hours = age.total_seconds() // 3600
