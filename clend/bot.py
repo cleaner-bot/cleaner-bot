@@ -23,7 +23,7 @@ class TheCleaner:
             hikari.CacheComponents.GUILDS
             | hikari.CacheComponents.GUILD_CHANNELS
             | hikari.CacheComponents.ROLES
-            | hikari.CacheComponents.MEMBERS  # TODO: remove once bot only cache works
+            | hikari.CacheComponents.MEMBERS
         )
 
         self.bot = hikari.GatewayBot(
