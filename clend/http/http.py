@@ -140,7 +140,7 @@ class HTTPService:
             if ev.take_role:
                 routine = self.bot.bot.rest.add_role_to_member
             coro = routine(ev.guild_id, ev.user_id, ev.role_id)
-            
+
             database = self.bot.database
             await database.set(f"guild:{ev.guild_id}:user:{ev.user_id}:challenge", "1")
 
