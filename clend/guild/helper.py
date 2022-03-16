@@ -210,7 +210,7 @@ def announcement(
 
     perms = permissions_for(me, channel)
 
-    can_send = perms & PERM_SEND > 0
+    can_send = perms & PERM_SEND == PERM_SEND
     if perms & hikari.Permissions.ADMINISTRATOR:
         can_send = True
 
