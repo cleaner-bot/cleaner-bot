@@ -2,7 +2,6 @@ import asyncio
 import hashlib
 import json
 import logging
-import math
 import typing
 
 import hikari
@@ -15,40 +14,11 @@ from ..bot import TheCleaner
 from ..shared.channel_perms import permissions_for
 from ..shared.protect import protect, protected_call
 from ..shared.sub import listen as pubsub_listen, Message
+from ..shared.risk import calculate_risk_score
 
 
 logger = logging.getLogger(__name__)
 REQUIRED_TO_SEND = hikari.Permissions.VIEW_CHANNEL | hikari.Permissions.SEND_MESSAGES
-
-
-def calculate_risk_score(user: hikari.User) -> float:
-    age = (utc_datetime() - user.created_at).total_seconds() / 86400
-    ground = 9
-    risk = ground / math.sqrt(age + (ground - 1) * ground) - 0.1
-    if user.avatar_hash is None:
-        risk += 0.17
-    else:
-        risk -= 0.04
-    if user.flags & (
-        hikari.UserFlag.HYPESQUAD_BALANCE
-        | hikari.UserFlag.HYPESQUAD_BRAVERY
-        | hikari.UserFlag.HYPESQUAD_BRILLIANCE
-    ):
-        risk -= 0.01
-    if user.flags & hikari.UserFlag.EARLY_SUPPORTER:
-        risk -= 0.05
-    if user.flags & (
-        hikari.UserFlag.PARTNERED_SERVER_OWNER
-        | hikari.UserFlag.EARLY_VERIFIED_DEVELOPER
-    ):
-        risk -= 0.1
-    if user.flags & (
-        hikari.UserFlag.DISCORD_CERTIFIED_MODERATOR
-        | hikari.UserFlag.HYPESQUAD_EVENTS
-        | hikari.UserFlag.DISCORD_EMPLOYEE
-    ):
-        risk = 0
-    return max(0, min(1, risk))
 
 
 def get_min_risk(config: Config, entitlements: Entitlements) -> typing.Optional[float]:
@@ -146,7 +116,6 @@ class ChallengeExtension:
             return
 
         await member.add_role(role)
-        # TODO: add log
 
     async def on_interaction_create(self, event: hikari.InteractionCreateEvent):
         interaction = event.interaction
