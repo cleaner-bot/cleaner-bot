@@ -21,7 +21,7 @@ def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
             Translateable(
                 "components_log_join",
                 {"user": event.user_id, "age": age_string, "risk": int(risk * 100)},
-            )
+            ),
         ),
     )
 
