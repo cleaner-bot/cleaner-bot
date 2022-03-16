@@ -9,3 +9,4 @@ janus>=1.0,<1.1
 expirepy@git+ssh://git@github.com/cleaner-bot/expirepy.git
 cleaner_conf@git+ssh://git@github.com/cleaner-bot/cleaner-config
 cleaner_data@git+ssh://git@github.com/cleaner-bot/cleaner-data
+cleaner_i18n@git+ssh://git@github.com/cleaner-bot/cleaner-i18n

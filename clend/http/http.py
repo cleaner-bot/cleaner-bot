@@ -8,6 +8,7 @@ from hikari.internal.time import utc_datetime
 import janus
 
 from cleaner_conf.guild.config import Config
+from cleaner_i18n.translate import translate
 from expirepy import ExpiringSet, ExpiringDict
 
 from ..bot import TheCleaner
@@ -141,7 +142,8 @@ class HTTPService:
             )
             self.banned_users.add(f"{ev.guild_id}-{ev.user_id}")
 
-        self.log_queue.put_nowait(ILog(ev.guild_id, message, None))
+        translated = translate("en-US", message, user=ev.user_id)
+        self.log_queue.put_nowait(ILog(ev.guild_id, translated, None))
 
     async def handle_action_delete(self, ev: IActionDelete):
         if ev.message_id in self.deleted_messages:
@@ -153,7 +155,8 @@ class HTTPService:
             await self.bot.bot.rest.delete_message(ev.channel_id, ev.message_id)
 
         message = "log_delete_success" if ev.can_delete else "log_delete_failure"
-        self.log_queue.put_nowait(ILog(ev.guild_id, message, ev.message))
+        translated = translate("en-US", message, user=ev.user_id, channel=ev.channel_id)
+        self.log_queue.put_nowait(ILog(ev.guild_id, translated, ev.message))
 
     async def handle_action_nickname(self, ev: IActionNickname):
         kick = False
@@ -171,16 +174,18 @@ class HTTPService:
         if kick:
             message = "log_nickname_kick"
 
-        self.log_queue.put_nowait(ILog(ev.guild_id, message, None))
+        translated = translate("en-US", message, user=ev.user_id)
+        self.log_queue.put_nowait(ILog(ev.guild_id, translated, None))
 
     async def handle_action_announcement(self, ev: IActionAnnouncement):
         guild_strikes = self.guild_strikes.get(ev.guild_id, 0)
         if guild_strikes >= 30:
             return
         elif not ev.can_send:
-            self.log_queue.put_nowait(
-                ILog(ev.guild_id, "log_announcement_failure", None)
+            translated = translate(
+                "en-US", "log_announcement_failure", channel=ev.channel_id
             )
+            self.log_queue.put_nowait(ILog(ev.guild_id, translated, None))
             return
 
         message = await self.bot.bot.rest.create_message(ev.channel_id, ev.announcement)
@@ -192,15 +197,18 @@ class HTTPService:
                 pass
 
     async def handle_action_channelratelimit(self, ev: IActionChannelRatelimit):
-        print(ev)
         if not ev.can_modify:
             return  # silently ignore
         await self.bot.bot.rest.edit_channel(
             ev.channel_id, rate_limit_per_user=ev.ratelimit
         )
-        self.log_queue.put_nowait(
-            ILog(ev.guild_id, "log_channelratelimit_success", None)
+        translated = translate(
+            "en-US",
+            "log_channelratelimit_success",
+            channel=ev.channel_id,
+            ratelimit=ev.ratelimit,
         )
+        self.log_queue.put_nowait(ILog(ev.guild_id, translated, None))
 
     async def logd(self):
         guilds: dict[int, list[ILog]] = {}
