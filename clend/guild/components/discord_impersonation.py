@@ -9,10 +9,10 @@ from ...shared.event import Translateable
 
 def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
     config = guild.get_config()
-    if config is None or not config.overview_discordimpersonation_enabled:
-        return
     if (
-        not is_name_blacklisted(event.user.username)
+        config is None 
+        or not config.overview_discordimpersonation_enabled
+        or not is_name_blacklisted(event.user.username)
         or event.user.avatar_hash not in avatar_blacklist
     ):
         return
