@@ -5,7 +5,7 @@ import queue
 
 from cleaner_conf.guild.config import Config
 from cleaner_conf.guild.entitlements import Entitlements
-from expirepy import ExpiringList, ExpiringSum
+from expirepy import ExpiringList, ExpiringSum, ExpiringCounter
 
 from ..bot import TheCleaner
 from ..shared.event import IGuildEvent
@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 class CleanerGuild:
     event_queue: queue.Queue[IGuildEvent]
     active_mitigations: list[typing.Any]
+    message_count: dict[int, ExpiringCounter]
+    current_slowmode: dict[int, int]
 
     def __init__(self, guild_id: int, bot: TheCleaner) -> None:
         self.id = guild_id
@@ -28,6 +30,8 @@ class CleanerGuild:
 
         # cache and stuff
         self.messages = ExpiringList(expires=30)
+        self.message_count = {}
+        self.current_slowmode = {}
         self.member_joins = ExpiringSum(expires=300)
         self.active_mitigations = []
 

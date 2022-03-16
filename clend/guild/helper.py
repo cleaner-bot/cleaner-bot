@@ -6,6 +6,7 @@ from .guild import CleanerGuild
 from ..shared.channel_perms import permissions_for
 from ..shared.event import (
     IActionChallenge,
+    IActionChannelRatelimit,
     IActionNickname,
     IActionAnnouncement,
     IActionDelete,
@@ -220,6 +221,49 @@ def announcement(
         can_send=can_send,
         announcement=announcement,
         delete_after=delete_after,
+    )
+
+
+def change_ratelimit(
+    channel: hikari.TextableGuildChannel, ratelimit: int
+) -> IActionChannelRatelimit:
+    # TODO: use once hikari-py/hikari#1057 lands in stable
+    # guild = channel.get_guild()
+    if isinstance(channel.app, hikari.CacheAware):
+        guild = channel.app.cache.get_guild(channel.guild_id)
+    else:
+        guild = None
+
+    if guild is None:
+        return IActionChannelRatelimit(
+            guild_id=channel.guild_id,
+            channel_id=channel.id,
+            ratelimit=ratelimit,
+            can_modify=False,
+        )
+
+    me = guild.get_my_member()
+
+    if me is None:
+        return IActionChannelRatelimit(
+            guild_id=channel.guild_id,
+            channel_id=channel.id,
+            ratelimit=ratelimit,
+            can_modify=False,
+        )
+
+    perms = permissions_for(me, channel)
+
+    can_modify = (
+        perms & (hikari.Permissions.ADMINISTRATOR | hikari.Permissions.MANAGE_CHANNELS)
+        > 0
+    )
+
+    return IActionChannelRatelimit(
+        guild_id=channel.guild_id,
+        channel_id=channel.id,
+        ratelimit=ratelimit,
+        can_modify=can_modify,
     )
 
 

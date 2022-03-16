@@ -60,6 +60,13 @@ class IActionAnnouncement(typing.NamedTuple):
     delete_after: float
 
 
+class IActionChannelRatelimit(typing.NamedTuple):
+    guild_id: int
+    channel_id: int
+    ratelimit: int
+    can_modify: bool
+
+
 class ILog(typing.NamedTuple):
     guild_id: int
     message: str

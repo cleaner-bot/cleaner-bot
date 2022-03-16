@@ -14,6 +14,7 @@ from ..bot import TheCleaner
 from ..shared.channel_perms import permissions_for
 from ..shared.event import (
     IActionChallenge,
+    IActionChannelRatelimit,
     IActionNickname,
     IActionAnnouncement,
     IActionDelete,
@@ -56,6 +57,9 @@ class HTTPService:
 
             elif isinstance(ev, IActionAnnouncement):
                 asyncio.create_task(self.run(self.handle_action_announcement(ev)))
+
+            elif isinstance(ev, IActionChannelRatelimit):
+                asyncio.create_task(self.run(self.handle_action_channelratelimit(ev)))
 
             elif isinstance(ev, ILog):
                 self.log_queue.put_nowait(ev)
@@ -186,6 +190,17 @@ class HTTPService:
                 await message.delete()
             except (hikari.NotFoundError, hikari.ForbiddenError):
                 pass
+
+    async def handle_action_channelratelimit(self, ev: IActionChannelRatelimit):
+        print(ev)
+        if not ev.can_modify:
+            return  # silently ignore
+        await self.bot.bot.rest.edit_channel(
+            ev.channel_id, rate_limit_per_user=ev.ratelimit
+        )
+        self.log_queue.put_nowait(
+            ILog(ev.guild_id, "log_channelratelimit_success", None)
+        )
 
     async def logd(self):
         guilds: dict[int, list[ILog]] = {}
