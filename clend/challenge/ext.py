@@ -209,8 +209,7 @@ class ChallengeExtension:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=(
-                    "Interactive challenges have been disabled by the server "
-                    "staff."
+                    "Interactive challenges have been disabled by the server staff."
                 ),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
