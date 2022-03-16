@@ -47,9 +47,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
 
     if recommended != current:
         guild.current_slowmode[event.channel_id] = recommended
-        return [
-            change_ratelimit(channel, recommended),
-        ]
+        return (change_ratelimit(channel, recommended),)
 
 
 listeners = [

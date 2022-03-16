@@ -9,7 +9,7 @@ import hikari
 from .mitigations import mitigations, mitigationsd
 from ..guild import CleanerGuild
 from ..helper import action_delete, action_challenge, announcement, is_moderator
-from ...shared.event import IGuildEvent
+from ...shared.event import IGuildEvent, ILog, Translateable
 
 
 logger = logging.getLogger(__name__)
@@ -39,19 +39,25 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
         if now - active_mitigation.last_triggered > active_mitigation.ttl:
             continue  # just ignore, it'll be cleaned up in a diff place
         if mit.match(active_mitigation.data, event.message):
-            name = f"antispam {active_mitigation.name} {active_mitigation.id}"
+            info = {
+                "name": "antispam",
+                "initial": False,
+                "mit_name": mit.name,
+            }
             active_mitigation.last_triggered = now
             return [
                 action_delete(
                     event.member,
                     event.message,
-                    name,
+                    reason=None,
+                    info=info,
                 ),
                 action_challenge(
                     guild,
                     event.member,
-                    name,
                     block=True,
+                    reason=None,
+                    info=info,
                 ),
             ]
 
@@ -81,22 +87,39 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
     if mit.ttl > 0:
         guild.active_mitigations.append(active_mitigation)
 
-    name = f"antispam {active_mitigation.name} {active_mitigation.id}"
+    reason = Translateable("components_antispam", {"mitigation": mit.name})
+    info = {
+        "name": "antispam",
+        "initial": True,
+        "mit_name": mit.name,
+        "mit_data": mitigation,
+    }
     actions: list[IGuildEvent] = []
+    actions.append(ILog(event.guild_id, reason))
     for old_message in messages:
         if mit.match(mitigation, old_message):
             if old_message.member is None:
                 logger.warning("encountered an old message without member")
             else:
-                actions.append(action_delete(old_message.member, old_message, name))
+                actions.append(
+                    action_delete(
+                        old_message.member, old_message, reason=reason, info=info
+                    )
+                )
 
-    actions.append(action_delete(event.member, event.message, name))
-    actions.append(action_challenge(guild, event.member, name, block=True))
+    actions.append(action_delete(event.member, event.message, reason=reason, info=info))
+    actions.append(
+        action_challenge(guild, event.member, block=True, reason=reason, info=info)
+    )
     if mit.ttl > 0:
         channel = event.get_channel()
         if channel is not None:
             actions.append(
-                announcement(channel, f"mitigation.announcement.{mit.name}", mit.ttl)
+                announcement(
+                    channel,
+                    Translateable("components_antispam_announcement", {}),
+                    mit.ttl,
+                )
             )
 
     return actions

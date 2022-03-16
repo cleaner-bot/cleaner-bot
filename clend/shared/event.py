@@ -2,6 +2,16 @@ import typing
 
 import hikari
 
+from cleaner_i18n.translate import translate
+
+
+class Translateable(typing.NamedTuple):
+    translate_key: str
+    variables: dict[str, typing.Any]
+
+    def translate(self, locale: str) -> str:
+        return translate(locale, self.translate_key, **self.variables)
+
 
 class IGuildEvent(typing.Protocol):
     @property
@@ -19,7 +29,8 @@ class IAction(typing.Protocol):
         ...
 
     user_id: int
-    reason: str
+    reason: Translateable
+    info: typing.Any
 
 
 class IActionChallenge(typing.NamedTuple):
@@ -32,7 +43,8 @@ class IActionChallenge(typing.NamedTuple):
     can_role: bool
     take_role: bool
     role_id: int
-    reason: str
+    reason: Translateable
+    info: typing.Any
 
 
 class IActionDelete(typing.NamedTuple):
@@ -41,22 +53,24 @@ class IActionDelete(typing.NamedTuple):
     channel_id: int
     message_id: int
     can_delete: bool
-    reason: str
     message: typing.Optional[hikari.Message]
+    reason: Translateable
+    info: typing.Any
 
 
 class IActionNickname(typing.NamedTuple):
     guild_id: int
     user_id: int
     can_reset: bool
-    reason: str
+    reason: Translateable
+    info: typing.Any
 
 
 class IActionAnnouncement(typing.NamedTuple):
     guild_id: int
     channel_id: int
     can_send: bool
-    announcement: str
+    announcement: Translateable
     delete_after: float
 
 
@@ -69,5 +83,6 @@ class IActionChannelRatelimit(typing.NamedTuple):
 
 class ILog(typing.NamedTuple):
     guild_id: int
-    message: str
-    referenced_message: typing.Optional[hikari.Message]
+    message: Translateable
+    reason: typing.Optional[Translateable] = None
+    referenced_message: typing.Optional[hikari.Message] = None

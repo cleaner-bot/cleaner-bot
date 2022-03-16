@@ -4,6 +4,7 @@ from cleaner_data.auto.avatars import data as avatar_blacklist
 
 from ..guild import CleanerGuild
 from ..helper import action_challenge
+from ...shared.event import Translateable
 
 
 def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
@@ -16,10 +17,18 @@ def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
     ):
         return
 
-    action = action_challenge(guild, event.member, "discord-impersonation")
+    reason = Translateable("components_discordimpersonation", {})
+    info = {
+        "name": "discord_impersonation",
+        "id": event.user_id,
+        "username": event.user.username,
+        "avatar": event.user.avatar_hash,
+        "flags": event.user.flags,
+    }
+    action = action_challenge(guild, event.member, reason=reason, info=info)
     if action.can_role or action.can_timeout:
         action = action._replace(can_role=False, can_timeout=False)
-    # TODO: report name and avatar
+
     return (action,)
 
 

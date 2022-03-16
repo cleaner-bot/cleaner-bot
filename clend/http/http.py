@@ -1,5 +1,5 @@
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 import typing
 
@@ -8,7 +8,6 @@ from hikari.internal.time import utc_datetime
 import janus
 
 from cleaner_conf.guild.config import Config
-from cleaner_i18n.translate import translate
 from expirepy import ExpiringSet, ExpiringDict
 
 from ..bot import TheCleaner
@@ -21,11 +20,21 @@ from ..shared.event import (
     IActionDelete,
     IGuildEvent,
     ILog,
+    Translateable,
 )
 
 
 logger = logging.getLogger(__name__)
 REQUIRED_TO_SEND = hikari.Permissions.VIEW_CHANNEL | hikari.Permissions.SEND_MESSAGES
+
+
+def format_log(log: ILog):
+    now = datetime.utcnow()
+    time_string = now.strftime("%H:%M:%S")
+    reason = ""
+    if log.reason:
+        reason = f"` Reason ` {log.reason.translate('en-US')}\n"
+    return f"`{time_string}` {log.message.translate('en-US')}\n{reason}"
 
 
 class HTTPService:
@@ -108,6 +117,8 @@ class HTTPService:
         if can_timeout or can_role or ev.can_kick or ev.can_ban:
             self.challenged_users.add(f"{ev.guild_id}-{ev.user_id}")
 
+        coro: typing.Coroutine[typing.Any, typing.Any, typing.Any] | None = None
+
         if can_timeout:
             self.member_edit[ev.guild_id] = self.member_edit.get(ev.guild_id, 0) + 1
 
@@ -115,7 +126,7 @@ class HTTPService:
                 seconds=30 * strikes
             )
             message = "log_challenge_timeout"
-            await self.bot.bot.rest.edit_member(
+            coro = self.bot.bot.rest.edit_member(
                 ev.guild_id,
                 ev.user_id,
                 communication_disabled_until=communication_disabled_until,
@@ -128,22 +139,24 @@ class HTTPService:
             routine = self.bot.bot.rest.remove_role_from_member
             if ev.take_role:
                 routine = self.bot.bot.rest.add_role_to_member
-            await routine(ev.guild_id, ev.user_id, ev.role_id)
+            coro = routine(ev.guild_id, ev.user_id, ev.role_id)
             # TODO: add forced challenge flag
 
         elif can_kick:
             message = "log_challenge_kick"
-            await self.bot.bot.rest.kick_user(ev.guild_id, ev.user_id)
+            coro = self.bot.bot.rest.kick_user(ev.guild_id, ev.user_id)
 
         elif ev.can_ban:
             message = "log_challenge_ban"
-            await self.bot.bot.rest.ban_user(
+            coro = self.bot.bot.rest.ban_user(
                 ev.guild_id, ev.user_id, delete_message_days=1
             )
             self.banned_users.add(f"{ev.guild_id}-{ev.user_id}")
 
-        translated = translate("en-US", message, user=ev.user_id)
-        self.log_queue.put_nowait(ILog(ev.guild_id, translated, None))
+        translated = Translateable(message, {"user": ev.user_id})
+        self.log_queue.put_nowait(ILog(ev.guild_id, translated, ev.reason))
+        if coro is not None:
+            await coro
 
     async def handle_action_delete(self, ev: IActionDelete):
         if ev.message_id in self.deleted_messages:
@@ -151,14 +164,21 @@ class HTTPService:
         elif f"{ev.guild_id}-{ev.user_id}" in self.banned_users:
             return
         self.deleted_messages.add(ev.message_id)
+        coro: typing.Coroutine[typing.Any, typing.Any, typing.Any] | None = None
         if ev.can_delete:
-            await self.bot.bot.rest.delete_message(ev.channel_id, ev.message_id)
+            coro = self.bot.bot.rest.delete_message(ev.channel_id, ev.message_id)
 
         message = "log_delete_success" if ev.can_delete else "log_delete_failure"
-        translated = translate("en-US", message, user=ev.user_id, channel=ev.channel_id)
-        self.log_queue.put_nowait(ILog(ev.guild_id, translated, ev.message))
+
+        translated = Translateable(
+            message, {"user": ev.user_id, "channel": ev.channel_id}
+        )
+        self.log_queue.put_nowait(ILog(ev.guild_id, translated, ev.reason, ev.message))
+        if coro is not None:
+            await coro
 
     async def handle_action_nickname(self, ev: IActionNickname):
+        coro: typing.Coroutine[typing.Any, typing.Any, typing.Any] | None = None
         kick = False
         if ev.can_reset:
             current = self.member_edit.get(ev.guild_id, 0) + 1
@@ -166,29 +186,32 @@ class HTTPService:
             if current >= 8:
                 kick = True
                 # TODO: can_kick and can_ban
-                await self.bot.bot.rest.kick_user(ev.guild_id, ev.user_id)
+                coro = self.bot.bot.rest.kick_user(ev.guild_id, ev.user_id)
             else:
-                await self.bot.bot.rest.edit_member(ev.guild_id, ev.user_id, nick=None)
+                coro = self.bot.bot.rest.edit_member(ev.guild_id, ev.user_id, nick=None)
 
         message = "log_nickname_reset_" + ("success" if ev.can_reset else "failure")
         if kick:
             message = "log_nickname_kick"
 
-        translated = translate("en-US", message, user=ev.user_id)
-        self.log_queue.put_nowait(ILog(ev.guild_id, translated, None))
+        translated = Translateable(message, {"user": ev.user_id})
+        self.log_queue.put_nowait(ILog(ev.guild_id, translated, ev.reason))
+        if coro is not None:
+            await coro
 
     async def handle_action_announcement(self, ev: IActionAnnouncement):
         guild_strikes = self.guild_strikes.get(ev.guild_id, 0)
         if guild_strikes >= 30:
             return
         elif not ev.can_send:
-            translated = translate(
-                "en-US", "log_announcement_failure", channel=ev.channel_id
+            translated = Translateable(
+                "log_announcement_failure", {"channel": ev.channel_id}
             )
-            self.log_queue.put_nowait(ILog(ev.guild_id, translated, None))
+            self.log_queue.put_nowait(ILog(ev.guild_id, translated))
             return
 
-        message = await self.bot.bot.rest.create_message(ev.channel_id, ev.announcement)
+        announcement = ev.announcement.translate("en-US")
+        message = await self.bot.bot.rest.create_message(ev.channel_id, announcement)
         if ev.delete_after > 0:
             await asyncio.sleep(ev.delete_after)
             try:
@@ -199,16 +222,16 @@ class HTTPService:
     async def handle_action_channelratelimit(self, ev: IActionChannelRatelimit):
         if not ev.can_modify:
             return  # silently ignore
+
+        translated = Translateable(
+            "log_channelratelimit_success",
+            {"channel": ev.channel_id, "ratelimit": ev.ratelimit},
+        )
+        self.log_queue.put_nowait(ILog(ev.guild_id, translated))
+
         await self.bot.bot.rest.edit_channel(
             ev.channel_id, rate_limit_per_user=ev.ratelimit
         )
-        translated = translate(
-            "en-US",
-            "log_channelratelimit_success",
-            channel=ev.channel_id,
-            ratelimit=ev.ratelimit,
-        )
-        self.log_queue.put_nowait(ILog(ev.guild_id, translated, None))
 
     async def logd(self):
         guilds: dict[int, list[ILog]] = {}
@@ -225,9 +248,10 @@ class HTTPService:
                 referenced_message = None
                 length = 0
                 for i, log in enumerate(logs):
-                    if len(log.message) + 1 + length > 2000:
+                    log_length = len(format_log(log))
+                    if log_length + length > 2000:
                         break
-                    length += len(log.message) + 1
+                    length += log_length
                     if (
                         referenced_message is None
                         and log.referenced_message is not None
@@ -236,7 +260,7 @@ class HTTPService:
                     i += 1
 
                 guilds[guild_id] = logs[i:]
-                message = "\n".join(x.message for x in logs[:i])
+                message = "".join(format_log(x) for x in logs[:i])
 
                 embed = hikari.UNDEFINED
                 if referenced_message is not None:

@@ -3,6 +3,7 @@ import hikari
 from .rules import firewall_rules
 from ..guild import CleanerGuild
 from ..helper import action_delete, action_challenge, is_moderator
+from ...shared.event import Translateable
 
 
 def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild):
@@ -28,17 +29,12 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
     if matched_rule is None:
         return
 
+    reason = Translateable("components_firewall", {"rule": matched_rule.name})
+    info = {"rule": matched_rule.name}
     return (
-        action_delete(
-            event.member,
-            event.message,
-            f"firewall {matched_rule.name}",
-        ),
+        action_delete(event.member, event.message, reason=reason, info=info),
         action_challenge(
-            guild,
-            event.member,
-            f"firewall {matched_rule.name}",
-            block=matched_action == 1,
+            guild, event.member, reason=reason, info=info, block=matched_action == 1
         ),
     )
 

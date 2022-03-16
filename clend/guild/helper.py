@@ -10,6 +10,7 @@ from ..shared.event import (
     IActionNickname,
     IActionAnnouncement,
     IActionDelete,
+    Translateable,
 )
 
 
@@ -22,7 +23,7 @@ PERM_SEND = hikari.Permissions.SEND_MESSAGES | hikari.Permissions.VIEW_CHANNEL
 
 
 def action_challenge(
-    cguild: CleanerGuild, member: hikari.Member, reason: str, block: bool = False
+    cguild: CleanerGuild, member: hikari.Member, block: bool = False, **kwargs
 ) -> IActionChallenge:
     guild = member.get_guild()
     config = cguild.get_config()
@@ -37,7 +38,7 @@ def action_challenge(
             can_role=False,
             take_role=False,
             role_id=0,
-            reason=reason,
+            **kwargs
         )
 
     role: typing.Optional[hikari.Role] = None
@@ -85,20 +86,17 @@ def action_challenge(
         can_role=can_role,
         take_role=True if config is None else config.challenge_interactive_take_role,
         role_id=role.id if role else 0,
-        reason=reason,
+        **kwargs
     )
 
     return action
 
 
-def action_nickname(member: hikari.Member, reason: str) -> IActionNickname:
+def action_nickname(member: hikari.Member, **kwargs) -> IActionNickname:
     guild = member.get_guild()
     if guild is None or member.id == guild.owner_id:
         return IActionNickname(
-            guild_id=member.guild_id,
-            user_id=member.id,
-            can_reset=False,
-            reason=reason,
+            guild_id=member.guild_id, user_id=member.id, can_reset=False, **kwargs
         )
 
     me = guild.get_my_member()
@@ -118,14 +116,14 @@ def action_nickname(member: hikari.Member, reason: str) -> IActionNickname:
         guild_id=guild.id,
         user_id=member.id,
         can_reset=above_role and my_perms & PERM_NICK > 0,
-        reason=reason,
+        **kwargs
     )
 
     return action
 
 
 def action_delete(
-    member: hikari.Member, message: hikari.Message, reason: str
+    member: hikari.Member, message: hikari.Message, **kwargs
 ) -> IActionDelete:
     guild = member.get_guild()
     if guild is None:
@@ -135,8 +133,8 @@ def action_delete(
             channel_id=message.channel_id,
             message_id=message.id,
             can_delete=False,
-            reason=reason,
             message=message,
+            **kwargs
         )
 
     me = guild.get_my_member()
@@ -149,8 +147,8 @@ def action_delete(
             channel_id=message.channel_id,
             message_id=message.id,
             can_delete=False,
-            reason=reason,
             message=message,
+            **kwargs
         )
 
     my_perms = hikari.Permissions.NONE
@@ -174,13 +172,15 @@ def action_delete(
         channel_id=channel.id,
         message_id=message.id,
         can_delete=can_delete,
-        reason=reason,
         message=message,
+        **kwargs
     )
 
 
 def announcement(
-    channel: hikari.TextableGuildChannel, announcement: str, delete_after: float
+    channel: hikari.TextableGuildChannel,
+    announcement: Translateable,
+    delete_after: float,
 ) -> IActionAnnouncement:
     # TODO: use once hikari-py/hikari#1057 lands in stable
     # guild = channel.get_guild()
