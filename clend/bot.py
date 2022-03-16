@@ -13,6 +13,7 @@ DEVELOPERS = {
 
 class TheCleaner:
     extensions: dict[str, typing.Any]
+    guild_has_members_cached: set[int]
 
     def __init__(self, token: str) -> None:
         intents = hikari.Intents.ALL_GUILDS_UNPRIVILEGED | hikari.Intents.GUILD_MEMBERS
@@ -32,6 +33,7 @@ class TheCleaner:
         self.database = coredis.StrictRedis()
 
         self.extensions = {}
+        self.guild_has_members_cached = set()
 
     def run(self):
         self.bot.run()
