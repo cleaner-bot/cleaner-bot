@@ -181,20 +181,22 @@ class HTTPService:
 
     async def handle_action_nickname(self, ev: IActionNickname):
         coro: typing.Coroutine[typing.Any, typing.Any, typing.Any] | None = None
-        kick = False
+        message = "log_nickname_reset_failure"
         if ev.can_reset:
             current = self.member_edit.get(ev.guild_id, 0) + 1
             self.member_edit[ev.guild_id] = current
             if current >= 8:
-                kick = True
-                # TODO: can_kick and can_ban
-                coro = self.bot.bot.rest.kick_user(ev.guild_id, ev.user_id)
+                if ev.can_kick:
+                    coro = self.bot.bot.rest.kick_user(ev.guild_id, ev.user_id)
+                    message = "log_nickname_reset_kick"
+                elif ev.can_ban:
+                    coro = self.bot.bot.rest.ban_user(ev.guild_id, ev.user_id)
+                    message = "log_nickname_reset_ban"
+                else:
+                    message = "log_nickname_failure"
             else:
+                message = "log_nickname_reset_success"
                 coro = self.bot.bot.rest.edit_member(ev.guild_id, ev.user_id, nick=None)
-
-        message = "log_nickname_reset_" + ("success" if ev.can_reset else "failure")
-        if kick:
-            message = "log_nickname_kick"
 
         translated = Translateable(message, {"user": ev.user_id})
         self.log_queue.put_nowait(ILog(ev.guild_id, translated, ev.reason))

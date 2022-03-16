@@ -117,6 +117,8 @@ def action_nickname(member: hikari.Member, **kwargs) -> IActionNickname:
         guild_id=guild.id,
         user_id=member.id,
         can_reset=above_role and my_perms & PERM_NICK > 0,
+        can_ban=above_role and my_perms & PERM_BAN > 0,
+        can_kick=above_role and my_perms & PERM_KICK > 0,
         **kwargs
     )
 

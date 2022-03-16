@@ -62,6 +62,8 @@ class IActionNickname(typing.NamedTuple):
     guild_id: int
     user_id: int
     can_reset: bool
+    can_kick: bool
+    can_ban: bool
     reason: Translateable
     info: typing.Any
 
