@@ -27,9 +27,13 @@ class HTTPExtension(threading.Thread):
         self.tasks = [
             asyncio.create_task(protect(self.http.ind)),
             asyncio.create_task(protect(self.http.logd)),
+            asyncio.create_task(protect(self.http.metricsd)),
         ]
 
     def on_unload(self):
         if self.tasks is not None:
             for task in self.tasks:
                 task.cancel()
+
+        self.http.metrics.flush()
+        self.http.metrics.close()

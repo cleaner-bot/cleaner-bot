@@ -1,6 +1,8 @@
 import asyncio
 from datetime import datetime, timedelta
+import json
 import logging
+import time
 import typing
 
 import hikari
@@ -10,6 +12,7 @@ import janus
 from cleaner_conf.guild.config import Config
 from expirepy import ExpiringSet, ExpiringDict
 
+from .metrics import Metrics, metrics_reader
 from ..bot import TheCleaner
 from ..shared.channel_perms import permissions_for
 from ..shared.event import (
@@ -40,11 +43,15 @@ def format_log(log: ILog):
 class HTTPService:
     main_queue: janus.Queue[IGuildEvent]
     log_queue: asyncio.Queue[ILog]
+    metrics_queue: asyncio.Queue[typing.Any]
 
     def __init__(self, bot: TheCleaner) -> None:
         self.bot = bot
         self.main_queue = janus.Queue()
         self.log_queue = asyncio.Queue()
+        self.metrics_queue = asyncio.Queue()
+        self.metrics = Metrics()
+        self.metrics.history = list(metrics_reader())
 
         self.guild_strikes = ExpiringDict(expires=300)
         self.member_strikes = ExpiringDict(expires=3600)
@@ -157,6 +164,14 @@ class HTTPService:
 
         translated = Translateable(message, {"user": ev.user_id})
         self.log_queue.put_nowait(ILog(ev.guild_id, translated, ev.reason))
+        self.metrics_queue.put_nowait(
+            {
+                "name": "challenge",
+                "guild": ev.guild_id,
+                "action": message.split("_")[-1],
+                "info": ev.info,
+            }
+        )
         if coro is not None:
             await coro
 
@@ -176,6 +191,14 @@ class HTTPService:
             message, {"user": ev.user_id, "channel": ev.channel_id}
         )
         self.log_queue.put_nowait(ILog(ev.guild_id, translated, ev.reason, ev.message))
+        self.metrics_queue.put_nowait(
+            {
+                "name": "delete",
+                "guild": ev.guild_id,
+                "action": message.split("_")[-1],
+                "info": ev.info,
+            }
+        )
         if coro is not None:
             await coro
 
@@ -200,6 +223,14 @@ class HTTPService:
 
         translated = Translateable(message, {"user": ev.user_id})
         self.log_queue.put_nowait(ILog(ev.guild_id, translated, ev.reason))
+        self.metrics_queue.put_nowait(
+            {
+                "name": "nickname",
+                "guild": ev.guild_id,
+                "action": "_".join(message.split("_")[2:]),
+                "info": ev.info,
+            }
+        )
         if coro is not None:
             await coro
 
@@ -331,9 +362,92 @@ class HTTPService:
 
             await asyncio.gather(*sends)
 
+    async def metricsd(self):
+        last_update = None
+        database = self.bot.database
+        while True:
+            event = await self.metrics_queue.get()
+            logger.debug(event)
+            self.metrics.log(event)
+
+            now = time.monotonic()
+            if last_update is None or now - last_update > 300:
+                loop = asyncio.get_running_loop()
+                data = await loop.run_in_executor(None, self.gather_radar_data)
+                await database.set("radar", json.dumps(data))
+
     def get_config(self, guild_id: int) -> typing.Optional[Config]:
         conf = self.bot.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")
             return None
         return conf.get_config(guild_id)
+
+    def gather_radar_data(self):
+        phishing_rules = (
+            "phishing.content",
+            "phishing.domain.blacklisted",
+            "phishing.domain.heuristic",
+            "phishing.embed",
+        )
+        ping = (
+            "ping.users.many",
+            "ping.users.few",
+            "ping.roles",
+            "ping.broad",
+            "ping.hidden",
+        )
+        advertisement = ("advertisement.discord.server",)
+        other = ("self_bot.embed", "emoji.mass")
+        all_rules = phishing_rules + ping + advertisement + other
+
+        traffic = (
+            "traffic.similar",
+            "traffic.exact",
+            "traffic.token",
+            "traffic.sticker",
+            "traffic.attachment",
+        )
+
+        challenge_actions = ("ban", "kick", "role", "timeout", "failure")
+        categories = ("phishing", "antispam", "advertisement", "other")
+
+        timespan = 60 * 60 * 24 * 30
+        latest = self.metrics.history[-1][0]
+        cutoff_now = latest - timespan
+        cutoff_previous = latest - timespan * 2
+
+        result = {
+            "rules": {r: {"previous": 0, "now": 0} for r in all_rules},
+            "traffic": {t: {"previous": 0, "now": 0} for t in traffic},
+            "categories": {c: {"previous": 0, "now": 0} for c in categories},
+            "challenges": {c: {"previous": 0, "now": 0} for c in challenge_actions},
+        }
+
+        for timestamp, data in self.metrics.history:
+            if cutoff_previous > timestamp:  # too old
+                continue
+            span = "previous" if cutoff_now > timestamp else "now"
+            if data["name"] == "challenge":
+                result["challenges"][data["action"]][span] += 1
+            elif data["name"] == "delete":
+                rule = data["info"]["rule"]
+                category = None
+                if rule in all_rules:
+                    result["rules"][rule][span] += 1
+                    if rule in phishing_rules:
+                        category = "phishing"
+                    elif rule in advertisement:
+                        category = "advertisement"
+                    else:
+                        category = "other"
+                elif rule in traffic:
+                    result["traffic"][rule][span] += 1
+                    category = "antispam"
+                else:
+                    logger.warning(f"unknown rule: {rule}")
+
+                if category is not None:
+                    result["categories"][category][span] += 1
+
+        return result

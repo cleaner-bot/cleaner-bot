@@ -17,6 +17,7 @@ MODULES_TO_RELOAD = (
     "janus",
     "typing_extensions",
     "pkg_resources",
+    "msgpack",
 )
 
 
