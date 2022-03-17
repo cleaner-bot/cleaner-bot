@@ -408,11 +408,9 @@ class ChallengeExtension:
 
     async def send_embed(self, channel_id: int, guild_id: int):
         channel = self.bot.bot.cache.get_guild_channel(channel_id)
-        print(channel, guild_id)
         if channel is None or not isinstance(channel, hikari.TextableGuildChannel):
             return
 
-        print(channel.id, channel.guild_id, guild_id, channel.guild_id == guild_id)
         if channel.guild_id != guild_id:
             return
 

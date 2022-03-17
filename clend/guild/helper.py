@@ -272,8 +272,6 @@ def change_ratelimit(
 
 
 def is_moderator(cguild: CleanerGuild, member: hikari.Member) -> bool:
-    if member.guild_id == 903845468725977091 and not member.is_bot:
-        return False  # TODO: remove debug guild
     guild = member.get_guild()
     if member.is_bot or (guild is not None and member.id == guild.owner_id):
         return True

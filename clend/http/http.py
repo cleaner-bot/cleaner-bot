@@ -329,7 +329,7 @@ class HTTPService:
                         )
 
                 config = self.get_config(guild_id)
-                channel_id = 919380927602384926  # TODO: change channel
+                channel_id = 952566965837369344
                 if (
                     config is not None
                     and config.logging_enabled

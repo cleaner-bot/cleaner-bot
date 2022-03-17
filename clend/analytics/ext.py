@@ -85,10 +85,6 @@ class AnalyticsExtension:
             else:
                 humans += 1
 
-        if guild.id == 684524887708008472:  # TODO: remove testing guild
-            humans = 100
-            bots = 5000
-
         if humans + bots >= 80 and bots > 2 * humans:
             logger.info(
                 f"detected botfarm on guild {guild.name!r} ({guild.id}): "
@@ -126,9 +122,8 @@ class AnalyticsExtension:
         await channel.send(embed=embed)
 
     def get_channel(self) -> hikari.TextableGuildChannel | None:
-        # TODO: replace with correct values
-        guild_id = 903845468725977091  # 905525342385602591
-        channel_id = 919380927602384926  # 909832103556964442
+        guild_id = 905525342385602591
+        channel_id = 909832103556964442
 
         guild = self.bot.bot.cache.get_guild(guild_id)
         if guild is None:
