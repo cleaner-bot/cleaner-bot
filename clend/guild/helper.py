@@ -1,5 +1,3 @@
-import typing
-
 import hikari
 
 from .guild import CleanerGuild
@@ -41,7 +39,7 @@ def action_challenge(
             **kwargs
         )
 
-    role: typing.Optional[hikari.Role] = None
+    role: hikari.Role | None = None
 
     me = guild.get_my_member()
     my_perms = hikari.Permissions.NONE

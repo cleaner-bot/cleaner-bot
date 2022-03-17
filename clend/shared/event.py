@@ -53,7 +53,7 @@ class IActionDelete(typing.NamedTuple):
     channel_id: int
     message_id: int
     can_delete: bool
-    message: typing.Optional[hikari.Message]
+    message: hikari.Message | None
     reason: Translateable
     info: typing.Any
 
@@ -86,5 +86,5 @@ class IActionChannelRatelimit(typing.NamedTuple):
 class ILog(typing.NamedTuple):
     guild_id: int
     message: Translateable
-    reason: typing.Optional[Translateable] = None
-    referenced_message: typing.Optional[hikari.Message] = None
+    reason: Translateable | None = None
+    referenced_message: hikari.Message | None = None

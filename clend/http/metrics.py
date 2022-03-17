@@ -11,7 +11,7 @@ DEFAULT = Path("metrics.bin")
 class Metrics:
     history: list[tuple[int, typing.Any]]
     _entries: list[bytes]
-    _file: typing.Optional[typing.TextIO] = None
+    _file: typing.TextIO | None = None
 
     def __init__(self, path: Path = None):
         if path is None:

@@ -94,13 +94,13 @@ class ConfigExtension:
             return logger.warning("unable to find clend.guild extension")
         guild.send_event(IGuildSettingsAvailable(guild_id))
 
-    def get_config(self, guild_id: int) -> typing.Optional[Config]:
+    def get_config(self, guild_id: int) -> Config | None:
         gd = self._guilds.get(guild_id, None)
         if gd is not None:
             return gd.config
         return None
 
-    def get_entitlements(self, guild_id: int) -> typing.Optional[Entitlements]:
+    def get_entitlements(self, guild_id: int) -> Entitlements | None:
         gd = self._guilds.get(guild_id, None)
         if gd is not None:
             return gd.entitlements

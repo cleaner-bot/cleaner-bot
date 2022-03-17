@@ -376,7 +376,7 @@ class HTTPService:
                 data = await loop.run_in_executor(None, self.gather_radar_data)
                 await database.set("radar", json.dumps(data))
 
-    def get_config(self, guild_id: int) -> typing.Optional[Config]:
+    def get_config(self, guild_id: int) -> Config | None:
         conf = self.bot.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")

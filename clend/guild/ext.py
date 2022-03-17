@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class GuildExtension:
     guilds: dict[int, CleanerGuild]
     callbacks: dict[typing.Type[IGuildEvent], list[ComponentListener]]
-    workers: typing.Optional[list[GuildWorker]] = None
+    workers: list[GuildWorker] | None = None
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
 
     def __init__(self, bot: TheCleaner) -> None:

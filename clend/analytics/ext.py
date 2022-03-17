@@ -135,7 +135,7 @@ class AnalyticsExtension:
             return None
         return guild.get_channel(channel_id)  # type: ignore
 
-    def get_entitlements(self, guild_id: int) -> typing.Optional[Entitlements]:
+    def get_entitlements(self, guild_id: int) -> Entitlements | None:
         conf = self.bot.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")

@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 REQUIRED_TO_SEND = hikari.Permissions.VIEW_CHANNEL | hikari.Permissions.SEND_MESSAGES
 
 
-def get_min_risk(config: Config, entitlements: Entitlements) -> typing.Optional[float]:
+def get_min_risk(config: Config, entitlements: Entitlements) -> float | None:
     level = config.challenge_interactive_level
     if level < 2 and entitlements.challenge_interactive_join_risk < entitlements.plan:
         level = 2
@@ -459,7 +459,7 @@ class ChallengeExtension:
         )
         await channel.send(embed=embed, component=component)
 
-    def get_config(self, guild_id: int) -> typing.Optional[Config]:
+    def get_config(self, guild_id: int) -> Config | None:
         conf = self.bot.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")
@@ -467,7 +467,7 @@ class ChallengeExtension:
 
         return conf.get_config(guild_id)
 
-    def get_entitlements(self, guild_id: int) -> typing.Optional[Entitlements]:
+    def get_entitlements(self, guild_id: int) -> Entitlements | None:
         conf = self.bot.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")
