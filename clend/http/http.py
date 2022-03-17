@@ -422,6 +422,10 @@ class HTTPService:
             "traffic": {t: {"previous": 0, "now": 0} for t in traffic},
             "categories": {c: {"previous": 0, "now": 0} for c in categories},
             "challenges": {c: {"previous": 0, "now": 0} for c in challenge_actions},
+            "stats": {
+                "guild_count": len(self.bot.bot.cache.get_guilds_view()),
+                "user_count": len(self.bot.bot.cache.get_users_view()),
+            },
         }
 
         for timestamp, data in self.metrics.history:
