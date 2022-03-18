@@ -11,6 +11,7 @@ from cleaner_conf.guild.config import Config
 from cleaner_conf.guild.entitlements import Entitlements
 
 from ..bot import TheCleaner
+from ..shared.button import add_link
 from ..shared.channel_perms import permissions_for
 from ..shared.protect import protect, protected_call
 from ..shared.sub import listen as pubsub_listen, Message
@@ -155,13 +156,8 @@ class ChallengeExtension:
         entitlements = self.get_entitlements(guild.id)
         if config is None or entitlements is None:
             logger.warning(f"uncached guild settings: {guild.id}")
-            url = "https://cleaner.leodev.xyz/discord"
             component = self.bot.bot.rest.build_action_row()
-            (
-                component.add_button(hikari.ButtonStyle.LINK, url)
-                .set_label("Support")
-                .add_to_container()
-            )
+            add_link(component, "Support", "https://cleaner.leodev.xyz/discord")
 
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
@@ -254,13 +250,8 @@ class ChallengeExtension:
 
         me = guild.get_my_member()
         if me is None:
-            url = "https://cleaner.leodev.xyz/discord"
             component = self.bot.bot.rest.build_action_row()
-            (
-                component.add_button(hikari.ButtonStyle.LINK, url)
-                .set_label("Support")
-                .add_to_container()
-            )
+            add_link(component, "Support", "https://cleaner.leodev.xyz/discord")
 
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
@@ -316,14 +307,9 @@ class ChallengeExtension:
                 f"challenge:flow:{flow}:guild", interaction.guild_id, ex=300
             )
 
-            url = f"https://cleaner.leodev.xyz/challenge?flow={flow}"
-
             component = self.bot.bot.rest.build_action_row()
-            (
-                component.add_button(hikari.ButtonStyle.LINK, url)
-                .set_label("Solve challenge")
-                .add_to_container()
-            )
+            url = f"https://cleaner.leodev.xyz/challenge?flow={flow}"
+            add_link(component, "Solve challenge", url)
 
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
@@ -440,13 +426,7 @@ class ChallengeExtension:
             .set_label("Verify")
             .add_to_container()
         )
-        (
-            component.add_button(
-                hikari.ButtonStyle.LINK, "https://cleaner.leodev.xyz/legal/privacy"
-            )
-            .set_label("Privacy Policy")
-            .add_to_container()
-        )
+        add_link(component, "Privacy Policy", "https://cleaner.leodev.xyz/legal/privacy")
 
         embed = hikari.Embed(
             title="Verification required",
