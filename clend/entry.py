@@ -17,7 +17,6 @@ MODULES_TO_RELOAD = (
     "janus",
     "typing_extensions",
     "pkg_resources",
-    "msgpack",
 )
 
 
@@ -38,6 +37,8 @@ class EntryExtension:
 
     def should_reload_module(self, module: str):
         if module == "clend" or module == "clend.bot" or module == __name__:
+            return False
+        elif module == "msgpack" or module.startswith("msgpack."):
             return False
         for mod_to_remove in MODULES_TO_RELOAD:
             if module.startswith(mod_to_remove):
