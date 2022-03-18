@@ -398,7 +398,7 @@ class HTTPService:
             "ping.hidden",
         )
         advertisement = ("advertisement.discord.server",)
-        other = ("self_bot.embed", "emoji.mass")
+        other = ("selfbot.embed", "emoji.mass")
         all_rules = phishing_rules + ping + advertisement + other
 
         traffic = (
