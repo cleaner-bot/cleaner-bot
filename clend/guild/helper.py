@@ -281,6 +281,6 @@ def is_moderator(cguild: CleanerGuild, member: hikari.Member) -> bool:
         for role in member.get_roles():
             if role.id in modroles:
                 return True
-            elif role.permissions | PERM_MOD:
+            elif role.permissions & PERM_MOD:
                 return True
     return False
