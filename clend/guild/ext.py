@@ -13,7 +13,9 @@ from ..shared.event import IGuildEvent, IGuildSettingsAvailable, IAction
 
 
 WORKERS = 4
-ComponentListener = typing.Callable[[IGuildEvent, CleanerGuild], None | list[IAction]]
+ComponentListener = typing.Callable[
+    [IGuildEvent, CleanerGuild], list[IAction | None] | None
+]
 logger = logging.getLogger(__name__)
 
 
