@@ -9,6 +9,7 @@ from hikari.internal.time import utc_datetime
 
 from cleaner_conf.guild.config import Config
 from cleaner_conf.guild.entitlements import Entitlements
+from cleaner_i18n.translate import translate
 
 from ..bot import TheCleaner
 from ..shared.button import add_link
@@ -139,10 +140,7 @@ class ChallengeExtension:
             logger.exception("Error occured during component interaction", exc_info=e)
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=(
-                    "**Internal error**: Something went wrong on our end.\n"
-                    "**Please contact support!**"
-                ),
+                content=translate(interaction.locale, "challenge_internal_error"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
@@ -152,20 +150,17 @@ class ChallengeExtension:
         if guild is None:
             return
 
+        t = lambda s, **k: translate(interaction.locale, f"challenge_{s}", **k)  # noqa E731
         config = self.get_config(guild.id)
         entitlements = self.get_entitlements(guild.id)
         if config is None or entitlements is None:
             logger.warning(f"uncached guild settings: {guild.id}")
             component = self.bot.bot.rest.build_action_row()
-            add_link(component, "Support", "https://cleaner.leodev.xyz/discord")
+            add_link(component, t("discord"), "https://cleaner.leodev.xyz/discord")
 
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=(
-                    "**Internal error**: We have no information "
-                    "about the server you are in.\n"
-                    "**Please contact support!**"
-                ),
+                content=t("no_settings"),
                 component=component,
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
@@ -173,20 +168,14 @@ class ChallengeExtension:
         if not config.challenge_interactive_enabled:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=(
-                    "Interactive challenges have been disabled by the server staff."
-                ),
+                content=t("disabled"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
         elif not config.challenge_interactive_role:
             act = "take" if config.challenge_interactive_take_role else "give"
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=(
-                    f"Server staff has not selected a role for me to {act}.\n"
-                    f"Contact server staff and inform them that they have not "
-                    f"completed the setup yet."
-                ),
+                content=t("no_role", action=act),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
@@ -197,7 +186,7 @@ class ChallengeExtension:
         ):
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content="You are already verified.",
+                content=t("already_verified"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
@@ -216,35 +205,21 @@ class ChallengeExtension:
             act = "take" if config.challenge_interactive_take_role else "give"
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=(
-                    f"I can not find the role I am supposed to {act}. "
-                    f"Maybe it has been deleted?\n"
-                    f"Contact server staff and inform them to select an "
-                    f"up-to-date role."
-                ),
+                content=t("role_gone", action=act),
+                flags=hikari.MessageFlag.EPHEMERAL,
             )
         elif role.is_managed:
             act = "take" if config.challenge_interactive_take_role else "give"
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=(
-                    f"I can not {act} the role {role.mention} because it is "
-                    f"managed (e.g. a bot role, the server booster role, or "
-                    f"part of a different integration)\n"
-                    f"Contact server staff and inform them to select a "
-                    f"non-managed role."
-                ),
+                content=t("role_managed", action=act, role=role.id),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
         elif role.position == 0:
             act = "take" if config.challenge_interactive_take_role else "give"
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=(
-                    f"I can not {act} the role everyone role."
-                    f"Contact server staff and inform them to select a "
-                    f"role that is not the everyone role."
-                ),
+                content=t("role_everyone", action=act),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
@@ -255,26 +230,25 @@ class ChallengeExtension:
 
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=(
-                    "**Internal error**: I can not find myself.\n"
-                    "Please try again in a few minutes.\n\n"
-                    "If this problem persists please contact support."
-                ),
+                content=t("no_myself"),
                 component=component,
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
         top_role = me.get_top_role()
         if top_role is not None and role.position >= top_role.position:
+            component = self.bot.bot.rest.build_action_row()
+            add_link(
+                component,
+                t("hierarchy_link"),
+                "https://cleaner.leodev.xyz/help/hierarchy",
+            )
+
             act = "take" if config.challenge_interactive_take_role else "give"
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=(
-                    f"The role I am supposed to {act} is above me in the role "
-                    f"hierarchy and therefore I can not give it.\n"
-                    f"Contact server staff and ask them to move me above the "
-                    f"{role.mention} role in the role settings."
-                ),
+                content=t("hierarchy", action=act, role=role.id),
+                component=component,
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
@@ -284,13 +258,10 @@ class ChallengeExtension:
             elif my_role.permissions & hikari.Permissions.MANAGE_ROLES:
                 break
         else:
+            act = "take" if config.challenge_interactive_take_role else "give"
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=(
-                    "I do not have permission to give roles :(\n"
-                    "Contact server staff and ask them to give me the "
-                    "`ADMINISTRATOR` or `MANAGE ROLES` permission."
-                ),
+                content=t("no_perms", action=act),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
@@ -309,22 +280,18 @@ class ChallengeExtension:
 
             component = self.bot.bot.rest.build_action_row()
             url = f"https://cleaner.leodev.xyz/challenge?flow={flow}"
-            add_link(component, "Solve challenge", url)
+            add_link(component, t("link"), url)
 
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=(
-                    "Click the button below and follow the instructions on "
-                    "the website to verify.\n"
-                    "*You have 5 minutes before the link becomes invalid*"
-                ),
+                content=t("content"),
                 component=component,
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
         else:
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content="You have been verified!",
+                content=t("verified"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
@@ -420,20 +387,19 @@ class ChallengeExtension:
             and perms & REQUIRED_TO_SEND != REQUIRED_TO_SEND
         ):
             return
+
+        t = lambda s: translate(guild.preferred_locale, f"challenge_embed_{s}")  # noqa E731
         component = self.bot.bot.rest.build_action_row()
         (
             component.add_button(hikari.ButtonStyle.PRIMARY, "challenge")
-            .set_label("Verify")
+            .set_label(t("verify"))
             .add_to_container()
         )
-        add_link(component, "Privacy Policy", "https://cleaner.leodev.xyz/legal/privacy")
+        add_link(component, t("privacy"), "https://cleaner.leodev.xyz/legal/privacy")
 
         embed = hikari.Embed(
-            title="Verification required",
-            description=(
-                "Please verify that you are not a robot.\n"
-                "Start by clicking on the button below."
-            ),
+            title=t("title"),
+            description=t("description"),
         )
         await channel.send(embed=embed, component=component)
 
