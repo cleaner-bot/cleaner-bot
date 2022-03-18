@@ -187,9 +187,7 @@ class HTTPService:
 
         message = "log_delete_success" if ev.can_delete else "log_delete_failure"
 
-        translated = Message(
-            message, {"user": ev.user_id, "channel": ev.channel_id}
-        )
+        translated = Message(message, {"user": ev.user_id, "channel": ev.channel_id})
         self.log_queue.put_nowait(ILog(ev.guild_id, translated, ev.reason, ev.message))
         self.metrics_queue.put_nowait(
             {
@@ -239,9 +237,7 @@ class HTTPService:
         if guild_strikes >= 30:
             return
         elif not ev.can_send:
-            translated = Message(
-                "log_announcement_failure", {"channel": ev.channel_id}
-            )
+            translated = Message("log_announcement_failure", {"channel": ev.channel_id})
             self.log_queue.put_nowait(ILog(ev.guild_id, translated))
             return
 
