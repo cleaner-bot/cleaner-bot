@@ -1,5 +1,7 @@
 import hikari
 
+from cleaner_i18n.translate import Message
+
 from .guild import CleanerGuild
 from ..shared.channel_perms import permissions_for
 from ..shared.event import (
@@ -8,7 +10,6 @@ from ..shared.event import (
     IActionNickname,
     IActionAnnouncement,
     IActionDelete,
-    Translateable,
 )
 
 
@@ -183,7 +184,7 @@ def action_delete(
 
 def announcement(
     channel: hikari.TextableGuildChannel,
-    announcement: Translateable,
+    announcement: Message,
     delete_after: float,
 ) -> IActionAnnouncement:
     # TODO: use once hikari-py/hikari#1057 lands in stable

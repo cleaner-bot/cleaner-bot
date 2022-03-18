@@ -1,10 +1,11 @@
 import hikari
+
 from cleaner_data.name import is_name_blacklisted
 from cleaner_data.auto.avatars import data as avatar_blacklist
+from cleaner_i18n.translate import Message
 
 from ..guild import CleanerGuild
 from ..helper import action_challenge
-from ...shared.event import Translateable
 
 
 def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
@@ -17,7 +18,7 @@ def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
     ):
         return
 
-    reason = Translateable("components_discordimpersonation", {})
+    reason = Message("components_discordimpersonation", {})
     info = {
         "name": "discord_impersonation",
         "id": event.user_id,

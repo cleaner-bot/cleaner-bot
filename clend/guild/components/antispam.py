@@ -6,10 +6,12 @@ import typing
 
 import hikari
 
+from cleaner_i18n.translate import Message
+
 from .mitigations import mitigations, mitigationsd
 from ..guild import CleanerGuild
 from ..helper import action_delete, action_challenge, announcement, is_moderator
-from ...shared.event import IGuildEvent, ILog, Translateable
+from ...shared.event import IGuildEvent, ILog
 
 
 logger = logging.getLogger(__name__)
@@ -87,7 +89,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
     if mit.ttl > 0:
         guild.active_mitigations.append(active_mitigation)
 
-    reason = Translateable("components_antispam", {"mitigation": mit.name})
+    reason = Message("components_antispam", {"mitigation": mit.name})
     info = {
         "name": "antispam",
         "initial": True,
@@ -117,7 +119,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
             actions.append(
                 announcement(
                     channel,
-                    Translateable("components_antispam_announcement", {}),
+                    Message("components_antispam_announcement", {}),
                     mit.ttl,
                 )
             )

@@ -1,9 +1,10 @@
 import hikari
 
+from cleaner_i18n.translate import Message
+
 from .rules import firewall_rules
 from ..guild import CleanerGuild
 from ..helper import action_delete, action_challenge, is_moderator, announcement
-from ...shared.event import Translateable
 
 
 def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild):
@@ -29,8 +30,8 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
     if matched_rule is None:
         return
 
-    reason = Translateable("components_firewall", {"rule": matched_rule.name})
-    translated = Translateable(
+    reason = Message("components_firewall", {"rule": matched_rule.name})
+    translated = Message(
         f"components_firewall_{matched_rule.name.replace('.', '_')}",
         {"user": event.author_id},
     )

@@ -10,6 +10,7 @@ from hikari.internal.time import utc_datetime
 import janus
 
 from cleaner_conf.guild.config import Config
+from cleaner_i18n.translate import Message
 from expirepy import ExpiringSet, ExpiringDict
 
 from .metrics import Metrics, metrics_reader
@@ -23,7 +24,6 @@ from ..shared.event import (
     IActionDelete,
     IGuildEvent,
     ILog,
-    Translateable,
 )
 
 
@@ -162,7 +162,7 @@ class HTTPService:
             )
             self.banned_users.add(f"{ev.guild_id}-{ev.user_id}")
 
-        translated = Translateable(message, {"user": ev.user_id})
+        translated = Message(message, {"user": ev.user_id})
         self.log_queue.put_nowait(ILog(ev.guild_id, translated, ev.reason))
         self.metrics_queue.put_nowait(
             {
@@ -187,7 +187,7 @@ class HTTPService:
 
         message = "log_delete_success" if ev.can_delete else "log_delete_failure"
 
-        translated = Translateable(
+        translated = Message(
             message, {"user": ev.user_id, "channel": ev.channel_id}
         )
         self.log_queue.put_nowait(ILog(ev.guild_id, translated, ev.reason, ev.message))
@@ -221,7 +221,7 @@ class HTTPService:
                 message = "log_nickname_reset_success"
                 coro = self.bot.bot.rest.edit_member(ev.guild_id, ev.user_id, nick=None)
 
-        translated = Translateable(message, {"user": ev.user_id})
+        translated = Message(message, {"user": ev.user_id})
         self.log_queue.put_nowait(ILog(ev.guild_id, translated, ev.reason))
         self.metrics_queue.put_nowait(
             {
@@ -239,7 +239,7 @@ class HTTPService:
         if guild_strikes >= 30:
             return
         elif not ev.can_send:
-            translated = Translateable(
+            translated = Message(
                 "log_announcement_failure", {"channel": ev.channel_id}
             )
             self.log_queue.put_nowait(ILog(ev.guild_id, translated))
@@ -258,7 +258,7 @@ class HTTPService:
         if not ev.can_modify:
             return  # silently ignore
 
-        translated = Translateable(
+        translated = Message(
             "log_channelratelimit_success",
             {"channel": ev.channel_id, "ratelimit": ev.ratelimit},
         )

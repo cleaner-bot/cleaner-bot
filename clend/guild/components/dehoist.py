@@ -1,8 +1,9 @@
 import hikari
 
+from cleaner_i18n.translate import Message
+
 from ..guild import CleanerGuild
 from ..helper import action_nickname, is_moderator
-from ...shared.event import Translateable
 
 
 def on_member_update(event: hikari.MemberUpdateEvent, guild: CleanerGuild):
@@ -16,7 +17,7 @@ def on_member_update(event: hikari.MemberUpdateEvent, guild: CleanerGuild):
     ):
         return
 
-    reason = Translateable("components_dehoist", {})
+    reason = Message("components_dehoist", {})
     info = {
         "name": "dehoist",
         "username": event.member.username,

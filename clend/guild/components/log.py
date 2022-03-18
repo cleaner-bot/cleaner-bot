@@ -1,9 +1,10 @@
 import hikari
 
+from cleaner_i18n.translate import Message
 
 from ..guild import CleanerGuild
 from ...shared.risk import calculate_risk_score
-from ...shared.event import ILog, Translateable
+from ...shared.event import ILog
 
 
 def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
@@ -18,7 +19,7 @@ def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
     return (
         ILog(
             event.guild_id,
-            Translateable(
+            Message(
                 "components_log_join",
                 {"user": event.user_id, "age": age_string, "risk": int(risk * 100)},
             ),
