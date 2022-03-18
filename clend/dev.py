@@ -21,6 +21,7 @@ class DevExtension:
             "clend.guild",
             "clend.challenge",
             "clend.sync",
+            "clend.slash",
             "clend.analytics",
         ]
         self.listeners = [
@@ -58,6 +59,8 @@ class DevExtension:
             await self.handle_ping(event)
         elif event.content == "clean!stop":
             await self.handle_stop(event)
+        elif event.content in ("clean!register-slash", "clean!register-slash-global"):
+            await self.handle_register_slash(event)
 
     async def handle_ping(self, event: hikari.GuildMessageCreateEvent):
         sent = datetime.utcnow().replace(tzinfo=timezone.utc)
@@ -84,6 +87,29 @@ class DevExtension:
     async def handle_stop(self, event: hikari.GuildMessageCreateEvent):
         await event.message.respond("Bye!")
         await self.bot.bot.close()
+
+    async def handle_register_slash(self, event: hikari.GuildMessageCreateEvent):
+        is_global = event.content and event.content.endswith("-global")
+
+        commands = [
+            event.app.rest.slash_command_builder(
+                "about", "General information about the Bot"
+            ),
+            event.app.rest.slash_command_builder(
+                "dashboard", "Get a link to the dashboard of this server"
+            ),
+        ]
+
+        me = self.bot.bot.get_me()
+        if me is None:
+            return await event.message.respond("no me found")
+        await event.app.rest.set_application_commands(
+            application=me.id,
+            commands=commands,
+            guild=hikari.UNDEFINED if is_global else event.guild_id,
+        )
+
+        await event.message.respond("done")
 
 
 extension = DevExtension
