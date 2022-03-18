@@ -107,4 +107,5 @@ class GuildWorker(threading.Thread):
             logger.warning("action required but http extension is not loaded")
         else:
             for item in data:
-                http.queue.sync_q.put(item)
+                if item is not None:
+                    http.queue.sync_q.put(item)
