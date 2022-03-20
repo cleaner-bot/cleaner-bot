@@ -405,6 +405,7 @@ class ChallengeExtension:
         embed = hikari.Embed(
             title=t("title"),
             description=t("description"),
+            color=0x0284C7
         )
         await channel.send(embed=embed, component=component)
 
