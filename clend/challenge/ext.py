@@ -6,9 +6,9 @@ import typing
 
 import hikari
 from hikari.internal.time import utc_datetime
+import msgpack  # type: ignore
 
-from cleaner_conf.guild.config import Config
-from cleaner_conf.guild.entitlements import Entitlements
+from cleaner_conf.guild import GuildConfig, GuildEntitlements
 from cleaner_i18n.translate import translate
 
 from ..bot import TheCleaner
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 REQUIRED_TO_SEND = hikari.Permissions.VIEW_CHANNEL | hikari.Permissions.SEND_MESSAGES
 
 
-def get_min_risk(config: Config, entitlements: Entitlements) -> float | None:
+def get_min_risk(config: GuildConfig, entitlements: GuildEntitlements) -> float | None:
     level = config.challenge_interactive_level
     if level < 2 and entitlements.challenge_interactive_join_risk < entitlements.plan:
         level = 2
@@ -150,7 +150,9 @@ class ChallengeExtension:
         if guild is None:
             return
 
-        t = lambda s, **k: translate(interaction.locale, f"challenge_{s}", **k)  # noqa E731
+        t = lambda s, **k: translate(  # noqa E731
+            interaction.locale, f"challenge_{s}", **k
+        )
         config = self.get_config(guild.id)
         entitlements = self.get_entitlements(guild.id)
         if config is None or entitlements is None:
@@ -312,7 +314,7 @@ class ChallengeExtension:
                 flow = event.data.decode()
                 asyncio.create_task(protected_call(self.verify_flow(flow)))
             else:
-                data = json.loads(event.data)
+                data = msgpack.unpackb(event.data)
                 asyncio.create_task(
                     protected_call(self.send_embed(data["channel"], data["guild"]))
                 )
@@ -388,7 +390,9 @@ class ChallengeExtension:
         ):
             return
 
-        t = lambda s: translate(guild.preferred_locale, f"challenge_embed_{s}")  # noqa E731
+        t = lambda s: translate(  # noqa E731
+            guild.preferred_locale, f"challenge_embed_{s}"
+        )
         component = self.bot.bot.rest.build_action_row()
         (
             component.add_button(hikari.ButtonStyle.PRIMARY, "challenge")
@@ -403,7 +407,7 @@ class ChallengeExtension:
         )
         await channel.send(embed=embed, component=component)
 
-    def get_config(self, guild_id: int) -> Config | None:
+    def get_config(self, guild_id: int) -> GuildConfig | None:
         conf = self.bot.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")
@@ -411,7 +415,7 @@ class ChallengeExtension:
 
         return conf.get_config(guild_id)
 
-    def get_entitlements(self, guild_id: int) -> Entitlements | None:
+    def get_entitlements(self, guild_id: int) -> GuildEntitlements | None:
         conf = self.bot.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")

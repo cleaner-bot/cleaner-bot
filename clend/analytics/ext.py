@@ -3,8 +3,9 @@ import logging
 import typing
 
 import hikari
+import msgpack  # type: ignore
 
-from cleaner_conf.guild.entitlements import Entitlements
+from cleaner_conf.guild import GuildEntitlements
 
 from ..bot import TheCleaner
 
@@ -100,7 +101,9 @@ class AnalyticsExtension:
         elif entitlements.suspended:
             return
 
-        await database.set(f"guild:{guild.id}:entitlement:suspended", "1")
+        await database.hset(
+            f"guild:{guild.id}:entitlements", "suspended", msgpack.packb(True)
+        )
         entitlements.suspended = True
 
         channel = self.get_channel()
@@ -130,7 +133,7 @@ class AnalyticsExtension:
             return None
         return guild.get_channel(channel_id)  # type: ignore
 
-    def get_entitlements(self, guild_id: int) -> Entitlements | None:
+    def get_entitlements(self, guild_id: int) -> GuildEntitlements | None:
         conf = self.bot.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")

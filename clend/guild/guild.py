@@ -3,8 +3,7 @@ import time
 import typing
 import queue
 
-from cleaner_conf.guild.config import Config
-from cleaner_conf.guild.entitlements import Entitlements
+from cleaner_conf.guild import GuildConfig, GuildEntitlements
 from expirepy import ExpiringList, ExpiringSum, ExpiringCounter
 
 from ..bot import TheCleaner
@@ -44,14 +43,14 @@ class CleanerGuild:
             if now - mitigation.last_triggered > mitigation.ttl:  # expired
                 self.active_mitigations.remove(mitigation)
 
-    def get_config(self) -> Config | None:
+    def get_config(self) -> GuildConfig | None:
         conf = self.bot.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")
             return None
         return conf.get_config(self.id)
 
-    def get_entitlements(self) -> Entitlements | None:
+    def get_entitlements(self) -> GuildEntitlements | None:
         conf = self.bot.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")

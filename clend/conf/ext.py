@@ -1,12 +1,11 @@
 import asyncio
 import typing
-import json
 import logging
 
 import hikari
+import msgpack  # type: ignore
 
-from cleaner_conf.guild.config import Config, config
-from cleaner_conf.guild.entitlements import Entitlements, entitlements
+from cleaner_conf.guild import GuildConfig, GuildEntitlements
 
 from ..bot import TheCleaner
 from ..shared.event import IGuildSettingsAvailable
@@ -18,8 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 class GuildData(typing.NamedTuple):
-    config: Config
-    entitlements: Entitlements
+    config: GuildConfig
+    entitlements: GuildEntitlements
 
 
 class ConfigExtension:
@@ -42,7 +41,7 @@ class ConfigExtension:
     def on_load(self):
         for guild_id in self.bot.bot.cache.get_guilds_view().keys():
             if guild_id not in self._guilds:
-                logger.debug(f"scheduled config:fetch_guild({guild_id})")
+                logger.debug(f"scheduled fetching settings for guild: {guild_id}")
                 asyncio.create_task(self.fetch_guild(guild_id))
 
         self.task = asyncio.create_task(protect(self.updated))
@@ -59,33 +58,23 @@ class ConfigExtension:
 
         self._races[guild_id] = event = asyncio.Event()
         try:
-            database = self.bot.database
-            guild_entitlements = Entitlements()
-            guild_config = Config()
-
-            for key, value in entitlements.items():
-                db = await database.get(f"guild:{guild_id}:entitlement:{key}")
-                if db is None:
-                    db = value.default
-                else:
-                    db = value.from_string(db.decode())
-
-                setattr(guild_entitlements, key, db)
-
-            for key, value in config.items():
-                db = await database.get(f"guild:{guild_id}:config:{key}")
-                if db is None:
-                    db = value.default
-                else:
-                    db = value.from_string(db.decode())
-
-                setattr(guild_config, key, db)
-
-            self._guilds[guild_id] = GuildData(guild_config, guild_entitlements)
+            guild_config = await self.fetch_dict(
+                f"guild:{guild_id}:config", tuple(GuildConfig.__fields__)
+            )
+            guild_entitlements = await self.fetch_dict(
+                f"guild:{guild_id}:entitlements",
+                tuple(GuildEntitlements.__fields__),
+            )
+            # TODO: investigate usage of .construct() instead
+            self._guilds[guild_id] = GuildData(
+                GuildConfig(**guild_config), GuildEntitlements(**guild_entitlements)
+            )
         except Exception as e:
-            logger.error(f"error during config:fetch_guild({guild_id})", exc_info=e)
+            logger.error(
+                f"error during fetching settings for guild: {guild_id}", exc_info=e
+            )
         else:
-            logger.debug(f"done config:fetch_guild({guild_id})")
+            logger.debug(f"fetched settings for {guild_id}")
         finally:
             event.set()
 
@@ -94,13 +83,18 @@ class ConfigExtension:
             return logger.warning("unable to find clend.guild extension")
         guild.send_event(IGuildSettingsAvailable(guild_id))
 
-    def get_config(self, guild_id: int) -> Config | None:
+    async def fetch_dict(self, key: str, keys: typing.Sequence[str]):
+        database = self.bot.database
+        values = await database.hmget(key, *keys)
+        return {k: msgpack.unpackb(v) for k, v in zip(keys, values) if v is not None}
+
+    def get_config(self, guild_id: int) -> GuildConfig | None:
         gd = self._guilds.get(guild_id, None)
         if gd is not None:
             return gd.config
         return None
 
-    def get_entitlements(self, guild_id: int) -> Entitlements | None:
+    def get_entitlements(self, guild_id: int) -> GuildEntitlements | None:
         gd = self._guilds.get(guild_id, None)
         if gd is not None:
             return gd.entitlements
@@ -122,21 +116,22 @@ class ConfigExtension:
 
     async def updated(self):
         pubsub = self.bot.database.pubsub()
-        await pubsub.subscribe("pubsub:config-update")
+        await pubsub.subscribe("pubsub:settings-update")
         async for event in pubsub_listen(pubsub):
             if not isinstance(event, Message):
                 continue
 
-            data = json.loads(event.data)
+            data = msgpack.unpackb(event.data)
             gd = self._guilds.get(data["guild_id"], None)
             if gd is None:
                 continue
 
-            obj = gd.config if data["table"] == "config" else gd.entitlements
-            validators = config if data["table"] == "config" else entitlements
-
-            for name, value in data["changes"].items():
-                logger.debug(
-                    f"changed {data['table']}.{name} to {value!r} ({data['guild_id']})"
-                )
-                setattr(obj, name, validators[name].from_string(value))
+            for space in ("config", "entitlements"):
+                if space not in data:
+                    continue
+                obj = getattr(gd, space)
+                for name, value in data[space]["changes"].items():
+                    logger.debug(
+                        f"changed {space}.{name} to {value!r} ({data['guild_id']})"
+                    )
+                    setattr(obj, name, value)

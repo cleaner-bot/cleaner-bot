@@ -1,6 +1,5 @@
 import asyncio
 from datetime import datetime, timedelta
-import json
 import logging
 import time
 import typing
@@ -8,8 +7,9 @@ import typing
 import hikari
 from hikari.internal.time import utc_datetime
 import janus
+import msgpack  # type: ignore
 
-from cleaner_conf.guild.config import Config
+from cleaner_conf.guild import GuildConfig
 from cleaner_i18n.translate import Message
 from expirepy import ExpiringSet, ExpiringDict
 
@@ -370,9 +370,9 @@ class HTTPService:
             if last_update is None or now - last_update > 300:
                 loop = asyncio.get_running_loop()
                 data = await loop.run_in_executor(None, self.gather_radar_data)
-                await database.set("radar", json.dumps(data))
+                await database.set("radar", msgpack.packb(data))
 
-    def get_config(self, guild_id: int) -> Config | None:
+    def get_config(self, guild_id: int) -> GuildConfig | None:
         conf = self.bot.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")

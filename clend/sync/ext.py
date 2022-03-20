@@ -1,9 +1,9 @@
 import asyncio
 import typing
 import logging
-import json
 
 import hikari
+import msgpack  # type: ignore
 
 from ..bot import TheCleaner
 from ..shared.channel_perms import permissions_for
@@ -90,7 +90,7 @@ class SyncExtension:
         data = {"permissions": {k.name: True for k in perms}}
 
         database = self.bot.database
-        await database.set(f"guild:{guild.id}:sync:myself", json.dumps(data))
+        await database.set(f"guild:{guild.id}:sync:myself", msgpack.packb(data))
 
     async def sync_roles(self, guild: hikari.GatewayGuild):
         me = guild.get_my_member()
@@ -112,7 +112,7 @@ class SyncExtension:
         ]
 
         database = self.bot.database
-        await database.set(f"guild:{guild.id}:sync:roles", json.dumps(data))
+        await database.set(f"guild:{guild.id}:sync:roles", msgpack.packb(data))
 
     async def sync_channels(self, guild: hikari.GatewayGuild):
         me = guild.get_my_member()
@@ -130,4 +130,4 @@ class SyncExtension:
         ]
 
         database = self.bot.database
-        await database.set(f"guild:{guild.id}:sync:channels", json.dumps(data))
+        await database.set(f"guild:{guild.id}:sync:channels", msgpack.packb(data))
