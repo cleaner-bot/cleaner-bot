@@ -2,7 +2,7 @@ from expirepy import ExpiringCounter
 import hikari
 
 from ..guild import CleanerGuild
-from ..helper import is_moderator, change_ratelimit
+from ..helper import is_moderator, is_exception, change_ratelimit
 
 
 # all = [round(x ** 1.5 / 100) for x in range(98)]
@@ -36,7 +36,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
     counter.increase()
     count = counter.value()
 
-    default = 0 if event.channel_id in config.slowmode_exceptions else 1
+    default = 0 if is_exception(config, channel.id) else 1
     current = guild.current_slowmode.get(event.channel_id, default)
 
     if default == 0:

@@ -329,9 +329,9 @@ class HTTPService:
                 if (
                     config is not None
                     and config.logging_enabled
-                    and config.logging_channel > 0
+                    and int(config.logging_channel) > 0
                 ):
-                    the_channel_id = config.logging_channel
+                    the_channel_id = int(config.logging_channel)
                     guild = self.bot.bot.cache.get_guild(guild_id)
                     if guild is not None:
                         me = guild.get_my_member()

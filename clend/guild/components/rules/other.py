@@ -6,16 +6,14 @@ import hikari
 from cleaner_data.url import get_urls
 
 from ...guild import CleanerGuild
+from ...helper import is_exception
 
 
 emoji_regex = re.compile(r"(<a?:[^\s:]+:\d+>)|(:[^\s:]+:)")
 
 
 def emoji_mass(message: hikari.Message, guild: CleanerGuild) -> bool:
-    config = guild.get_config()
-    if not message.content or (
-        config is not None and message.channel_id in config.slowmode_exceptions
-    ):
+    if not message.content or is_exception(guild, message.channel_id):
         return False
     content = emoji.demojize(message.content)
     emojis = emoji_regex.findall(content)

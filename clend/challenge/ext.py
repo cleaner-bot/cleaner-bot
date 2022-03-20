@@ -92,7 +92,7 @@ class ChallengeExtension:
         if guild is None:
             return  # this should never happen
 
-        role = guild.get_role(config.challenge_interactive_role)
+        role = guild.get_role(int(config.challenge_interactive_role))
         if (
             role is None
             or role.is_managed
@@ -167,13 +167,14 @@ class ChallengeExtension:
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
+        challenge_interactive_role = int(config.challenge_interactive_role)
         if not config.challenge_interactive_enabled:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("disabled"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
-        elif not config.challenge_interactive_role:
+        elif not challenge_interactive_role:
             act = "take" if config.challenge_interactive_take_role else "give"
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
@@ -183,7 +184,7 @@ class ChallengeExtension:
 
         member = interaction.member
         if member is None or (
-            (config.challenge_interactive_role not in member.role_ids)
+            (challenge_interactive_role not in member.role_ids)
             == config.challenge_interactive_take_role
         ):
             return await interaction.create_initial_response(
@@ -202,7 +203,7 @@ class ChallengeExtension:
             actual_risk = calculate_risk_score(member.user)
             challenge = min_risk is not None and actual_risk >= min_risk
 
-        role = guild.get_role(config.challenge_interactive_role)
+        role = guild.get_role(challenge_interactive_role)
         if role is None:
             act = "take" if config.challenge_interactive_take_role else "give"
             return await interaction.create_initial_response(
@@ -335,7 +336,7 @@ class ChallengeExtension:
             logger.warning(f"uncached guild settings: {guild_id}")
             return
 
-        role = guild.get_role(config.challenge_interactive_role)
+        role = guild.get_role(int(config.challenge_interactive_role))
         if role is None or role.is_managed or role.position == 0:
             return
 
@@ -359,7 +360,7 @@ class ChallengeExtension:
         if config.challenge_interactive_take_role:
             routine = self.bot.bot.rest.remove_role_from_member
 
-        await routine(guild.id, int(user_id), config.challenge_interactive_role)
+        await routine(guild.id, int(user_id), role.id)
 
     async def send_embed(self, channel_id: int, guild_id: int):
         channel = self.bot.bot.cache.get_guild_channel(channel_id)

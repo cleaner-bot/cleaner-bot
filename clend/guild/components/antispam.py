@@ -44,7 +44,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
             info = {
                 "name": "antispam",
                 "initial": False,
-                "mit_name": mit.name,
+                "rule": mit.name,
             }
             active_mitigation.last_triggered = now
             return [
@@ -93,7 +93,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
     info = {
         "name": "antispam",
         "initial": True,
-        "mit_name": mit.name,
+        "rule": mit.name,
         "mit_data": mitigation,
     }
     actions: list[IGuildEvent] = []

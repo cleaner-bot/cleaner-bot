@@ -130,7 +130,7 @@ class ConfigExtension:
                 if space not in data:
                     continue
                 obj = getattr(gd, space)
-                for name, value in data[space]["changes"].items():
+                for name, value in data[space].items():
                     logger.debug(
                         f"changed {space}.{name} to {value!r} ({data['guild_id']})"
                     )

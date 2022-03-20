@@ -29,7 +29,7 @@ def detection(
         return
 
     config = guild.get_config()
-    slowmode_exceptions = set() if config is None else set(config.slowmode_exceptions)
+    slowmode_exceptions = set() if config is None else set(map(int, config.slowmode_exceptions))
 
     user_score = guild_score = 0.0
     current_match_ratio = 1.0

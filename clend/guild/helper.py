@@ -1,5 +1,6 @@
 import hikari
 
+from cleaner_conf.guild import GuildConfig
 from cleaner_i18n.translate import Message
 
 from .guild import CleanerGuild
@@ -62,7 +63,7 @@ def action_challenge(
 
     role = None
     if config is not None and config.challenge_interactive_enabled:
-        role_id = config.challenge_interactive_role
+        role_id = int(config.challenge_interactive_role)
         role = guild.get_role(role_id)
 
     can_timeout = (
@@ -278,10 +279,21 @@ def is_moderator(cguild: CleanerGuild, member: hikari.Member) -> bool:
         return True
     config = cguild.get_config()
     if config is not None:
-        modroles = set(config.overview_modroles)
+        modroles = set(map(int, config.overview_modroles))
         for role in member.get_roles():
             if role.id in modroles:
                 return True
             elif role.permissions & PERM_MOD:
                 return True
     return False
+
+
+def is_exception(config_or_guild: CleanerGuild | GuildConfig, channel_id: int):
+    if isinstance(config_or_guild, CleanerGuild):
+        config = config_or_guild.get_config()
+        if config is None:
+            return False
+    else:
+        config = config_or_guild
+    
+    return str(channel_id) in config.slowmode_exceptions
