@@ -2,7 +2,7 @@ import importlib
 import logging
 import typing
 
-import coredis  # type: ignore
+from coredis import StrictRedis
 import hikari
 
 
@@ -30,7 +30,7 @@ class TheCleaner:
             token=token, intents=intents, cache_settings=cache_settings
         )
         logging.getLogger("clend").setLevel(logging.DEBUG)
-        self.database = coredis.StrictRedis()
+        self.database = StrictRedis()
 
         self.extensions = {}
         self.guild_has_members_cached = set()

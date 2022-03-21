@@ -102,7 +102,7 @@ class AnalyticsExtension:
             return
 
         await database.hset(
-            f"guild:{guild.id}:entitlements", "suspended", msgpack.packb(True)
+            f"guild:{guild.id}:entitlements", {"suspended": msgpack.packb(True)}
         )
         entitlements.suspended = True
 

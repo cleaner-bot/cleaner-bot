@@ -277,7 +277,7 @@ class ChallengeExtension:
                 f"challenge:flow:{flow}:user", interaction.user.id, ex=300
             )
             await self.bot.database.set(
-                f"challenge:flow:{flow}:guild", interaction.guild_id, ex=300
+                f"challenge:flow:{flow}:guild", guild.id, ex=300
             )
 
             component = self.bot.bot.rest.build_action_row()
@@ -324,15 +324,17 @@ class ChallengeExtension:
 
         user_id = await self.bot.database.get(f"challenge:flow:{flow}:user")
         guild_id = await self.bot.database.get(f"challenge:flow:{flow}:guild")
+        if user_id is None or guild_id is None:
+            return  # the flow expired, F
 
         guild = self.bot.bot.cache.get_guild(int(guild_id))
         if guild is None:
-            logger.warning(f"uncached guild: {guild_id}")
+            logger.warning(f"uncached guild: {int(guild_id)}")
             return
         config = self.get_config(guild.id)
 
         if config is None:
-            logger.warning(f"uncached guild settings: {guild_id}")
+            logger.warning(f"uncached guild settings: {guild.id}")
             return
 
         role = guild.get_role(int(config.challenge_interactive_role))
