@@ -295,5 +295,5 @@ def is_exception(config_or_guild: CleanerGuild | GuildConfig, channel_id: int):
             return False
     else:
         config = config_or_guild
-    
+
     return str(channel_id) in config.slowmode_exceptions

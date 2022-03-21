@@ -23,7 +23,9 @@ def detection(
         return
 
     config = guild.get_config()
-    slowmode_exceptions = set() if config is None else set(map(int, config.slowmode_exceptions))
+    slowmode_exceptions = (
+        set() if config is None else set(map(int, config.slowmode_exceptions))
+    )
 
     stickers = 0.0
     stickers_ids = {int(k.id) for k in message.stickers}

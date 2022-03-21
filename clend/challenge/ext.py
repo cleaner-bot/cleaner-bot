@@ -1,6 +1,5 @@
 import asyncio
 import hashlib
-import json
 import logging
 import typing
 
@@ -403,9 +402,7 @@ class ChallengeExtension:
         add_link(component, t("privacy"), "https://cleaner.leodev.xyz/legal/privacy")
 
         embed = hikari.Embed(
-            title=t("title"),
-            description=t("description"),
-            color=0x0284C7
+            title=t("title"), description=t("description"), color=0x0284C7
         )
         await channel.send(embed=embed, component=component)
 
