@@ -149,7 +149,7 @@ class HTTPService:
             coro = routine(ev.guild_id, ev.user_id, ev.role_id)
 
             database = self.bot.database
-            await database.set(f"guild:{ev.guild_id}:user:{ev.user_id}:challenge", "1")
+            await database.sadd(f"guild:{ev.guild_id}:challenged", (ev.user_id,))
 
         elif can_kick:
             message = "log_challenge_kick"

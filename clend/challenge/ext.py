@@ -192,8 +192,8 @@ class ChallengeExtension:
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
-        forced_challenge = await database.exists(
-            f"guild:{guild.id}:user:{member.id}:challenge"
+        forced_challenge = await database.sismember(
+            f"guild:{guild.id}:challenged", member.id
         )
         challenge = True
 
@@ -273,12 +273,11 @@ class ChallengeExtension:
                 f"created flow for {interaction.user.id}@{interaction.guild_id}: {flow}"
             )
 
-            await self.bot.database.set(
-                f"challenge:flow:{flow}:user", interaction.user.id, ex=300
+            await self.bot.database.hset(
+                f"challenge:flow:{flow}",
+                {"user": interaction.user.id, "guild": guild.id},
             )
-            await self.bot.database.set(
-                f"challenge:flow:{flow}:guild", guild.id, ex=300
-            )
+            await self.bot.database.expire(f"challenge:flow:{flow}", 300)
 
             component = self.bot.bot.rest.build_action_row()
             url = f"https://cleaner.leodev.xyz/challenge?flow={flow}"

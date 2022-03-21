@@ -45,7 +45,7 @@ class SyncExtension:
 
     async def new_guild(self, guild: hikari.GatewayGuild):
         database = self.bot.database
-        await database.set(f"guild:{guild.id}:sync:added", "1")
+        await database.hset(f"guild:{guild.id}:sync", {"added": 1})
         await self.sync_myself(guild)
         await self.sync_roles(guild)
         await self.sync_channels(guild)
@@ -90,7 +90,7 @@ class SyncExtension:
         data = {"permissions": {k.name: True for k in perms}}
 
         database = self.bot.database
-        await database.set(f"guild:{guild.id}:sync:myself", msgpack.packb(data))
+        await database.hset(f"guild:{guild.id}:sync", {"myself": msgpack.packb(data)})
 
     async def sync_roles(self, guild: hikari.GatewayGuild):
         me = guild.get_my_member()
@@ -112,7 +112,7 @@ class SyncExtension:
         ]
 
         database = self.bot.database
-        await database.set(f"guild:{guild.id}:sync:roles", msgpack.packb(data))
+        await database.hset(f"guild:{guild.id}:sync", {"roles": msgpack.packb(data)})
 
     async def sync_channels(self, guild: hikari.GatewayGuild):
         me = guild.get_my_member()
@@ -130,4 +130,4 @@ class SyncExtension:
         ]
 
         database = self.bot.database
-        await database.set(f"guild:{guild.id}:sync:channels", msgpack.packb(data))
+        await database.hset(f"guild:{guild.id}:sync", {"channels": msgpack.packb(data)})
