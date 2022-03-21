@@ -85,7 +85,7 @@ class ConfigExtension:
 
     async def fetch_dict(self, key: str, keys: typing.Sequence[str]):
         database = self.bot.database
-        values = await database.hmget(key, *keys)
+        values = await database.hmget(key, keys)
         return {k: msgpack.unpackb(v) for k, v in zip(keys, values) if v is not None}
 
     def get_config(self, guild_id: int) -> GuildConfig | None:

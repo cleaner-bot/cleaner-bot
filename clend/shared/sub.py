@@ -1,7 +1,7 @@
 import typing
 import logging
 
-from coredis.pubsub import PubSub  # type: ignore
+from coredis.commands.pubsub import PubSub  # type: ignore
 
 
 logger = logging.getLogger(__name__)
