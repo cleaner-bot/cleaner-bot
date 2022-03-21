@@ -23,9 +23,7 @@ class SlashExtension:
 
     async def on_interaction_create(self, event: hikari.InteractionCreateEvent):
         interaction = event.interaction
-        if not isinstance(interaction, hikari.CommandInteraction):
-            return
-
+        
         age = (utc_datetime() - interaction.created_at).total_seconds()
         if age > 3:
             logger.error(f"received interaction that is older than 3s ({age:.3f}s)")
@@ -33,6 +31,9 @@ class SlashExtension:
             logger.warning(f"received interaction that is older than 1s ({age:.3f}s)")
         else:
             logger.debug(f"got interaction with age {age:.3f}s")
+
+        if not isinstance(interaction, hikari.CommandInteraction):
+            return
 
         try:
             if interaction.command_name == "about":

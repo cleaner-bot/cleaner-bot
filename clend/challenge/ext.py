@@ -125,14 +125,6 @@ class ChallengeExtension:
         elif not interaction.custom_id.startswith("challenge"):
             return
 
-        age = (utc_datetime() - interaction.created_at).total_seconds()
-        if age > 3:
-            logger.error(f"received interaction that is older than 3s ({age:.3f}s)")
-        elif age > 1:
-            logger.warning(f"received interaction that is older than 1s ({age:.3f}s)")
-        else:
-            logger.debug(f"got interaction with age {age:.3f}s")
-
         try:
             await self.create_flow(interaction)
         except Exception as e:
