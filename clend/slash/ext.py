@@ -1,4 +1,5 @@
 import logging
+import os
 import typing
 
 import hikari
@@ -23,7 +24,7 @@ class SlashExtension:
 
     async def on_interaction_create(self, event: hikari.InteractionCreateEvent):
         interaction = event.interaction
-        
+
         age = (utc_datetime() - interaction.created_at).total_seconds()
         if age > 3:
             logger.error(f"received interaction that is older than 3s ({age:.3f}s)")
@@ -32,14 +33,24 @@ class SlashExtension:
         else:
             logger.debug(f"got interaction with age {age:.3f}s")
 
-        if not isinstance(interaction, hikari.CommandInteraction):
+        coro = None
+        if isinstance(interaction, hikari.CommandInteraction):
+            if interaction.command_name == "about":
+                coro = self.handle_about(interaction)
+            elif interaction.command_name == "dashboard":
+                coro = self.handle_dashboard(interaction)
+            elif interaction.command_name == "login":
+                coro = self.handle_login(interaction)
+        
+        elif isinstance(interaction, hikari.ComponentInteraction):
+            if interaction.custom_id == "login":
+                coro = self.handle_login_button(interaction)
+
+        if coro is None:
             return
 
         try:
-            if interaction.command_name == "about":
-                await self.handle_about(interaction)
-            elif interaction.command_name == "dashboard":
-                await self.handle_dashboard(interaction)
+            await coro
         except Exception as e:
             logger.exception("Error occured during component interaction", exc_info=e)
             await interaction.create_initial_response(
@@ -100,6 +111,50 @@ class SlashExtension:
         await interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_CREATE,
             t("content") + (f"\n\n{note}" if note is not None else ""),
+            component=component,
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+
+    async def handle_login(self, interaction: hikari.CommandInteraction):
+        locale = interaction.locale
+        t = lambda s: translate(locale, f"slash_login_{s}")  # noqa E731
+        database = self.bot.database
+
+        if not await database.exists((f"user:{interaction.user.id}:oauth:token",)):
+            return await interaction.create_initial_response(
+                hikari.ResponseType.MESSAGE_CREATE,
+                t("nosession"),
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+
+        component = interaction.app.rest.build_action_row()
+        (
+            component.add_button(hikari.ButtonStyle.DANGER, "login")
+            .set_label(t("proceed"))
+            .add_to_container()
+        )
+
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_CREATE,
+            t("content"),
+            component=component,
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+
+    async def handle_login_button(self, interaction: hikari.ComponentInteraction):
+        locale = interaction.locale
+        t = lambda s: translate(locale, f"slash_login_{s}")  # noqa E731
+        database = self.bot.database
+
+        code = os.urandom(32).hex()
+        await database.set(f"remote-auth:{code}", interaction.user.id, ex=300)
+
+        component = interaction.app.rest.build_action_row()
+        add_link(component, "Login", f"https://cleaner.leodev.xyz/remote-auth?code={code}")
+
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_UPDATE,
+            t("success"),
             component=component,
             flags=hikari.MessageFlag.EPHEMERAL,
         )

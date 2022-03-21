@@ -98,6 +98,9 @@ class DevExtension:
             event.app.rest.slash_command_builder(
                 "dashboard", "Get a link to the dashboard of this server"
             ),
+            event.app.rest.slash_command_builder(
+                "login", "Create a link to login immediately (useful for phones)"
+            ),
         ]
 
         me = self.bot.bot.get_me()
