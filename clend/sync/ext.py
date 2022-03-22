@@ -52,12 +52,7 @@ class SyncExtension:
 
     async def on_destroy_guild(self, event: hikari.GuildLeaveEvent):
         database = self.bot.database
-        await database.delete(
-            *(
-                f"guild:{event.guild_id}:sync:{x}"
-                for x in ("added", "myself", "roles", "channels")
-            )
-        )
+        await database.delete((f"guild:{event.guild_id}:sync",))
 
     async def on_update_role(self, event: hikari.RoleEvent):
         # TODO: add role.get_guild() to hikari
