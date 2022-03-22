@@ -2,7 +2,7 @@ import typing
 
 import hikari
 
-from . import similar, exact, token, sticker
+from . import similar, exact, token, sticker, attachment
 from ...guild import CleanerGuild
 
 
@@ -20,5 +20,6 @@ mitigations = [
     MitigationSystem("traffic.exact", exact.match, exact.detection, 120),
     MitigationSystem("traffic.token", token.match, token.detection, 120),
     MitigationSystem("traffic.sticker", sticker.match, sticker.detection, 0),
+    MitigationSystem("traffic.attachment", attachment.match, attachment.detection, 0),
 ]
 mitigationsd = {mit.name: mit for mit in mitigations}
