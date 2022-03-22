@@ -24,7 +24,6 @@ class SlashExtension:
 
     async def on_interaction_create(self, event: hikari.InteractionCreateEvent):
         interaction = event.interaction
-
         age = (utc_datetime() - interaction.created_at).total_seconds()
         if age > 3:
             logger.error(f"received interaction that is older than 3s ({age:.3f}s)")
@@ -41,10 +40,13 @@ class SlashExtension:
                 coro = self.handle_dashboard(interaction)
             elif interaction.command_name == "login":
                 coro = self.handle_login(interaction)
-        
+
         elif isinstance(interaction, hikari.ComponentInteraction):
             if interaction.custom_id == "login":
                 coro = self.handle_login_button(interaction)
+
+        else:
+            return
 
         if coro is None:
             return
@@ -53,9 +55,12 @@ class SlashExtension:
             await coro
         except Exception as e:
             logger.exception("Error occured during component interaction", exc_info=e)
-            await interaction.create_initial_response(
+            # mypy is being weird here, thinking that interaction is PartialInteraction
+            await interaction.create_initial_response(  # type: ignore
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=translate(interaction.locale, "slash_internal_error"),
+                content=translate(
+                    interaction.locale, "slash_internal_error"  # type: ignore
+                ),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
@@ -150,7 +155,9 @@ class SlashExtension:
         await database.set(f"remote-auth:{code}", interaction.user.id, ex=300)
 
         component = interaction.app.rest.build_action_row()
-        add_link(component, "Login", f"https://cleaner.leodev.xyz/remote-auth?code={code}")
+        add_link(
+            component, "Login", f"https://cleaner.leodev.xyz/remote-auth?code={code}"
+        )
 
         await interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_UPDATE,

@@ -4,7 +4,6 @@ import logging
 import typing
 
 import hikari
-from hikari.internal.time import utc_datetime
 import msgpack  # type: ignore
 
 from cleaner_conf.guild import GuildConfig, GuildEntitlements
