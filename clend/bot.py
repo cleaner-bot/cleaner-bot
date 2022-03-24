@@ -18,6 +18,8 @@ class TheCleaner:
     def __init__(self, token: str) -> None:
         intents = hikari.Intents.ALL_GUILDS_UNPRIVILEGED | hikari.Intents.GUILD_MEMBERS
 
+        # have import from hikari.api.config in dev108
+        # from hikari.api.config import CacheSettings, CacheComponents
         cache_settings = hikari.CacheSettings()
         cache_settings.components = (
             hikari.CacheComponents.GUILDS
