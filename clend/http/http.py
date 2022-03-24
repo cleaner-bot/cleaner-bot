@@ -10,7 +10,7 @@ import janus
 import msgpack  # type: ignore
 
 from cleaner_conf.guild import GuildConfig
-from cleaner_i18n.translate import Message
+from cleaner_i18n.translate import Message, translate
 from expirepy import ExpiringSet, ExpiringDict
 
 from .metrics import Metrics, metrics_reader
@@ -31,13 +31,13 @@ logger = logging.getLogger(__name__)
 REQUIRED_TO_SEND = hikari.Permissions.VIEW_CHANNEL | hikari.Permissions.SEND_MESSAGES
 
 
-def format_log(log: ILog):
+def format_log(log: ILog, locale: str):
     now = datetime.utcnow()
     time_string = now.strftime("%H:%M:%S")
     reason = ""
     if log.reason:
-        reason = f"` Reason ` {log.reason.translate('en-US')}\n"
-    return f"`{time_string}` {log.message.translate('en-US')}\n{reason}"
+        reason = f"` Reason ` {log.reason.translate(locale)}\n"
+    return f"`{time_string}` {log.message.translate(locale)}\n{reason}"
 
 
 class HTTPService:
@@ -241,7 +241,8 @@ class HTTPService:
             self.log_queue.put_nowait(ILog(ev.guild_id, translated))
             return
 
-        announcement = ev.announcement.translate("en-US")
+        guild = self.bot.bot.cache.get_guild(ev.guild_id)
+        announcement = ev.announcement.translate("en-US" if guild is None else guild.preferred_locale)
         message = await self.bot.bot.rest.create_message(ev.channel_id, announcement)
         if ev.delete_after > 0:
             await asyncio.sleep(ev.delete_after)
@@ -276,10 +277,15 @@ class HTTPService:
 
             sends = []
             for guild_id, logs in guilds.items():
+                guild = self.bot.bot.cache.get_guild(guild_id)
+                locale = "en-US" if guild is None else guild.preferred_locale
+
                 referenced_message = None
+                result = []
                 length = 0
                 for i, log in enumerate(logs):
-                    log_length = len(format_log(log))
+                    formatted_log = format_log(log, locale)
+                    log_length = len(formatted_log)
                     if log_length + length > 2000:
                         break
                     length += log_length
@@ -288,10 +294,10 @@ class HTTPService:
                         and log.referenced_message is not None
                     ):
                         referenced_message = log.referenced_message
-                    i += 1
+                    result.append(formatted_log)
 
-                guilds[guild_id] = logs[i:]
-                message = "".join(format_log(x) for x in logs[:i])
+                guilds[guild_id] = logs[i + 1:]
+                message = "".join(result)
 
                 embed = hikari.UNDEFINED
                 if referenced_message is not None:
@@ -299,7 +305,7 @@ class HTTPService:
                         hikari.Embed(
                             description=referenced_message.content, color=0xF43F5E
                         )
-                        .set_author(name="Deleted message")
+                        .set_author(name=translate(locale, "log_embed_deleted"))
                         .set_footer(
                             text=(
                                 f"{referenced_message.author} "
@@ -310,7 +316,7 @@ class HTTPService:
                             ),
                         )
                         .add_field(
-                            name="Channel",
+                            name=translate(locale, "log_embed_channel"),
                             value=(
                                 f"<#{referenced_message.channel_id}> "
                                 f"({referenced_message.channel_id})"
@@ -321,7 +327,7 @@ class HTTPService:
                         sticker = referenced_message.stickers[0]
                         embed.set_image(sticker.image_url)
                         embed.add_field(
-                            name="Sticker", value=f"{sticker.name} ({sticker.id})"
+                            name=translate(locale, "log_embed_sticker"), value=f"{sticker.name} ({sticker.id})"
                         )
 
                 config = self.get_config(guild_id)
