@@ -157,6 +157,12 @@ class ChallengeExtension:
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
+        act = (
+            t("action_take")
+            if config.challenge_interactive_take_role
+            else t("action_give")
+        )
+
         challenge_interactive_role = int(config.challenge_interactive_role)
         if not config.challenge_interactive_enabled:
             return await interaction.create_initial_response(
@@ -165,7 +171,6 @@ class ChallengeExtension:
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
         elif not challenge_interactive_role:
-            act = "take" if config.challenge_interactive_take_role else "give"
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("no_role", action=act),
@@ -195,21 +200,18 @@ class ChallengeExtension:
 
         role = guild.get_role(challenge_interactive_role)
         if role is None:
-            act = "take" if config.challenge_interactive_take_role else "give"
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("role_gone", action=act),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
         elif role.is_managed:
-            act = "take" if config.challenge_interactive_take_role else "give"
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("role_managed", action=act, role=role.id),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
         elif role.position == 0:
-            act = "take" if config.challenge_interactive_take_role else "give"
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("role_everyone", action=act),
@@ -237,7 +239,6 @@ class ChallengeExtension:
                 "https://cleaner.leodev.xyz/help/hierarchy",
             )
 
-            act = "take" if config.challenge_interactive_take_role else "give"
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("hierarchy", action=act, role=role.id),
@@ -251,7 +252,6 @@ class ChallengeExtension:
             elif my_role.permissions & hikari.Permissions.MANAGE_ROLES:
                 break
         else:
-            act = "take" if config.challenge_interactive_take_role else "give"
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("no_perms", action=act),
