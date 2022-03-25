@@ -242,7 +242,9 @@ class HTTPService:
             return
 
         guild = self.bot.bot.cache.get_guild(ev.guild_id)
-        announcement = ev.announcement.translate("en-US" if guild is None else guild.preferred_locale)
+        announcement = ev.announcement.translate(
+            "en-US" if guild is None else guild.preferred_locale
+        )
         message = await self.bot.bot.rest.create_message(ev.channel_id, announcement)
         if ev.delete_after > 0:
             await asyncio.sleep(ev.delete_after)
@@ -296,7 +298,7 @@ class HTTPService:
                         referenced_message = log.referenced_message
                     result.append(formatted_log)
 
-                guilds[guild_id] = logs[i + 1:]
+                guilds[guild_id] = logs[i + 1 :]
                 message = "".join(result)
 
                 embed = hikari.UNDEFINED
@@ -327,7 +329,8 @@ class HTTPService:
                         sticker = referenced_message.stickers[0]
                         embed.set_image(sticker.image_url)
                         embed.add_field(
-                            name=translate(locale, "log_embed_sticker"), value=f"{sticker.name} ({sticker.id})"
+                            name=translate(locale, "log_embed_sticker"),
+                            value=f"{sticker.name} ({sticker.id})",
                         )
 
                 config = self.get_config(guild_id)

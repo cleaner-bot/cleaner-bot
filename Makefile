@@ -9,7 +9,7 @@ coverage:
 	coverage report -m
 
 lint:
-	flake8 . --max-line-length 88 --exclude build
+	flake8 . --max-line-length 88 --exclude build --ignore=E203,W503
 	mypy . --exclude build
 	codespell . --skip ".*"
 
