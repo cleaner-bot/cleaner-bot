@@ -3,7 +3,7 @@ python-Levenshtein==0.12.2
 coredis>=3.0,<3.2
 quickjs>=1.16,<1.18
 emoji>=1.6,<1.8
-python-dotenv>=0.19,<0.20
+python-dotenv>=0.19,<0.21
 sentry_sdk>=1.5,<1.6
 janus>=1.0,<1.1
 msgpack>=1,<1.1
