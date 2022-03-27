@@ -40,7 +40,9 @@ class AnalyticsExtension:
             .set_thumbnail(event.guild.make_icon_url())
             .add_field(name="Name", value=event.guild.name)
             .add_field(name="Members", value=str(event.guild.member_count))
-            .add_field(name="Features", value=str(event.guild.features))
+            .add_field(
+                name="Features", value=", ".join(x.name for x in event.guild.features)
+            )
             .set_footer(str(event.guild_id))
         )
         if event.guild.vanity_url_code:
@@ -58,11 +60,14 @@ class AnalyticsExtension:
             .set_author(name="Left guild!")
             .set_footer(str(event.guild_id))
         )
-        if event.old_guild:
+        if event.old_guild is not None:
             embed.set_thumbnail(event.old_guild.make_icon_url())
             embed.add_field(name="Name", value=event.old_guild.name)
             embed.add_field(name="Members", value=str(event.old_guild.member_count))
-            embed.add_field(name="Features", value=str(event.old_guild.features))
+            embed.add_field(
+                name="Features",
+                value=", ".join(x.name for x in event.old_guild.features),
+            )
             if event.old_guild.vanity_url_code:
                 vanity = event.old_guild.vanity_url_code
                 embed.add_field("Vanity Invite", f"https://discord.gg/{vanity}")
