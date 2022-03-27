@@ -402,7 +402,7 @@ class HTTPService:
             "ping.broad",
             "ping.hidden",
         )
-        advertisement = ("advertisement.discord.server",)
+        advertisement = ("advertisement.discord.invite",)
         other = ("selfbot.embed", "emoji.mass")
         all_rules = phishing_rules + ping + advertisement + other
 

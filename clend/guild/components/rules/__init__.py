@@ -21,7 +21,7 @@ firewall_rules = [
     FirewallRule("ping.roles", ping.ping_roles),
     FirewallRule("ping.broad", ping.ping_broad),
     FirewallRule("ping.hidden", ping.ping_hidden),
-    FirewallRule("advertisement.discord.server", advertisement.advertisement_discord),
+    FirewallRule("advertisement.discord.invite", advertisement.advertisement_discord),
     FirewallRule("emoji.mass", other.emoji_mass),
     FirewallRule("selfbot.embed", other.selfbot_embed),
 ]
