@@ -1,9 +1,11 @@
 import logging
 import os
 import typing
+from urllib.parse import urlencode
 
 import hikari
 from hikari.internal.time import utc_datetime
+from hikari.urls import BASE_URL
 
 from cleaner_i18n.translate import translate
 
@@ -38,6 +40,8 @@ class SlashExtension:
                 coro = self.handle_about(interaction)
             elif interaction.command_name == "dashboard":
                 coro = self.handle_dashboard(interaction)
+            elif interaction.command_name == "invite":
+                coro = self.handle_invite(interaction)
             elif interaction.command_name == "login":
                 coro = self.handle_login(interaction)
 
@@ -116,6 +120,43 @@ class SlashExtension:
         await interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_CREATE,
             t("content") + (f"\n\n{note}" if note is not None else ""),
+            component=component,
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+
+    async def handle_invite(self, interaction: hikari.CommandInteraction):
+        base = "/oauth2/authorize"
+        permissions = (
+            hikari.Permissions.BAN_MEMBERS
+            | hikari.Permissions.KICK_MEMBERS
+            | hikari.Permissions.SEND_MESSAGES
+            | hikari.Permissions.VIEW_CHANNEL
+            | hikari.Permissions.EMBED_LINKS
+            | hikari.Permissions.MANAGE_MESSAGES
+            | hikari.Permissions.MANAGE_GUILD
+            | hikari.Permissions.MANAGE_CHANNELS
+            | hikari.Permissions.MANAGE_ROLES
+            | hikari.Permissions.MANAGE_NICKNAMES
+            | hikari.Permissions.MODERATE_MEMBERS
+        )
+        query = {
+            "client_id": "823533449717481492",
+            "redirect_uri": "https://cleaner.leodev.xyz/oauth-comeback",
+            "response_type": "code",
+            "scope": " ".join(
+                ["identify", "guilds", "email", "bot", "applications.commands"]
+            ),
+            "state": "1",
+            "prompt": "none",
+            "permissions": str(int(permissions)),
+        }
+
+        url = f"{BASE_URL}{base}?{urlencode(query)}"
+        component = interaction.app.rest.build_action_row()
+        add_link(component, "Invite link", url)
+
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_CREATE,
             component=component,
             flags=hikari.MessageFlag.EPHEMERAL,
         )
