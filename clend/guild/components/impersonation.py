@@ -18,7 +18,7 @@ def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
     reason: Message | None = None
     name: str | None = None
 
-    if config.impersonation_discord and (
+    if config.impersonation_discord_enabled and (
         is_name_blacklisted(event.user.username)
         or event.user.avatar_hash in avatar_blacklist
     ):
