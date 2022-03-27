@@ -2,7 +2,7 @@ import hikari
 
 
 def has_unescaped(content: str, key: str) -> bool:
-    current_position = None
+    current_position: int | None = None
     while current_position is None or current_position < len(content):
         try:
             current_position = content.index(
