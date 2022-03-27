@@ -1,8 +1,8 @@
 from . import (
     antispam,
     dehoist,
-    discord_impersonation,
     firewall,
+    impersonation,
     log,
     slowmode,
 )
@@ -11,7 +11,7 @@ from . import (
 components = [
     antispam,
     dehoist,
-    discord_impersonation,
+    impersonation,
     firewall,
     log,
     slowmode,
