@@ -4,7 +4,7 @@ import typing
 import queue
 
 from cleaner_conf.guild import GuildConfig, GuildEntitlements
-from expirepy import ExpiringList, ExpiringSum, ExpiringCounter
+from expirepy import ExpiringList, ExpiringCounter
 
 from ..bot import TheCleaner
 from ..shared.event import IGuildEvent
@@ -31,7 +31,7 @@ class CleanerGuild:
         self.messages = ExpiringList(expires=30)
         self.message_count = {}
         self.current_slowmode = {}
-        self.member_joins = ExpiringSum(expires=300)
+        self.member_joins = ExpiringCounter(expires=300)
         self.active_mitigations = []
 
     def evict_cache(self):

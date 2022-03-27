@@ -1,4 +1,5 @@
 from . import (
+    antiraid,
     antispam,
     dehoist,
     firewall,
@@ -9,6 +10,7 @@ from . import (
 
 
 components = [
+    antiraid,
     antispam,
     dehoist,
     impersonation,
