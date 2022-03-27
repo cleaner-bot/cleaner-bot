@@ -1,6 +1,24 @@
 import hikari
 
 
+def has_unescaped(content: str, key: str) -> bool:
+    current_position = None
+    while current_position is None or current_position < len(content):
+        try:
+            current_position = content.index(
+                key, None if current_position is None else current_position + 1
+            )
+        except ValueError:
+            break
+        before, after = content[:current_position], content[current_position:]
+        if before.count("`") % 2 == 0:
+            return True
+        elif after.count("`") == 0:
+            return True
+
+    return False
+
+
 def ping_users_many(message: hikari.Message, guild) -> bool:
     if message.mentions.user_ids is hikari.UNDEFINED:
         return False
@@ -25,7 +43,9 @@ def ping_roles(message: hikari.Message, guild) -> bool:
 def ping_broad(message: hikari.Message, guild) -> bool:
     if not message.content or message.mentions.everyone:
         return False
-    return "@everyone" in message.content or "@here" in message.content
+    return has_unescaped(message.content, "@everyone") or has_unescaped(
+        message.content, "@here"
+    )
 
 
 def ping_hidden(message: hikari.Message, guild) -> bool:
