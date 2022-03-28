@@ -61,6 +61,8 @@ class DevExtension:
             await self.handle_stop(event)
         elif event.content in ("clean!register-slash", "clean!register-slash-global"):
             await self.handle_register_slash(event)
+        elif event.content == "clean!info":
+            await self.handle_info(event)
 
     async def handle_ping(self, event: hikari.GuildMessageCreateEvent):
         sent = datetime.utcnow().replace(tzinfo=timezone.utc)
@@ -116,6 +118,19 @@ class DevExtension:
         )
 
         await event.message.respond("done")
+    
+    async def handle_info(self, event: hikari.GuildMessageCreateEvent):
+        bot = self.bot.bot
+        guilds = len(bot.cache.get_guilds_view())
+        users = len(bot.cache.get_users_view())
+        members = sum(len(bot.cache.get_members_view_for_guild(guild)) for guild in bot.cache.get_guilds_view())
+        await event.message.respond(
+            f"__Total__:\n"
+            f"Guilds: {guilds}\n\n"
+            f"__Cache stats__\n"
+            f"Users: {users}\n"
+            f"Members: {members}\n"
+        )
 
 
 extension = DevExtension
