@@ -26,6 +26,7 @@ class TheCleaner:
             | CacheComponents.GUILD_CHANNELS
             | CacheComponents.ROLES
             | CacheComponents.MEMBERS
+            | CacheComponents.ME
         )
 
         self.bot = hikari.GatewayBot(
