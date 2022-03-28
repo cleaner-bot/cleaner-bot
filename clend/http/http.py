@@ -217,7 +217,9 @@ class HTTPService:
                     message = "log_nickname_failure"
             else:
                 message = "log_nickname_reset_success"
-                coro = self.bot.bot.rest.edit_member(ev.guild_id, ev.user_id, nick=None)
+                coro = self.bot.bot.rest.edit_member(
+                    ev.guild_id, ev.user_id, nickname=None
+                )
 
         translated = Message(message, {"user": ev.user_id})
         self.log_queue.put_nowait(ILog(ev.guild_id, translated, ev.reason))

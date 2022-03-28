@@ -188,12 +188,7 @@ def announcement(
     announcement: Message,
     delete_after: float,
 ) -> IActionAnnouncement:
-    # TODO: use once hikari-py/hikari#1057 lands in stable
-    # guild = channel.get_guild()
-    if isinstance(channel.app, hikari.CacheAware):
-        guild = channel.app.cache.get_guild(channel.guild_id)
-    else:
-        guild = None
+    guild = channel.get_guild()
 
     if guild is None:
         return IActionAnnouncement(
@@ -233,12 +228,7 @@ def announcement(
 def change_ratelimit(
     channel: hikari.TextableGuildChannel, ratelimit: int
 ) -> IActionChannelRatelimit:
-    # TODO: use once hikari-py/hikari#1057 lands in stable
-    # guild = channel.get_guild()
-    if isinstance(channel.app, hikari.CacheAware):
-        guild = channel.app.cache.get_guild(channel.guild_id)
-    else:
-        guild = None
+    guild = channel.get_guild()
 
     if guild is None:
         return IActionChannelRatelimit(
