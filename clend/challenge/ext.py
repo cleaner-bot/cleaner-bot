@@ -19,6 +19,24 @@ from ..shared.risk import calculate_risk_score
 
 logger = logging.getLogger(__name__)
 REQUIRED_TO_SEND = hikari.Permissions.VIEW_CHANNEL | hikari.Permissions.SEND_MESSAGES
+DANGEROUS_PERMISSIONS = (
+    hikari.Permissions.KICK_MEMBERS
+    | hikari.Permissions.BAN_MEMBERS
+    | hikari.Permissions.ADMINISTRATOR
+    | hikari.Permissions.MANAGE_CHANNELS
+    | hikari.Permissions.MANAGE_GUILD
+    | hikari.Permissions.MANAGE_MESSAGES
+    | hikari.Permissions.MUTE_MEMBERS
+    | hikari.Permissions.DEAFEN_MEMBERS
+    | hikari.Permissions.MOVE_MEMBERS
+    | hikari.Permissions.MANAGE_NICKNAMES
+    | hikari.Permissions.MANAGE_ROLES
+    | hikari.Permissions.MANAGE_WEBHOOKS
+    | hikari.Permissions.MANAGE_EMOJIS_AND_STICKERS
+    # | hikari.Permissions.MANAGE_EVENTS
+    | hikari.Permissions.MANAGE_THREADS
+    | hikari.Permissions.MODERATE_MEMBERS
+)
 
 
 def get_min_risk(config: GuildConfig, entitlements: GuildEntitlements) -> float | None:
@@ -217,6 +235,21 @@ class ChallengeExtension:
                 content=t("role_everyone", action=act),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
+        elif role.permissions & DANGEROUS_PERMISSIONS:
+            component = self.bot.bot.rest.build_action_row()
+            add_link(
+                component,
+                t("role_dangerous_link"),
+                "https://cleaner.leodev.xyz/help/role-restrictions"
+                "#dangerous-permissions",
+            )
+
+            return await interaction.create_initial_response(
+                hikari.ResponseType.MESSAGE_CREATE,
+                content=t("role_dangerous", action=act),
+                component=component,
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
 
         me = guild.get_my_member()
         if me is None:
@@ -328,7 +361,12 @@ class ChallengeExtension:
             return
 
         role = guild.get_role(int(config.challenge_interactive_role))
-        if role is None or role.is_managed or role.position == 0:
+        if (
+            role is None
+            or role.is_managed
+            or role.position == 0
+            or role.permissions & DANGEROUS_PERMISSIONS
+        ):
             return
 
         me = guild.get_my_member()
