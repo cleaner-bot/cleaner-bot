@@ -16,6 +16,7 @@ class DevExtension:
     def __init__(self, bot: TheCleaner) -> None:
         self.bot = bot
         self.extensions = [
+            "clend.timer",
             "clend.conf",
             "clend.http",
             "clend.guild",
