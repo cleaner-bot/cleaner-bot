@@ -345,8 +345,9 @@ class ChallengeExtension:
     async def verify_flow(self, flow: str):
         logger.debug(f"flow has been solved: {flow}")
 
-        user_id = await self.bot.database.get(f"challenge:flow:{flow}:user")
-        guild_id = await self.bot.database.get(f"challenge:flow:{flow}:guild")
+        user_id, guild_id = await self.bot.database.hmget(
+            f"challenge:flow:{flow}", ("user", "guild")
+        )
         if user_id is None or guild_id is None:
             return  # the flow expired, F
 
