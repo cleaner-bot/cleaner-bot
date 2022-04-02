@@ -382,6 +382,7 @@ class HTTPService:
                 loop = asyncio.get_running_loop()
                 data = await loop.run_in_executor(None, self.gather_radar_data)
                 await database.set("radar", msgpack.packb(data))
+                last_update = now
 
     def get_config(self, guild_id: int) -> GuildConfig | None:
         conf = self.bot.extensions.get("clend.conf", None)
