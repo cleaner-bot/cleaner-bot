@@ -391,6 +391,7 @@ class ChallengeExtension:
             routine = self.bot.bot.rest.remove_role_from_member
 
         await routine(guild.id, int(user_id), role.id)
+        await self.bot.database.delete((f"challenge:flow:{flow}",))
 
     async def send_embed(self, channel_id: int, guild_id: int):
         channel = self.bot.bot.cache.get_guild_channel(channel_id)
