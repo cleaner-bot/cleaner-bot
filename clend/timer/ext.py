@@ -30,7 +30,7 @@ class TimerExtension:
     async def timerd(self):
         sequence = 0
         while True:
-            event = TimerEvent(sequence)
+            event = TimerEvent(self.bot.bot, sequence=sequence)
             self.bot.bot.dispatch(event)
             sequence += 1
 
