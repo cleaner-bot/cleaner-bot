@@ -21,6 +21,7 @@ class DevExtension:
             "clend.http",
             "clend.guild",
             "clend.challenge",
+            "clend.verification",
             "clend.sync",
             "clend.slash",
             "clend.analytics",
