@@ -67,7 +67,8 @@ def action_challenge(
         role = guild.get_role(role_id)
 
     can_timeout = (
-        his_perms & hikari.Permissions.ADMINISTRATOR == 0
+        (config is None or config.challenge_timeout_enabled)
+        and his_perms & hikari.Permissions.ADMINISTRATOR == 0
         and my_perms & PERM_TIMEOUT > 0
     )
     can_role = (
@@ -77,7 +78,7 @@ def action_challenge(
         and toprole_me.position > role.position
         and (
             config is None
-            or (role.id in member.role_ids) == config.challenge_interactive_take_role
+            or (role.id not in member.role_ids) == config.challenge_interactive_take_role
         )
     )
     action = IActionChallenge(
