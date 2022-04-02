@@ -236,7 +236,7 @@ class ChallengeExtension:
             add_link(
                 component,
                 t("hierarchy_link"),
-                "https://cleaner.leodev.xyz/help/hierarchy",
+                "https://cleaner.leodev.xyz/help/role-restrictions#hierarchy",
             )
 
             return await interaction.create_initial_response(
