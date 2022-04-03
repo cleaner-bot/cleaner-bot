@@ -8,6 +8,7 @@ import msgpack  # type: ignore
 from ..bot import TheCleaner
 from ..shared.channel_perms import permissions_for
 from ..shared.protect import protected_call
+from ..shared.dangerous import DANGEROUS_PERMISSIONS
 
 
 logger = logging.getLogger(__name__)
@@ -102,7 +103,8 @@ class SyncExtension:
                 "name": role.name,
                 "id": str(role.id),
                 "can_control": not role.is_managed
-                and top_role_position > role.position > 0,
+                and top_role_position > role.position > 0
+                and role.permissions & DANGEROUS_PERMISSIONS == 0,
                 "is_managed": role.is_managed or role.position == 0,
             }
             for role in guild.get_roles().values()
