@@ -78,7 +78,7 @@ def action_challenge(
         and toprole_me.position > role.position
         and (
             config is None
-            or (role.id not in member.role_ids) == config.challenge_interactive_take_role
+            or (role.id in member.role_ids) != config.challenge_interactive_take_role
         )
     )
     action = IActionChallenge(

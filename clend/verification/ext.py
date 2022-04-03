@@ -58,13 +58,17 @@ class VerificationExtension:
             self.task.cancel()
 
     async def on_member_create(self, event: hikari.MemberCreateEvent):
-        await self.bot.database.set(f"guild:{event.guild_id}:user:{event.user_id}:verification", "1", ex=600)
+        await self.bot.database.set(
+            f"guild:{event.guild_id}:user:{event.user_id}:verification", "1", ex=600
+        )
         if event.guild_id not in self.kicks:
             self.kicks[event.guild_id] = {}
         self.kicks[event.guild_id][event.user_id] = time.monotonic()
-    
+
     async def on_member_delete(self, event: hikari.MemberDeleteEvent):
-        await self.bot.database.delete(f"guild:{event.guild_id}:user:{event.user_id}:verification")
+        await self.bot.database.delete(
+            f"guild:{event.guild_id}:user:{event.user_id}:verification"
+        )
         if event.guild_id not in self.kicks:
             return
         kicks = self.kicks[event.guild_id]
@@ -99,13 +103,13 @@ class VerificationExtension:
                 action = IActionChallenge(
                     guild_id,
                     user_id,
-                    False, # block
-                    False, # can_ban
-                    True, # can_kick
-                    False, # can_timeout
-                    False, # can_role
-                    False, # take_role
-                    0, # role_id
+                    False,  # block
+                    False,  # can_ban
+                    True,  # can_kick
+                    False,  # can_timeout
+                    False,  # can_role
+                    False,  # take_role
+                    0,  # role_id
                     message,
                     info,
                 )
@@ -155,13 +159,17 @@ class VerificationExtension:
         if config is None:
             logger.warning(f"uncached guild settings: {guild.id}")
             return
-        
+
         if not config.verification_enabled:
             return
-        elif not await self.bot.database.exists((f"guild:{guild_id}:user:{user_id}:verification",)):
+        elif not await self.bot.database.exists(
+            (f"guild:{guild_id}:user:{user_id}:verification",)
+        ):
             return
-        
-        await self.bot.database.delete((f"guild:{guild_id}:user:{user_id}:verification",))
+
+        await self.bot.database.delete(
+            (f"guild:{guild_id}:user:{user_id}:verification",)
+        )
         if guild_id in self.kicks:  # bot might've restarted
             kicks = self.kicks[guild_id]
             if user_id in kicks:
