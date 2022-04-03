@@ -15,28 +15,11 @@ from ..shared.channel_perms import permissions_for
 from ..shared.protect import protect, protected_call
 from ..shared.sub import listen as pubsub_listen, Message
 from ..shared.risk import calculate_risk_score
+from ..shared.dangerous import DANGEROUS_PERMISSIONS
 
 
 logger = logging.getLogger(__name__)
 REQUIRED_TO_SEND = hikari.Permissions.VIEW_CHANNEL | hikari.Permissions.SEND_MESSAGES
-DANGEROUS_PERMISSIONS = (
-    hikari.Permissions.KICK_MEMBERS
-    | hikari.Permissions.BAN_MEMBERS
-    | hikari.Permissions.ADMINISTRATOR
-    | hikari.Permissions.MANAGE_CHANNELS
-    | hikari.Permissions.MANAGE_GUILD
-    | hikari.Permissions.MANAGE_MESSAGES
-    | hikari.Permissions.MUTE_MEMBERS
-    | hikari.Permissions.DEAFEN_MEMBERS
-    | hikari.Permissions.MOVE_MEMBERS
-    | hikari.Permissions.MANAGE_NICKNAMES
-    | hikari.Permissions.MANAGE_ROLES
-    | hikari.Permissions.MANAGE_WEBHOOKS
-    | hikari.Permissions.MANAGE_EMOJIS_AND_STICKERS
-    # | hikari.Permissions.MANAGE_EVENTS
-    | hikari.Permissions.MANAGE_THREADS
-    | hikari.Permissions.MODERATE_MEMBERS
-)
 
 
 def get_min_risk(config: GuildConfig, entitlements: GuildEntitlements) -> float | None:

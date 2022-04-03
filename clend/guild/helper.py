@@ -12,6 +12,7 @@ from ..shared.event import (
     IActionAnnouncement,
     IActionDelete,
 )
+from ..shared.dangerous import DANGEROUS_PERMISSIONS
 
 
 PERM_BAN = hikari.Permissions.ADMINISTRATOR | hikari.Permissions.BAN_MEMBERS
@@ -80,6 +81,7 @@ def action_challenge(
             config is None
             or (role.id in member.role_ids) != config.challenge_interactive_take_role
         )
+        and role.permissions & DANGEROUS_PERMISSIONS == 0
     )
     action = IActionChallenge(
         guild_id=guild.id,

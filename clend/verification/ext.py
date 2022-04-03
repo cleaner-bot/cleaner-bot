@@ -14,27 +14,7 @@ from ..shared.protect import protect, protected_call
 from ..shared.sub import listen as pubsub_listen, Message
 from ..shared.custom_events import TimerEvent
 from ..shared.event import IActionChallenge
-
-
-logger = logging.getLogger(__name__)
-DANGEROUS_PERMISSIONS = (
-    hikari.Permissions.KICK_MEMBERS
-    | hikari.Permissions.BAN_MEMBERS
-    | hikari.Permissions.ADMINISTRATOR
-    | hikari.Permissions.MANAGE_CHANNELS
-    | hikari.Permissions.MANAGE_GUILD
-    | hikari.Permissions.MANAGE_MESSAGES
-    | hikari.Permissions.MUTE_MEMBERS
-    | hikari.Permissions.DEAFEN_MEMBERS
-    | hikari.Permissions.MOVE_MEMBERS
-    | hikari.Permissions.MANAGE_NICKNAMES
-    | hikari.Permissions.MANAGE_ROLES
-    | hikari.Permissions.MANAGE_WEBHOOKS
-    | hikari.Permissions.MANAGE_EMOJIS_AND_STICKERS
-    # | hikari.Permissions.MANAGE_EVENTS
-    | hikari.Permissions.MANAGE_THREADS
-    | hikari.Permissions.MODERATE_MEMBERS
-)
+from ..shared.dangerous import DANGEROUS_PERMISSIONS
 
 
 class VerificationExtension:
