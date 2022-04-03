@@ -74,6 +74,8 @@ class SyncExtension:
         guild = event.get_guild()
         if guild is not None:
             await self.sync_myself(guild)
+            await self.sync_roles(guild)
+            await self.sync_channels(guild)
 
     async def sync_myself(self, guild: hikari.GatewayGuild):
         perms = hikari.Permissions.NONE
