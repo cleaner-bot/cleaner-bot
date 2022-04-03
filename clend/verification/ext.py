@@ -16,6 +16,8 @@ from ..shared.custom_events import TimerEvent
 from ..shared.event import IActionChallenge
 from ..shared.dangerous import DANGEROUS_PERMISSIONS
 
+logger = logging.getLogger(__name__)
+
 
 class VerificationExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
