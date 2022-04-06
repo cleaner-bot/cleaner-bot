@@ -6,7 +6,7 @@ import hikari
 
 from ..bot import TheCleaner
 from ..shared.protect import protect
-from ..shared.custom_events import TimerEvent
+from ..shared.custom_events import FastTimerEvent, SlowTimerEvent
 
 
 logger = logging.getLogger(__name__)
@@ -30,8 +30,12 @@ class TimerExtension:
     async def timerd(self):
         sequence = 0
         while True:
-            event = TimerEvent(self.bot.bot, sequence=sequence)
-            self.bot.bot.dispatch(event)
+            fast_timer_event = FastTimerEvent(self.bot.bot, sequence=sequence)
+            self.bot.bot.dispatch(fast_timer_event)
+            if sequence % 30 == 0:
+                slow_timer_event = SlowTimerEvent(self.bot.bot, sequence=sequence // 30)
+                self.bot.bot.dispatch(slow_timer_event)
+
             sequence += 1
 
-            await asyncio.sleep(30)
+            await asyncio.sleep(10)
