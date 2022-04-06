@@ -1,19 +1,15 @@
 import asyncio
 import logging
-import time
 import typing
 
 import hikari
 import msgpack  # type: ignore
 
 from cleaner_conf.guild import GuildConfig, GuildEntitlements
-from cleaner_i18n.translate import Message as TLMessage
 
 from ..bot import TheCleaner
 from ..shared.protect import protect, protected_call
 from ..shared.sub import listen as pubsub_listen, Message
-from ..shared.custom_events import TimerEvent
-from ..shared.event import IActionChallenge
 from ..shared.dangerous import DANGEROUS_PERMISSIONS
 
 logger = logging.getLogger(__name__)
@@ -27,10 +23,9 @@ class VerificationExtension:
         self.bot = bot
         self.listeners = [
             (hikari.MemberCreateEvent, self.on_member_create),
-            (TimerEvent, self.on_timer),
+            (hikari.MemberDeleteEvent, self.on_member_delete),
         ]
         self.task = None
-        self.kicks = {}
 
     def on_load(self):
         self.task = asyncio.create_task(protect(self.verifyd))
@@ -43,69 +38,11 @@ class VerificationExtension:
         await self.bot.database.set(
             f"guild:{event.guild_id}:user:{event.user_id}:verification", "1", ex=600
         )
-        if event.guild_id not in self.kicks:
-            self.kicks[event.guild_id] = {}
-        self.kicks[event.guild_id][event.user_id] = time.monotonic()
 
     async def on_member_delete(self, event: hikari.MemberDeleteEvent):
         await self.bot.database.delete(
             f"guild:{event.guild_id}:user:{event.user_id}:verification"
         )
-        if event.guild_id not in self.kicks:
-            return
-        kicks = self.kicks[event.guild_id]
-        if event.user_id not in kicks:
-            return
-        del kicks[event.user_id]
-
-    async def on_timer(self, event: TimerEvent):
-        now = time.monotonic()
-        actions = []
-
-        info = {"name": "verification", "action": "kick"}
-        for guild_id, guild_users in tuple(self.kicks.items()):
-            guild = self.bot.bot.cache.get_guild(guild_id)
-            if guild is None or not self.check_guild(guild):
-                del self.kicks[guild_id]
-                continue
-            config = self.get_config(guild_id)
-            if config is None or not config.verification_enabled:
-                continue
-
-            for user_id, expire in tuple(guild_users.items()):
-                if now < expire + 8 * 60:
-                    continue
-                del guild_users[user_id]
-                member = guild.get_member(user_id)
-                # > 1 because everyone role
-                if member is None or len(member.role_ids) > 1:
-                    continue
-
-                message = TLMessage("verification_kick_reason", {"user": user_id})
-                action = IActionChallenge(
-                    guild_id,
-                    user_id,
-                    False,  # block
-                    False,  # can_ban
-                    True,  # can_kick
-                    False,  # can_timeout
-                    False,  # can_role
-                    False,  # take_role
-                    0,  # role_id
-                    message,
-                    info,
-                )
-                actions.append(action)
-
-        if not actions:
-            return
-
-        http = self.bot.extensions.get("clend.http", None)
-        if http is None:
-            logger.warning("action required but http extension is not loaded")
-        else:
-            for item in actions:
-                await http.queue.async_q.put(item)
 
     @staticmethod
     def check_guild(guild: hikari.Guild) -> bool:
@@ -152,10 +89,6 @@ class VerificationExtension:
         await self.bot.database.delete(
             (f"guild:{guild_id}:user:{user_id}:verification",)
         )
-        if guild_id in self.kicks:  # bot might've restarted
-            kicks = self.kicks[guild_id]
-            if user_id in kicks:
-                del kicks[user_id]
 
         role = guild.get_role(int(config.verification_role))
         if (

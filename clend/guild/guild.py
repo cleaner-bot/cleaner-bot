@@ -3,21 +3,23 @@ import time
 import typing
 import queue
 
+import hikari
+
 from cleaner_conf.guild import GuildConfig, GuildEntitlements
 from expirepy import ExpiringList, ExpiringCounter
 
 from ..bot import TheCleaner
-from ..shared.event import IGuildEvent
 
 
 logger = logging.getLogger(__name__)
 
 
 class CleanerGuild:
-    event_queue: queue.Queue[IGuildEvent]
+    event_queue: queue.Queue[hikari.Event]
     active_mitigations: list[typing.Any]
     message_count: dict[int, ExpiringCounter]
     current_slowmode: dict[int, int]
+    verification_joins: dict[int, float]
 
     def __init__(self, guild_id: int, bot: TheCleaner) -> None:
         self.id = guild_id
@@ -33,6 +35,7 @@ class CleanerGuild:
         self.current_slowmode = {}
         self.member_joins = ExpiringCounter(expires=300)
         self.active_mitigations = []
+        self.verification_joins = {}  # no cache evict needed
 
     def evict_cache(self):
         self.messages.evict()

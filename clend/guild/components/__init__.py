@@ -6,6 +6,7 @@ from . import (
     impersonation,
     log,
     slowmode,
+    verification,
 )
 
 
@@ -17,4 +18,5 @@ components = [
     firewall,
     log,
     slowmode,
+    verification,
 ]
