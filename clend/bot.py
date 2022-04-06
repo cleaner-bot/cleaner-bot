@@ -38,8 +38,8 @@ class TheCleaner:
         self.extensions = {}
         self.guild_has_members_cached = set()
 
-    def run(self):
-        self.bot.run()
+    def run(self, **kwargs):
+        self.bot.run(**kwargs)
 
     def load_extension(self, module: str):
         if module in self.extensions:
