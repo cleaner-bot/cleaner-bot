@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 load_dotenv(Path("~/.cleaner/secrets").expanduser())
 
 from clend.bot import TheCleaner  # noqa: E402
+from pcex import inject
 
 
 try:
@@ -28,6 +29,8 @@ if sentry_dsn is not None:
     import sentry_sdk
 
     sentry_sdk.init(dsn=sentry_dsn)
+
+inject()
 
 bot = TheCleaner(token=token)
 bot.load_extension("clend.entry")
