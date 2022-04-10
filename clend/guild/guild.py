@@ -17,7 +17,8 @@ logger = logging.getLogger(__name__)
 class CleanerGuild:
     event_queue: queue.Queue[hikari.Event]
     active_mitigations: list[typing.Any]
-    message_count: dict[int, ExpiringCounter]
+    message_count: dict[int, list[int]]
+    pending_message_count: dict[int, int]
     current_slowmode: dict[int, int]
     verification_joins: dict[int, float]
 
