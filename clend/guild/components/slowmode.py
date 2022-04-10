@@ -1,19 +1,12 @@
-from expirepy import ExpiringCounter
 import hikari
+
+from cleaner.clend.shared.custom_events import FastTimerEvent
 
 from ..guild import CleanerGuild
 from ..helper import is_moderator, is_exception, change_ratelimit
 
 
-# all = [round(x ** 1.5 / 100) for x in range(98)]
-# [all.index(x) for x in range(1, 11)]
-slowmode_steps = [14, 29, 40, 50, 59, 68, 76, 83, 90, 97]
-slowmode = []
-_ = 0
-for __ in range(98):
-    if __ in slowmode_steps:
-        _ += 1
-    slowmode.append(_)
+slowmode = [round(x ** 1.3 / 15) for x in range(60)]
 
 
 def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild):
@@ -29,15 +22,51 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
     if channel is None:
         return
 
-    counter = guild.message_count.get(event.channel_id, None)
-    if counter is None:
-        counter = guild.message_count[event.channel_id] = ExpiringCounter(expires=60)
+    counter = guild.pending_message_count.get(event.channel_id, 0)
+    guild.pending_message_count[event.channel_id] = counter + 1
 
     counter.increase()
-    count = counter.value()
 
-    default = 0 if is_exception(config, channel.id) else 1
-    current = guild.current_slowmode.get(event.channel_id, default)
+
+def on_fast_timer(event: FastTimerEvent, cguild: CleanerGuild):
+    config = cguild.get_config()
+    if (
+        config is None
+        or not config.slowmode_enabled
+        or not cguild.pending_message_count
+    ):
+        return
+
+    guild = event.app.cache.get_guild(cguild.id)
+    if guild is None:
+        return
+
+    for channel_id, count in cguild.pending_message_count.items():
+        current = cguild.message_count.get(channel_id, None)
+        if current is None:
+            current = cguild.message_count[channel_id] = [0, 0, 0, 0, 0, 0]
+        current.append(count)
+        if len(current) > 6:
+            current.pop(0)
+        cguild.pending_message_count[channel_id] = 0
+
+    actions = []
+
+    for channel_id, counts in cguild.message_count:
+        spike = counts[-1]
+        avg = sum(counts) / len(counts)
+
+        default = 0 if is_exception(config, channel_id) else 1
+        current = cguild.current_slowmode.get(channel_id, default)
+
+        spike_rt = 10 if spike >= len(slowmode) else slowmode[spike]
+        avg_rt = 10 if avg >= len(slowmode) else slowmode[avg]
+
+        if spike_rt > current + 1 or avg_rt != current:
+            channel = guild.get_channel(channel_id)
+            if channel is not None and isinstance(channel, hikari.TextableGuildChannel):
+                recommended = spike_rt if spike_rt > current + 1 else avg_rt
+                actions.append(change_ratelimit(channel, recommended))
 
     if default == 0:
         count /= 5
@@ -49,7 +78,10 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
         guild.current_slowmode[event.channel_id] = recommended
         return (change_ratelimit(channel, recommended),)
 
+    return actions
+
 
 listeners = [
     (hikari.GuildMessageCreateEvent, on_message_create),
+    (FastTimerEvent, on_fast_timer),
 ]

@@ -32,6 +32,7 @@ class CleanerGuild:
         # cache and stuff
         self.messages = ExpiringList(expires=30)
         self.message_count = {}
+        self.pending_message_count = {}
         self.current_slowmode = {}
         self.member_joins = ExpiringCounter(expires=300)
         self.active_mitigations = []
