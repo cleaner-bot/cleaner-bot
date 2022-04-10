@@ -10,7 +10,7 @@ def on_member_update(event: hikari.MemberUpdateEvent, guild: CleanerGuild):
     config = guild.get_config()
     if (
         config is None
-        or not config.overview_dehoisting_enabled
+        or not config.general_dehoisting_enabled
         or event.member.username == event.member.nickname
         or not event.member.display_name.startswith("!")
         or is_moderator(guild, event.member)

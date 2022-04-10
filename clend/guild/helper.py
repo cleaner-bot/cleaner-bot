@@ -272,7 +272,7 @@ def is_moderator(cguild: CleanerGuild, member: hikari.Member) -> bool:
         return True
     config = cguild.get_config()
     if config is not None:
-        modroles = set(map(int, config.overview_modroles))
+        modroles = set(map(int, config.general_modroles))
         for role in member.get_roles():
             if role.id in modroles:
                 return True
