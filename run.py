@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv(Path("~/.cleaner/secrets").expanduser())
 
 from clend.bot import TheCleaner  # noqa: E402
-from pcex import inject
+from pcex import inject  # noqa: E402
 
 
 try:
