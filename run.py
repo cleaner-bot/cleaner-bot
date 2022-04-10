@@ -30,8 +30,7 @@ if sentry_dsn is not None:
 
     sentry_sdk.init(dsn=sentry_dsn)
 
-inject()
-
 bot = TheCleaner(token=token)
+inject(bot.bot)
 bot.load_extension("clend.entry")
 bot.run()
