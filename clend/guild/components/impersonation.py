@@ -9,7 +9,9 @@ from ..guild import CleanerGuild
 from ..helper import action_challenge
 
 
-def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
+def on_new_member(
+    event: hikari.MemberCreateEvent | hikari.MemberUpdateEvent, guild: CleanerGuild
+):
     config = guild.get_config()
     if config is None:
         return
@@ -69,5 +71,6 @@ def is_custom_blacklist(name: str, words: list[str], subwords: list[str]) -> boo
 
 
 listeners = [
-    (hikari.MemberCreateEvent, on_member_create),
+    (hikari.MemberCreateEvent, on_new_member),
+    (hikari.MemberUpdateEvent, on_new_member),
 ]
