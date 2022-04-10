@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timezone
 import logging
 import typing
@@ -65,6 +66,8 @@ class DevExtension:
             await self.handle_register_slash(event)
         elif event.content == "clean!info":
             await self.handle_info(event)
+        elif event.content == "clean!pull":
+            await self.handle_pull(event)
 
     async def handle_ping(self, event: hikari.GuildMessageCreateEvent):
         sent = datetime.utcnow().replace(tzinfo=timezone.utc)
@@ -136,6 +139,17 @@ class DevExtension:
             f"Users: {users}\n"
             f"Members: {members}\n"
         )
+
+    async def handle_pull(self, event: hikari.GuildMessageCreateEvent):
+        msg = await event.message.respond("Pulling from git")
+        git_pull = await asyncio.create_subprocess_shell(
+            "git pull", stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await git_pull.communicate()
+        message = (stdout.decode() if stdout else "") + (
+            stderr.decode() if stderr else ""
+        )
+        await msg.edit(f"```\n{message}```" if message else "Done. (no output)")
 
 
 extension = DevExtension
