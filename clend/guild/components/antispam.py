@@ -12,6 +12,7 @@ from .mitigations import mitigations, mitigationsd
 from ..guild import CleanerGuild
 from ..helper import action_delete, action_challenge, announcement, is_moderator
 from ...shared.event import IGuildEvent, ILog
+from ...shared.custom_events import SlowTimerEvent
 
 
 logger = logging.getLogger(__name__)
@@ -127,6 +128,17 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
     return actions
 
 
+def on_slow_timer(event: SlowTimerEvent, guild: CleanerGuild):
+    now = time.monotonic()
+    active_mitigations: list[ActiveMitigation] = guild.active_mitigations
+
+    guild.messages.evict()
+    guild.active_mitigations = [
+        x for x in active_mitigations if now - x.last_triggered <= x.ttl
+    ]
+
+
 listeners = [
     (hikari.GuildMessageCreateEvent, on_message_create),
+    (SlowTimerEvent, on_slow_timer),
 ]

@@ -4,6 +4,7 @@ from cleaner_i18n.translate import Message
 
 from ..guild import CleanerGuild
 from ..helper import action_challenge
+from ...shared.custom_events import SlowTimerEvent
 
 
 def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
@@ -34,6 +35,11 @@ def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
     return (action,)
 
 
+def on_slow_timer(event: SlowTimerEvent, guild: CleanerGuild):
+    guild.member_joins.evict()
+
+
 listeners = [
     (hikari.MemberCreateEvent, on_member_create),
+    (SlowTimerEvent, on_slow_timer),
 ]
