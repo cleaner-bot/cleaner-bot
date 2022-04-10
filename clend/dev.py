@@ -105,9 +105,9 @@ class DevExtension:
             event.app.rest.slash_command_builder(
                 "invite", "Get an invite link for The Cleaner"
             ),
-            event.app.rest.slash_command_builder(
-                "login", "Create a link to login immediately (useful for phones)"
-            ),
+            # event.app.rest.slash_command_builder(
+            #     "login", "Create a link to login immediately (useful for phones)"
+            # ),
         ]
 
         me = self.bot.bot.get_me()
