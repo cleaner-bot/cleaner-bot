@@ -139,8 +139,17 @@ class SlashExtension:
             | hikari.Permissions.MANAGE_NICKNAMES
             | hikari.Permissions.MODERATE_MEMBERS
         )
+        client_id = os.getenv("CLIENT_ID")
+        if client_id is None:
+            me = self.bot.bot.cache.get_me()
+            if me is None:
+                # dont bother handling because this should NEVER happen
+                raise RuntimeError("no client_id for invite command")
+
+            client_id = me.id
+
         query = {
-            "client_id": "823533449717481492",
+            "client_id": client_id,
             "redirect_uri": "https://cleaner.leodev.xyz/oauth-comeback",
             "response_type": "code",
             "scope": " ".join(
