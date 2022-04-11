@@ -110,11 +110,14 @@ class HTTPService:
         self.member_strikes[f"{ev.guild_id}-{ev.user_id}"] = user_strikes + worth
         self.guild_strikes[ev.guild_id] = guild_strikes + worth
 
-        if ev.block and user_strikes < 2 and guild_strikes < 10:
+        user_strikes += worth
+        guild_strikes += worth
+
+        if ev.block and user_strikes < 3 and guild_strikes < 13:
             return
 
         strikes = (user_strikes + guild_strikes // 2) / 3
-        if guild_strikes >= 30 and ev.can_ban:
+        if (guild_strikes >= 30 or user_strikes > 12) and ev.can_ban:
             can_timeout = can_role = can_kick = False
         elif (strikes > 6 or guild_strikes >= 10) and (ev.can_ban or can_kick):
             can_timeout = can_role = False
