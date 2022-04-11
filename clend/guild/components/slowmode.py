@@ -67,6 +67,7 @@ def on_fast_timer(event: FastTimerEvent, cguild: CleanerGuild):
             channel = guild.get_channel(channel_id)
             if channel is not None and isinstance(channel, hikari.TextableGuildChannel):
                 recommended = spike_rt if spike_rt > current + 1 else avg_rt
+                cguild.current_slowmode[channel_id] = recommended
                 actions.append(change_ratelimit(channel, recommended))
 
     return actions
