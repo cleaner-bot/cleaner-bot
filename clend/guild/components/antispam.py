@@ -58,7 +58,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
                 action_challenge(
                     guild,
                     event.member,
-                    block=True,
+                    block=mit.block,
                     reason=None,
                     info=info,
                 ),
@@ -112,7 +112,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
 
     actions.append(action_delete(event.member, event.message, reason=reason, info=info))
     actions.append(
-        action_challenge(guild, event.member, block=True, reason=reason, info=info)
+        action_challenge(guild, event.member, block=mit.block, reason=reason, info=info)
     )
     if mit.ttl > 0:
         channel = event.get_channel()

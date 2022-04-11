@@ -13,13 +13,14 @@ class MitigationSystem(typing.NamedTuple):
         [hikari.Message, list[hikari.Message], CleanerGuild], None | typing.Any
     ]
     ttl: int
+    block: bool
 
 
 mitigations = [
-    MitigationSystem("traffic.similar", similar.match, similar.detection, 120),
-    MitigationSystem("traffic.exact", exact.match, exact.detection, 120),
-    MitigationSystem("traffic.token", token.match, token.detection, 120),
-    MitigationSystem("traffic.sticker", sticker.match, sticker.detection, 0),
-    MitigationSystem("traffic.attachment", attachment.match, attachment.detection, 0),
+    MitigationSystem("traffic.similar", similar.match, similar.detection, 120, True),
+    MitigationSystem("traffic.token", token.match, token.detection, 120, True),
+    MitigationSystem("traffic.exact", exact.match, exact.detection, 0, False),
+    MitigationSystem("traffic.sticker", sticker.match, sticker.detection, 0, True),
+    MitigationSystem("traffic.attachment", attachment.match, attachment.detection, 0, True),
 ]
 mitigationsd = {mit.name: mit for mit in mitigations}
