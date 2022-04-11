@@ -1,4 +1,5 @@
 import hikari
+from hikari.internal.time import utc_datetime
 
 from cleaner_data.name import is_name_blacklisted
 from cleaner_data.normalize import normalize
@@ -13,7 +14,11 @@ def on_new_member(
     event: hikari.MemberCreateEvent | hikari.MemberUpdateEvent, guild: CleanerGuild
 ):
     config = guild.get_config()
-    if config is None:
+    if config is None or (
+        isinstance(event, hikari.MemberUpdateEvent)  # prevent duplicate kicks
+        and event.old_member.username == event.member.username
+        and (event.member.joined_at - utc_datetime()).total_seconds() < 5
+    ):
         return
     entitlements = guild.get_entitlements()
 
@@ -29,7 +34,7 @@ def on_new_member(
 
     if (
         entitlements is not None
-        and entitlements.impersonation_advanced >= entitlements.plan
+        and entitlements.plan >= entitlements.impersonation_advanced
         and config.impersonation_advanced_enabled
         and is_custom_blacklist(
             event.user.username,
