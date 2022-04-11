@@ -15,7 +15,7 @@ def on_new_member(
 ):
     config = guild.get_config()
     if config is None or (
-        isinstance(event, hikari.MemberUpdateEvent)  # prevent duplicate kicks
+        isinstance(event, hikari.MemberUpdateEvent)  # prevent duplicate actions
         and event.old_member.username == event.member.username
         and (event.member.joined_at - utc_datetime()).total_seconds() < 5
     ):
