@@ -25,7 +25,7 @@ def detection(
     channels = {message.channel_id}
     for old_message in messages:
         if message.content == old_message.content:
-            channels.add(message.channel_id)
+            channels.add(old_message.channel_id)
 
     if len(channels) >= THRESHOLD:
         return ExactMessageMitigation(message.content)
