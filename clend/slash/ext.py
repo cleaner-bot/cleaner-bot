@@ -146,7 +146,7 @@ class SlashExtension:
                 # dont bother handling because this should NEVER happen
                 raise RuntimeError("no client_id for invite command")
 
-            client_id = me.id
+            client_id = str(me.id)
 
         query = {
             "client_id": client_id,
