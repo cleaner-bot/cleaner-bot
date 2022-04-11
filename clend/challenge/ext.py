@@ -229,7 +229,7 @@ class ChallengeExtension:
 
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("role_dangerous", action=act),
+                content=t("role_dangerous", action=act, role=role.id),
                 component=component,
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
