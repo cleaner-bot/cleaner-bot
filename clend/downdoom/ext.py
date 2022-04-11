@@ -25,7 +25,7 @@ class DowndoomExtension:
 
     def on_load(self):
         if self.client is not None:
-            self.task = self.client.run()
+            self.task = asyncio.create_task(self.client.run())
 
     def on_unload(self):
         if self.task is not None:
