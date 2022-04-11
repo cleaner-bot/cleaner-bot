@@ -130,6 +130,9 @@ class HTTPService:
 
         coro: typing.Coroutine[typing.Any, typing.Any, typing.Any] | None = None
 
+        guild = self.bot.bot.cache.get_guild(ev.guild_id)
+        locale = "en-US" if guild is None else guild.preferred_locale
+
         if can_timeout:
             self.member_edit[ev.guild_id] = self.member_edit.get(ev.guild_id, 0) + 1
 
@@ -141,6 +144,7 @@ class HTTPService:
                 ev.guild_id,
                 ev.user_id,
                 communication_disabled_until=communication_disabled_until,
+                reason=ev.reason.translate(locale),
             )
 
         elif can_role:
@@ -150,19 +154,31 @@ class HTTPService:
             routine = self.bot.bot.rest.remove_role_from_member
             if ev.take_role:
                 routine = self.bot.bot.rest.add_role_to_member
-            coro = routine(ev.guild_id, ev.user_id, ev.role_id)
+            coro = routine(
+                ev.guild_id,
+                ev.user_id,
+                ev.role_id,
+                reason=ev.reason.translate(locale),
+            )
 
             database = self.bot.database
             await database.sadd(f"guild:{ev.guild_id}:challenged", (ev.user_id,))
 
         elif can_kick:
             message = "log_challenge_kick"
-            coro = self.bot.bot.rest.kick_user(ev.guild_id, ev.user_id)
+            coro = self.bot.bot.rest.kick_user(
+                ev.guild_id,
+                ev.user_id,
+                reason=ev.reason.translate(locale),
+            )
 
         elif ev.can_ban:
             message = "log_challenge_ban"
             coro = self.bot.bot.rest.ban_user(
-                ev.guild_id, ev.user_id, delete_message_days=1
+                ev.guild_id,
+                ev.user_id,
+                delete_message_days=1,
+                reason=ev.reason.translate(locale),
             )
             self.banned_users.add(f"{ev.guild_id}-{ev.user_id}")
 
@@ -213,22 +229,33 @@ class HTTPService:
     async def handle_action_nickname(self, ev: IActionNickname):
         coro: typing.Coroutine[typing.Any, typing.Any, typing.Any] | None = None
         message = "log_nickname_reset_failure"
+
+        guild = self.bot.bot.cache.get_guild(ev.guild_id)
+        locale = "en-US" if guild is None else guild.preferred_locale
+
         if ev.can_reset:
             current = self.member_edit.get(ev.guild_id, 0) + 1
             self.member_edit[ev.guild_id] = current
             if current >= 8:
                 if ev.can_kick:
-                    coro = self.bot.bot.rest.kick_user(ev.guild_id, ev.user_id)
+                    coro = self.bot.bot.rest.kick_user(
+                        ev.guild_id, ev.user_id, reason=ev.reason.translate(locale)
+                    )
                     message = "log_nickname_reset_kick"
                 elif ev.can_ban:
-                    coro = self.bot.bot.rest.ban_user(ev.guild_id, ev.user_id)
+                    coro = self.bot.bot.rest.ban_user(
+                        ev.guild_id, ev.user_id, reason=ev.reason.translate(locale)
+                    )
                     message = "log_nickname_reset_ban"
                 else:
                     message = "log_nickname_failure"
             else:
                 message = "log_nickname_reset_success"
                 coro = self.bot.bot.rest.edit_member(
-                    ev.guild_id, ev.user_id, nickname=None
+                    ev.guild_id,
+                    ev.user_id,
+                    nickname=None,
+                    reason=ev.reason.translate(locale),
                 )
 
         translated = Message(message, {"user": ev.user_id})
@@ -254,9 +281,9 @@ class HTTPService:
             return
 
         guild = self.bot.bot.cache.get_guild(ev.guild_id)
-        announcement = ev.announcement.translate(
-            "en-US" if guild is None else guild.preferred_locale
-        )
+        locale = "en-US" if guild is None else guild.preferred_locale
+
+        announcement = ev.announcement.translate(locale)
         message = await self.bot.bot.rest.create_message(ev.channel_id, announcement)
         if ev.delete_after > 0:
             await asyncio.sleep(ev.delete_after)
@@ -269,6 +296,9 @@ class HTTPService:
         if not ev.can_modify:
             return  # silently ignore
 
+        guild = self.bot.bot.cache.get_guild(ev.guild_id)
+        locale = "en-US" if guild is None else guild.preferred_locale
+
         translated = Message(
             "log_channelratelimit_success",
             {"channel": ev.channel_id, "ratelimit": ev.ratelimit},
@@ -276,7 +306,9 @@ class HTTPService:
         self.log_queue.put_nowait(ILog(ev.guild_id, translated))
 
         await self.bot.bot.rest.edit_channel(
-            ev.channel_id, rate_limit_per_user=ev.ratelimit
+            ev.channel_id,
+            rate_limit_per_user=ev.ratelimit,
+            reason=translated.translate(locale),
         )
 
     async def logd(self):
