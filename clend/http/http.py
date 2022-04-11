@@ -14,6 +14,7 @@ from cleaner_i18n.translate import Message, translate
 from expirepy import ExpiringSet, ExpiringDict
 
 from .metrics import Metrics, metrics_reader
+from .likely_phishing import is_likely_phishing, report_phishing
 from ..bot import TheCleaner
 from ..shared.channel_perms import permissions_for
 from ..shared.event import (
@@ -199,6 +200,12 @@ class HTTPService:
         )
         if coro is not None:
             await coro
+
+        if ev.message is not None and is_likely_phishing(ev):
+            guild_strikes = self.guild_strikes.get(ev.guild_id, 0)
+            if guild_strikes >= 30:
+                return
+            await report_phishing(ev, self.bot)
 
     async def handle_action_nickname(self, ev: IActionNickname):
         coro: typing.Coroutine[typing.Any, typing.Any, typing.Any] | None = None
