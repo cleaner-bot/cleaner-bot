@@ -359,7 +359,7 @@ class HTTPService:
                                     if my_perms & hikari.Permissions.EMBED_LINKS == 0:
                                         embed = hikari.UNDEFINED
 
-                if channel_id == fallback_id:
+                if channel_id == fallback_id and embed is not hikari.UNDEFINED:
                     guild = self.bot.bot.cache.get_guild(guild_id)
                     if guild is None:
                         embed.add_field("Guild", guild_id)
