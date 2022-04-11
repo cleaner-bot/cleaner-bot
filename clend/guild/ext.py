@@ -41,7 +41,7 @@ class GuildExtension:
                 self.callbacks[type].append(func)
 
     def on_load(self):
-        self.workers = [GuildWorker(self) for _ in range(WORKERS)]
+        self.workers = [GuildWorker(self, idx, WORKERS) for idx in range(WORKERS)]
         for worker in self.workers:
             worker.start()
 
