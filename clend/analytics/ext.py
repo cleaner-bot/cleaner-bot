@@ -127,13 +127,10 @@ class AnalyticsExtension:
         await channel.send(embed=embed)
 
     def get_channel(self) -> hikari.TextableGuildChannel | None:
-        guild_id = 905525342385602591
-        channel_id = 909832103556964442
+        channel_id = 963043465355206716
 
-        guild = self.bot.bot.cache.get_guild(guild_id)
-        if guild is None:
-            return None
-        return guild.get_channel(channel_id)  # type: ignore
+        channel = self.bot.bot.cache.get_guild_channel(channel_id)
+        return channel  # type: ignore
 
     def get_entitlements(self, guild_id: int) -> GuildEntitlements | None:
         conf = self.bot.extensions.get("clend.conf", None)
