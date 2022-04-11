@@ -18,7 +18,7 @@ def on_member_delete(event: hikari.MemberDeleteEvent, guild: CleanerGuild):
         del guild.verification_joins[event.user_id]
 
 
-async def on_fast_timer(event: FastTimerEvent, cguild: CleanerGuild):
+def on_fast_timer(event: FastTimerEvent, cguild: CleanerGuild):
     config = cguild.get_config()
     guild = event.app.cache.get_guild(cguild.id)
     if config is None or not config.verification_enabled or guild is None:
