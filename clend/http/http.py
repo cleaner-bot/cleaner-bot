@@ -336,7 +336,7 @@ class HTTPService:
                         )
 
                 config = self.get_config(guild_id)
-                channel_id = 952566965837369344
+                channel_id = fallback_id = 963043115730608188
                 if (
                     config is not None
                     and config.logging_enabled
@@ -358,6 +358,13 @@ class HTTPService:
                                     channel_id = the_channel_id
                                     if my_perms & hikari.Permissions.EMBED_LINKS == 0:
                                         embed = hikari.UNDEFINED
+
+                if channel_id == fallback_id:
+                    guild = self.bot.bot.cache.get_guild(guild_id)
+                    if guild is None:
+                        embed.add_field("Guild", guild_id)
+                    else:
+                        embed.add_field("Guild", f"{guild.name} ({guild.id})")
 
                 sends.append(
                     self.bot.bot.rest.create_message(channel_id, message, embed=embed)
