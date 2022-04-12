@@ -21,6 +21,7 @@ def on_member_delete(event: hikari.MemberDeleteEvent, guild: CleanerGuild):
 def on_fast_timer(event: FastTimerEvent, cguild: CleanerGuild):
     config = cguild.get_config()
     guild = event.app.cache.get_guild(cguild.id)
+    print(guild, config, getattr(config, "verification_enabled", None))
     if config is None or not config.verification_enabled or guild is None:
         return
 
