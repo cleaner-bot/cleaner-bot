@@ -42,6 +42,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
         if now - active_mitigation.last_triggered > active_mitigation.ttl:
             continue  # just ignore, it'll be cleaned up in a diff place
         if mit.match(active_mitigation.data, event.message):
+            reason = Message("components_antispam", {"mitigation": mit.name})
             info = {
                 "name": "antispam",
                 "initial": False,
@@ -52,14 +53,14 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
                 action_delete(
                     event.member,
                     event.message,
-                    reason=None,
+                    reason=reason,
                     info=info,
                 ),
                 action_challenge(
                     guild,
                     event.member,
                     block=mit.block,
-                    reason=None,
+                    reason=reason,
                     info=info,
                 ),
             ]
