@@ -45,9 +45,15 @@ class SlashExtension:
             elif interaction.command_name == "login":
                 coro = self.handle_login(interaction)
 
+            if coro is not None:
+                logger.debug(f"used slash command: {interaction.command_name}")
+
         elif isinstance(interaction, hikari.ComponentInteraction):
             if interaction.custom_id == "login":
                 coro = self.handle_login_button(interaction)
+
+            if coro is not None:
+                logger.debug(f"used button command: {interaction.command_id}")
 
         else:
             return

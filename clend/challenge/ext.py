@@ -128,6 +128,7 @@ class ChallengeExtension:
         elif (passed := time_passed_since(interaction.id).total_seconds()) >= 2.5:
             return
 
+        logger.debug("used challenge button")
 
         try:
             try:
