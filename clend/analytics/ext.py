@@ -37,6 +37,11 @@ class AnalyticsExtension:
             .add_field(name="Members", value=str(event.guild.member_count))
             .set_footer(str(event.guild_id))
         )
+        owner = self.bot.bot.cache.get_user(event.guild.owner_id)
+        if owner is None:
+            embed.add_field(name="Owner ID", value=str(event.guild.owner_id))
+        else:
+            embed.add_field(name="Owner", value=f"{owner} ({owner.id})")
         if event.guild.features:
             embed.add_field(name="Features", value=", ".join(event.guild.features))
         if event.guild.vanity_url_code:
@@ -58,12 +63,22 @@ class AnalyticsExtension:
             embed.set_thumbnail(event.old_guild.make_icon_url())
             embed.add_field(name="Name", value=event.old_guild.name)
             embed.add_field(name="Members", value=str(event.old_guild.member_count))
-            embed.add_field(
-                name="Features", value=", ".join(map(str, event.old_guild.features))
-            )
+
+            owner = self.bot.bot.cache.get_user(event.old_guild.owner_id)
+            if owner is None:
+                embed.add_field(name="Owner ID", value=str(event.old_guild.owner_id))
+            else:
+                embed.add_field(name="Owner", value=f"{owner} ({owner.id})")
+
+            if event.old_guild.features:
+                embed.add_field(
+                    name="Features", value=", ".join(event.old_guild.features)
+                )
+
             if event.old_guild.vanity_url_code:
                 vanity = event.old_guild.vanity_url_code
                 embed.add_field("Vanity Invite", f"https://discord.gg/{vanity}")
+
         await channel.send(embed=embed)
 
     async def on_member_chunk(self, event: hikari.MemberChunkEvent):
