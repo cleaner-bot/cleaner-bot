@@ -125,11 +125,23 @@ class ChallengeExtension:
             return
         elif not interaction.custom_id.startswith("challenge"):
             return
-        elif time_passed_since(interaction.id).total_seconds() >= 2.5:
+        elif (passed := time_passed_since(interaction.id).total_seconds()) >= 2.5:
             return
 
+
         try:
-            await self.create_flow(interaction)
+            try:
+                await self.create_flow(interaction)
+            except hikari.NotFoundError as e:
+                if "Unknown interaction" in str(e):
+                    now_passed = time_passed_since(interaction.id).total_seconds()
+                    logger.error(
+                        f"interaction expired "
+                        f"(alleged age={passed:.3f}s, now={now_passed:.3f})"
+                    )
+                else:
+                    raise
+                
         except Exception as e:
             logger.exception("Error occured during component interaction", exc_info=e)
             await interaction.create_initial_response(

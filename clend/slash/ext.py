@@ -56,7 +56,18 @@ class SlashExtension:
             return
 
         try:
-            await coro
+            try:
+                await coro
+            except hikari.NotFoundError as e:
+                if "Unknown interaction" in str(e):
+                    now_passed = time_passed_since(interaction.id).total_seconds()
+                    logger.error(
+                        f"interaction expired "
+                        f"(alleged age={passed:.3f}s, now={now_passed:.3f})"
+                    )
+                else:
+                    raise
+                
         except Exception as e:
             logger.exception("Error occured during component interaction", exc_info=e)
             # mypy is being weird here, thinking that interaction is PartialInteraction
