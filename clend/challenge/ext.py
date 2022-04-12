@@ -153,8 +153,9 @@ class ChallengeExtension:
         
         if interaction.custom_id != "challenge":  # old embed
             logger.info(f"found old challenge embed {interaction.custom_id} in {interaction.guild_id}")
-            if interaction.guild_id == 903845468725977091:
-                await self.migrate_embed(interaction.message)
+            guild = interaction.get_guild()
+            if interaction.guild_id == 903845468725977091 and guild is not None:
+                await self.migrate_embed(interaction.message, guild)
 
     async def create_flow(self, interaction: hikari.ComponentInteraction):
         database = self.bot.database
@@ -446,14 +447,7 @@ class ChallengeExtension:
 
         await channel.send(**self.get_message(guild))
 
-    async def migrate_embed(self, message: hikari.Message):
-        if message.guild_id is None:
-            return  # impossible, but lets make mypy happy
-
-        guild = self.bot.bot.cache.get_guild(message.guild_id)
-        if guild is None:
-            return
-        
+    async def migrate_embed(self, message: hikari.Message, guild: hikari.GatewayGuild):
         await message.edit(**self.get_message(guild))
 
     def get_config(self, guild_id: int) -> GuildConfig | None:
