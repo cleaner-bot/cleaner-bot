@@ -150,6 +150,11 @@ class ChallengeExtension:
                 content=translate(interaction.locale, "challenge_internal_error"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
+        
+        if interaction.custom_id != "challenge":  # old embed
+            logger.info(f"found old challenge embed {interaction.custom_id} in {interaction.guild_id}")
+            if interaction.guild_id == 903845468725977091:
+                await self.migrate_embed(interaction.message)
 
     async def create_flow(self, interaction: hikari.ComponentInteraction):
         database = self.bot.database
@@ -392,6 +397,24 @@ class ChallengeExtension:
         await routine(guild.id, int(user_id), role.id)
         await self.bot.database.delete((f"challenge:flow:{flow}",))
 
+    def get_message(self, guild: hikari.GatewayGuild) -> dict:
+        t = lambda s: translate(  # noqa E731
+            guild.preferred_locale, f"challenge_embed_{s}"
+        )
+        component = self.bot.bot.rest.build_action_row()
+        (
+            component.add_button(hikari.ButtonStyle.PRIMARY, "challenge")
+            .set_label(t("verify"))
+            .add_to_container()
+        )
+        add_link(component, t("privacy"), "https://cleaner.leodev.xyz/legal/privacy")
+
+        embed = hikari.Embed(
+            title=t("title"), description=t("description"), color=0x0284C7
+        )
+
+        return dict(embed=embed, component=component)
+
     async def send_embed(self, channel_id: int, guild_id: int):
         channel = self.bot.bot.cache.get_guild_channel(channel_id)
         if channel is None or not isinstance(channel, hikari.TextableGuildChannel):
@@ -421,21 +444,17 @@ class ChallengeExtension:
         ):
             return
 
-        t = lambda s: translate(  # noqa E731
-            guild.preferred_locale, f"challenge_embed_{s}"
-        )
-        component = self.bot.bot.rest.build_action_row()
-        (
-            component.add_button(hikari.ButtonStyle.PRIMARY, "challenge")
-            .set_label(t("verify"))
-            .add_to_container()
-        )
-        add_link(component, t("privacy"), "https://cleaner.leodev.xyz/legal/privacy")
+        await channel.send(**self.get_message(guild))
 
-        embed = hikari.Embed(
-            title=t("title"), description=t("description"), color=0x0284C7
-        )
-        await channel.send(embed=embed, component=component)
+    async def migrate_embed(self, message: hikari.Message):
+        if message.guild_id is None:
+            return  # impossible, but lets make mypy happy
+
+        guild = self.bot.bot.cache.get_guild(message.guild_id)
+        if guild is None:
+            return
+        
+        await message.edit(**self.get_message(guild))
 
     def get_config(self, guild_id: int) -> GuildConfig | None:
         conf = self.bot.extensions.get("clend.conf", None)
