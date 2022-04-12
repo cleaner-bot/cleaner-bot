@@ -24,11 +24,6 @@ class AnalyticsExtension:
             (hikari.MemberChunkEvent, self.on_member_chunk),
         ]
 
-    def on_load(self):
-        for guild in self.bot.bot.cache.get_guilds_view().values():
-            if guild.id in self.bot.guild_has_members_cached:
-                asyncio.create_task(self.acheck_guild(guild))
-
     async def on_guild_join(self, event: hikari.GuildJoinEvent):
         channel = self.get_channel()
         if channel is None:
