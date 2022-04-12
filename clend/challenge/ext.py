@@ -16,6 +16,7 @@ from ..shared.protect import protect, protected_call
 from ..shared.sub import listen as pubsub_listen, Message
 from ..shared.risk import calculate_risk_score
 from ..shared.dangerous import DANGEROUS_PERMISSIONS
+from ..shared.id import time_passed_since
 
 
 logger = logging.getLogger(__name__)
@@ -123,6 +124,8 @@ class ChallengeExtension:
         if not isinstance(interaction, hikari.ComponentInteraction):
             return
         elif not interaction.custom_id.startswith("challenge"):
+            return
+        elif time_passed_since(interaction.id).total_seconds() >= 2.5:
             return
 
         try:

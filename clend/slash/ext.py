@@ -4,13 +4,13 @@ import typing
 from urllib.parse import urlencode
 
 import hikari
-from hikari.internal.time import utc_datetime
 from hikari.urls import BASE_URL
 
 from cleaner_i18n.translate import translate
 
 from ..bot import TheCleaner
 from ..shared.button import add_link
+from ..shared.id import time_passed_since
 
 logger = logging.getLogger(__name__)
 
@@ -26,13 +26,13 @@ class SlashExtension:
 
     async def on_interaction_create(self, event: hikari.InteractionCreateEvent):
         interaction = event.interaction
-        age = (utc_datetime() - interaction.created_at).total_seconds()
-        if age > 3:
-            logger.error(f"received interaction that is older than 3s ({age:.3f}s)")
-        elif age > 1:
-            logger.warning(f"received interaction that is older than 1s ({age:.3f}s)")
+        passed = time_passed_since(interaction.id).total_seconds()
+
+        if passed >= 2.5:
+            logger.error(f"received expired interaction ({passed:.3f}s)")
+            return  # dont even bother
         else:
-            logger.debug(f"got interaction with age {age:.3f}s")
+            logger.debug(f"received interaction with age {passed:.3f}s")
 
         coro = None
         if isinstance(interaction, hikari.CommandInteraction):
