@@ -29,15 +29,12 @@ def on_fast_timer(event: FastTimerEvent, cguild: CleanerGuild):
 
     info = {"name": "verification", "action": "kick"}
 
-    print(cguild.verification_joins)
     for user_id, expire in tuple(cguild.verification_joins.items()):
-        print(user_id, expire + 8 * 60 - now)
         if now < expire + 8 * 60:
             continue
         del cguild.verification_joins[user_id]
 
         member = guild.get_member(user_id)
-        print(member)
         # > 1 because everyone role
         if member is None or len(member.role_ids) > 1:
             continue
