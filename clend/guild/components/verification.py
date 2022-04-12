@@ -11,6 +11,7 @@ from ...shared.custom_events import FastTimerEvent
 
 def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
     guild.verification_joins[event.user_id] = time.monotonic()
+    print("new user!", event.guild_id, event.user_id, guild.verification_joins)
 
 
 def on_member_delete(event: hikari.MemberDeleteEvent, guild: CleanerGuild):
