@@ -69,6 +69,8 @@ class DevExtension:
             await self.handle_info(event)
         elif event.content == "clean!pull":
             await self.handle_pull(event)
+        elif event.content == "clean!update":
+            await self.handle_update(event)
 
     async def handle_ping(self, event: hikari.GuildMessageCreateEvent):
         sent = datetime.utcnow().replace(tzinfo=timezone.utc)
@@ -147,6 +149,18 @@ class DevExtension:
             "git pull", stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
         )
         stdout, stderr = await git_pull.communicate()
+        message = (stdout.decode() if stdout else "") + (
+            stderr.decode() if stderr else ""
+        )
+        await msg.edit(f"```\n{message}```" if message else "Done. (no output)")
+
+    async def handle_update(self, event: hikari.GuildMessageCreateEvent):
+        name = event.message.content[13:]
+        msg = await event.message.respond(f"Updating `{name}`")
+        pip = await asyncio.create_subprocess_shell(
+            f"pip install -U {msg}", stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await pip.communicate()
         message = (stdout.decode() if stdout else "") + (
             stderr.decode() if stderr else ""
         )
