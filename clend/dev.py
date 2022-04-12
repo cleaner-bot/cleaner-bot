@@ -70,7 +70,7 @@ class DevExtension:
             await self.handle_info(event)
         elif event.content == "clean!pull":
             await self.handle_pull(event)
-        elif event.content == "clean!update":
+        elif event.content.startswith("clean!update "):
             await self.handle_update(event)
 
     async def handle_ping(self, event: hikari.GuildMessageCreateEvent):
