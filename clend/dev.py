@@ -7,6 +7,7 @@ import typing
 import hikari
 
 from .bot import TheCleaner
+from .shared.timing import timer_generator
 
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,8 @@ class DevExtension:
         ]
 
     def on_load(self):
+        timer = timer_generator()
+        next(timer)  # skip first 0
         for ext in self.extensions:
             if ext in self.bot.extensions:
                 logger.warning(f"loading already loaded extension: {ext}")
@@ -44,6 +47,9 @@ class DevExtension:
                     logger.exception(
                         f"An error occured while loading extension: {ext}", exc_info=e
                     )
+
+            if (time_taken := next(timer)) >= 0.5:
+                logger.info(f"spent {time_taken:.3f}s loading {ext}")
 
     def on_unload(self):
         for ext in self.extensions:
