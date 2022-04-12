@@ -27,7 +27,7 @@ class AnalyticsExtension:
     def on_load(self):
         for guild in self.bot.bot.cache.get_guilds_view().values():
             if guild.id in self.bot.guild_has_members_cached:
-                asyncio.create_task(self.check_guild(guild))
+                asyncio.create_task(self.acheck_guild(guild))
 
     async def on_guild_join(self, event: hikari.GuildJoinEvent):
         channel = self.get_channel()
@@ -79,22 +79,33 @@ class AnalyticsExtension:
 
         guild = self.bot.bot.cache.get_guild(event.guild_id)
         if guild is not None:
-            await self.check_guild(guild)
+            await self.acheck_guild(guild)
 
-    async def check_guild(self, guild: hikari.GatewayGuild):
+    async def acheck_guild(self, guild: hikari.GatewayGuild):
+        loop = asyncio.get_running_loop()
+        is_farm, humans, bots = await loop.run_in_executor(
+            None, self.check_guild, guild
+        )
+        if is_farm:
+            await self.suspend(guild, f"Bot farm (h={humans}, b={bots})")
+
+    def check_guild(self, guild: hikari.GatewayGuild):
         humans = bots = 0
-        for member in guild.get_members().values():
+        members = tuple(guild.get_members().values())  # clone to avoid race conditions
+        for member in members:
             if member.is_bot:
                 bots += 1
             else:
                 humans += 1
 
-        if humans + bots >= 80 and bots > 2 * humans:
+        is_farm = humans + bots >= 80 and bots > 2 * humans
+        if is_farm:
             logger.info(
                 f"detected botfarm on guild {guild.name!r} ({guild.id}): "
                 f"{humans}:{bots}"
             )
-            await self.suspend(guild, f"Bot farm (h={humans}, b={bots})")
+
+        return is_farm, humans, bots
 
     async def suspend(self, guild: hikari.GatewayGuild, reason: str):
         database = self.bot.database
