@@ -42,4 +42,4 @@ fh = logging.FileHandler("debug.log")
 fh.setLevel(logging.DEBUG)
 logging.getLogger().addHandler(fh)
 
-bot.run()
+bot.run(asyncio_debug=True)
