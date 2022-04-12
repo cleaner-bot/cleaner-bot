@@ -21,7 +21,8 @@ def on_member_delete(event: hikari.MemberDeleteEvent, guild: CleanerGuild):
 def on_fast_timer(event: FastTimerEvent, cguild: CleanerGuild):
     config = cguild.get_config()
     guild = event.app.cache.get_guild(cguild.id)
-    print(guild, config, getattr(config, "verification_enabled", None))
+    if config and config.verification_enabled:
+        print(guild)
     if config is None or not config.verification_enabled or guild is None:
         return
 
@@ -30,6 +31,7 @@ def on_fast_timer(event: FastTimerEvent, cguild: CleanerGuild):
 
     info = {"name": "verification", "action": "kick"}
 
+    print(cguild.verification_joins)
     for user_id, expire in tuple(cguild.verification_joins.items()):
         print(user_id, expire + 8 * 60 - now)
         if now < expire + 8 * 60:
