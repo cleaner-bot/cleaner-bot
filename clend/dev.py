@@ -58,7 +58,7 @@ class DevExtension:
                 logger.warning(f"extension was never loaded: {ext}")
 
     async def on_message_create(self, event: hikari.GuildMessageCreateEvent):
-        if not self.bot.is_developer(event.author_id):
+        if not self.bot.is_developer(event.author_id) or event.content is None:
             return
         if event.content == "clean!ping":
             await self.handle_ping(event)
