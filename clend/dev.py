@@ -1,10 +1,10 @@
 import asyncio
-from datetime import datetime, timezone
 import logging
 import sys
 import typing
 
 import hikari
+from hikari.internal.time import utc_datetime
 
 from .bot import TheCleaner
 from .shared.timing import timer_generator
@@ -80,7 +80,7 @@ class DevExtension:
             await self.handle_update(event)
 
     async def handle_ping(self, event: hikari.GuildMessageCreateEvent):
-        sent = datetime.utcnow().replace(tzinfo=timezone.utc)
+        sent = utc_datetime()
         ws_latency = self.bot.bot.heartbeat_latency * 1000
 
         msg = await event.message.respond(
