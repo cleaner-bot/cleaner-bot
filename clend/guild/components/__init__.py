@@ -11,6 +11,7 @@ from . import (
 
 
 components = [
+    verification,
     antiraid,
     antispam,
     dehoist,
@@ -18,5 +19,4 @@ components = [
     firewall,
     log,
     slowmode,
-    verification,
 ]

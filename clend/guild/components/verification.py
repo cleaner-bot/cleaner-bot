@@ -11,7 +11,6 @@ from ...shared.custom_events import FastTimerEvent
 
 def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
     guild.verification_joins[event.user_id] = time.monotonic()
-    print("new user!", event.guild_id, event.user_id, guild.verification_joins)
 
 
 def on_member_delete(event: hikari.MemberDeleteEvent, guild: CleanerGuild):
@@ -22,8 +21,6 @@ def on_member_delete(event: hikari.MemberDeleteEvent, guild: CleanerGuild):
 def on_fast_timer(event: FastTimerEvent, cguild: CleanerGuild):
     config = cguild.get_config()
     guild = event.app.cache.get_guild(cguild.id)
-    if config and config.verification_enabled:
-        print(guild)
     if config is None or not config.verification_enabled or guild is None:
         return
 
