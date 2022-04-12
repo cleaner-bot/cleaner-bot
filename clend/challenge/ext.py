@@ -154,7 +154,7 @@ class ChallengeExtension:
         if interaction.custom_id != "challenge":  # old embed
             logger.info(f"found old challenge embed {interaction.custom_id} in {interaction.guild_id}")
             guild = interaction.get_guild()
-            if interaction.guild_id == 903845468725977091 and guild is not None:
+            if guild is not None:
                 await self.migrate_embed(interaction.message, guild)
 
     async def create_flow(self, interaction: hikari.ComponentInteraction):
