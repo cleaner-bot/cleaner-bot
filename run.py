@@ -1,5 +1,6 @@
 import asyncio
 from pathlib import Path
+import logging
 import os
 
 from dotenv import load_dotenv
@@ -31,6 +32,10 @@ if sentry_dsn is not None:
     import sentry_sdk
 
     sentry_sdk.init(dsn=sentry_dsn)
+
+fh = logging.FileHandler("debug.log")
+fh.setLevel(logging.DEBUG)
+logging.getLogger().addHandler(fh)
 
 bot = TheCleaner(token=token)
 inject(bot.bot)
