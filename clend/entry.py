@@ -15,9 +15,14 @@ MODULES_TO_RELOAD = (
     "Levenshtein",
     "emoji",
     "janus",
-    "typing_extensions",
     "pkg_resources",
     "pydantic",
+    "downdoom",
+)
+MODULES_TO_NOT_RELOAD = (
+    "msgpack",
+    "coredis",
+    "typing_extensions",
 )
 
 
@@ -39,10 +44,14 @@ class EntryExtension:
     def should_reload_module(self, module: str):
         if module == "clend" or module == "clend.bot" or module == __name__:
             return False
-        elif module == "msgpack" or module.startswith("msgpack."):
-            return False
+        for mod_to_not_remove in MODULES_TO_NOT_RELOAD:
+            if module == mod_to_not_remove or module.startswith(
+                mod_to_not_remove + "."
+            ):
+                return False
+
         for mod_to_remove in MODULES_TO_RELOAD:
-            if module.startswith(mod_to_remove):
+            if module == mod_to_remove or module.startswith(mod_to_remove + "."):
                 return True
         mod = sys.modules.get(module, None)
         if mod is not None:
