@@ -40,12 +40,13 @@ class AnalyticsExtension:
             .set_thumbnail(event.guild.make_icon_url())
             .add_field(name="Name", value=event.guild.name)
             .add_field(name="Members", value=str(event.guild.member_count))
-            .add_field(name="Features", value=", ".join(map(str, event.guild.features)))
             .set_footer(str(event.guild_id))
         )
+        if event.guild.features:
+            embed.add_field(name="Features", value=", ".join(event.guild.features))
         if event.guild.vanity_url_code:
             vanity = event.guild.vanity_url_code
-            embed.add_field("Vanity Invite", f"https://discord.gg/{vanity}")
+            embed.add_field(name="Vanity Invite", value=f"https://discord.gg/{vanity}")
         await channel.send(embed=embed)
 
     async def on_guild_leave(self, event: hikari.GuildLeaveEvent):
