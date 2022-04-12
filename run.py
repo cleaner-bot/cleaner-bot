@@ -33,11 +33,13 @@ if sentry_dsn is not None:
 
     sentry_sdk.init(dsn=sentry_dsn)
 
+bot = TheCleaner(token=token)
+inject(bot.bot)
+bot.load_extension("clend.entry")
+
+# hikari logger is already inited, so we can add ours
 fh = logging.FileHandler("debug.log")
 fh.setLevel(logging.DEBUG)
 logging.getLogger().addHandler(fh)
 
-bot = TheCleaner(token=token)
-inject(bot.bot)
-bot.load_extension("clend.entry")
 bot.run()
