@@ -218,7 +218,10 @@ class HTTPService:
             }
         )
         if coro is not None:
-            await coro
+            try:
+                await coro
+            except hikari.NotFoundError:
+                pass
 
         if ev.message is not None and is_likely_phishing(ev):
             guild_strikes = self.guild_strikes.get(ev.guild_id, 0)
