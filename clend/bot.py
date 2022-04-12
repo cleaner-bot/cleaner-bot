@@ -34,6 +34,8 @@ class TheCleaner:
             token=token, intents=intents, cache_settings=cache_settings
         )
         logging.getLogger("clend").setLevel(logging.DEBUG)
+        # spammy with pretty much useless info
+        logging.getLogger("clend.conf").setLevel(logging.INFO)
         self.database = StrictRedis()
 
         self.extensions = {}
