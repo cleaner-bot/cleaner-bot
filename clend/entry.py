@@ -10,7 +10,6 @@ from .bot import TheCleaner
 logger = logging.getLogger(__name__)
 MODULES_TO_RELOAD = (
     "clend",
-    "cleaner_",
     "expirepy",
     "Levenshtein",
     "emoji",
@@ -44,6 +43,9 @@ class EntryExtension:
     def should_reload_module(self, module: str):
         if module == "clend" or module == "clend.bot" or module == __name__:
             return False
+        elif module.startswith("cleaner_"):
+            return True
+
         for mod_to_not_remove in MODULES_TO_NOT_RELOAD:
             if module == mod_to_not_remove or module.startswith(
                 mod_to_not_remove + "."
@@ -53,6 +55,7 @@ class EntryExtension:
         for mod_to_remove in MODULES_TO_RELOAD:
             if module == mod_to_remove or module.startswith(mod_to_remove + "."):
                 return True
+
         mod = sys.modules.get(module, None)
         if mod is not None:
             if (
