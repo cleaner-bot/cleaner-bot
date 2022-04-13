@@ -166,9 +166,8 @@ class DevExtension:
             return  # impossible, but makes mypy happy
         name = event.message.content[13:]
         msg = await event.message.respond(f"Updating `{name}`")
-        print(f"{sys.executable} -m pip install -U {msg!r}")
         pip = await asyncio.create_subprocess_shell(
-            f"{sys.executable} -m pip install -U {msg!r}",
+            f"{sys.executable} -m pip install -U {name!r}",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
