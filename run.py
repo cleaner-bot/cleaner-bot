@@ -40,6 +40,9 @@ bot.load_extension("clend.entry")
 # hikari logger is already inited, so we can add ours
 fh = logging.FileHandler("debug.log")
 fh.setLevel(logging.DEBUG)
+fh.setFormatter(
+    logging.Formatter("%(levelname)-1.1s %(asctime)23.23s %(name)s: %(message)s")
+)
 logging.getLogger().addHandler(fh)
 
 bot.run(asyncio_debug=True)
