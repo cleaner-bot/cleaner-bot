@@ -73,7 +73,7 @@ class SlashExtension:
                     )
                 else:
                     raise
-                
+
         except Exception as e:
             logger.exception("Error occured during component interaction", exc_info=e)
             # mypy is being weird here, thinking that interaction is PartialInteraction

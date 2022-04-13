@@ -142,7 +142,7 @@ class ChallengeExtension:
                     )
                 else:
                     raise
-                
+
         except Exception as e:
             logger.exception("Error occured during component interaction", exc_info=e)
             await interaction.create_initial_response(
@@ -150,9 +150,12 @@ class ChallengeExtension:
                 content=translate(interaction.locale, "challenge_internal_error"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
-        
+
         if interaction.custom_id != "challenge":  # old embed
-            logger.info(f"found old challenge embed {interaction.custom_id} in {interaction.guild_id}")
+            logger.info(
+                f"found old challenge embed {interaction.custom_id} "
+                f"in {interaction.guild_id}"
+            )
             guild = interaction.get_guild()
             if guild is not None:
                 await self.migrate_embed(interaction.message, guild)
