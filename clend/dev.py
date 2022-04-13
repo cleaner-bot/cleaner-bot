@@ -167,7 +167,7 @@ class DevExtension:
         name = event.message.content[13:]
         msg = await event.message.respond(f"Updating `{name}`")
         pip = await asyncio.create_subprocess_shell(
-            f"{sys.executable} -m pip install -U {msg}",
+            f"{sys.executable} -m pip install -U {msg!r}",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
