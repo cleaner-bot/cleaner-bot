@@ -39,7 +39,7 @@ class ConfigExtension:
         self.task = None
 
     def on_load(self):
-        asyncio.create_task(protected_call(self.loader))
+        asyncio.create_task(protected_call(self.loader()))
         self.task = asyncio.create_task(protect(self.updated))
 
     async def loader(self):
