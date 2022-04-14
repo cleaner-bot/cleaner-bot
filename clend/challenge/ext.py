@@ -71,7 +71,7 @@ class ChallengeExtension:
         config = self.get_config(member.guild_id)
         entitlements = self.get_entitlements(member.guild_id)
         if config is None or entitlements is None:
-            logging.warning(f"uncached guild settings: {member.guild_id}")
+            logger.warning(f"uncached guild settings: {member.guild_id}")
             return
 
         if (
