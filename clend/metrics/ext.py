@@ -45,7 +45,6 @@ class MetricsExtension:
             loading = loop.run_in_executor(None, self.load_metrics)
             while not loading.done():
                 temp_storage.append(await self.queue.get())
-                print(temp_storage)
             logger.info("all metrics loaded")
 
             for event in temp_storage:
