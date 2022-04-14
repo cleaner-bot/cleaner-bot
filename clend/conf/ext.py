@@ -46,6 +46,7 @@ class ConfigExtension:
         for guild_id in tuple(self.bot.bot.cache.get_guilds_view().keys()):
             if guild_id not in self._guilds:
                 await self.fetch_guild(guild_id)
+        logger.info("initial setting fetch done")
 
     def on_unload(self):
         if self.task is not None:

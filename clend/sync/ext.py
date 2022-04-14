@@ -39,6 +39,7 @@ class SyncExtension:
     async def loader(self):
         for guild in tuple(self.bot.bot.cache.get_guilds_view().values()):
             await self.new_guild(guild)
+        logger.info("initial sync done")
 
     async def on_new_guild(
         self, event: hikari.GuildJoinEvent | hikari.GuildAvailableEvent
