@@ -79,6 +79,8 @@ class DevExtension:
             await self.handle_pull(event)
         elif event.content.startswith("clean!update "):
             await self.handle_update(event)
+        elif event.content.startswith("clean!reload "):
+            await self.handle_reload(event)
 
     async def handle_ping(self, event: hikari.GuildMessageCreateEvent):
         sent = utc_datetime()
@@ -177,6 +179,35 @@ class DevExtension:
             stderr.decode() if stderr else ""
         )
         await msg.edit(f"```\n{message}```" if message else "Done. (no output)")
+
+    async def handle_reload(self, event: hikari.GuildMessageCreateEvent):
+        if event.message.content is None:
+            return  # impossible, but makes mypy happy
+        name = event.message.content[13:]
+        msg = await event.message.respond(f"Reloading `{name}`")
+
+        if name in self.bot.extensions:
+            try:
+                self.bot.unload_extension(name)
+            except Exception as e:
+                logger.error(f"Error unloading {name}", exc_info=e)
+                return await msg.edit("Failed. Unload error.")
+
+        reloaded = []
+        for module in tuple(sys.modules):
+            if module == name or module.startswith(f"{name}."):
+                del sys.modules[module]
+                reloaded.append(module)
+
+        try:
+            self.bot.load_extension(name)
+        except Exception as e:
+            logger.error(f"Error loading {name}", exc_info=e)
+            return await msg.edit("Failed. Load error.")
+
+        await msg.edit(
+            "Success. Reloaded modules: " + ", ".join(f"`{x}`" for x in reloaded)
+        )
 
 
 extension = DevExtension
