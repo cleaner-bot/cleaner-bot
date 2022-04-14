@@ -53,7 +53,7 @@ class SlashExtension:
                 coro = self.handle_login_button(interaction)
 
             if coro is not None:
-                logger.debug(f"used button command: {interaction.command_id}")
+                logger.debug(f"used button command: {interaction.custom_id}")
 
         else:
             return
