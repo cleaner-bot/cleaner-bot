@@ -28,7 +28,7 @@ class MetricsExtension:
         self.metrics = Metrics()
 
     def on_load(self):
-        self.task = asyncio.create_task(protect(self.maind()))
+        self.task = asyncio.create_task(protect(self.maind))
 
     def on_unload(self):
         if self.task is not None:
@@ -39,7 +39,7 @@ class MetricsExtension:
 
     async def maind(self):
         loop = asyncio.get_running_loop()
-        
+
         if not self.metrics.history:
             temp_storage = []
             loading = asyncio.create_task(loop.run_in_executor(None, self.load_metrics))
