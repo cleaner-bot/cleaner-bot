@@ -10,7 +10,7 @@ from cleaner_conf.guild import GuildConfig, GuildEntitlements
 from ..bot import TheCleaner
 from ..shared.event import IGuildSettingsAvailable
 from ..shared.sub import listen as pubsub_listen, Message
-from ..shared.protect import protect
+from ..shared.protect import protect, protected_call
 
 
 logger = logging.getLogger(__name__)
@@ -39,12 +39,13 @@ class ConfigExtension:
         self.task = None
 
     def on_load(self):
-        for guild_id in self.bot.bot.cache.get_guilds_view().keys():
-            if guild_id not in self._guilds:
-                logger.debug(f"scheduled fetching settings for guild: {guild_id}")
-                asyncio.create_task(self.fetch_guild(guild_id))
-
+        asyncio.create_task(protected_call(self.loader))
         self.task = asyncio.create_task(protect(self.updated))
+
+    async def loader(self):
+        for guild_id in tuple(self.bot.bot.cache.get_guilds_view().keys()):
+            if guild_id not in self._guilds:
+                await self.fetch_guild(guild_id)
 
     def on_unload(self):
         if self.task is not None:
