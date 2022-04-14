@@ -42,7 +42,7 @@ class MetricsExtension:
 
         if not self.metrics.history:
             temp_storage = []
-            loading = asyncio.create_task(loop.run_in_executor(None, self.load_metrics))
+            loading = loop.run_in_executor(None, self.load_metrics)
             while not loading.done():
                 temp_storage.append(await self.queue.get())
                 print(temp_storage)
