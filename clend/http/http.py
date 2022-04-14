@@ -426,4 +426,5 @@ class HTTPService:
         if metrics is None:
             logger.warning("unable to get metrics queue")
             return
+        logger.debug(f"putting into metrics: {item}")
         metrics.queue.put_nowait(item)
