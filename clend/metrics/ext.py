@@ -9,6 +9,7 @@ import msgpack  # type: ignore
 
 from .metrics import Metrics, metrics_reader
 from ..bot import TheCleaner
+from ..shared.protect import protect
 
 logger = logging.getLogger(__name__)
 
@@ -23,11 +24,11 @@ class MetricsExtension:
         self.bot = bot
         self.listeners = []
         self.queue = asyncio.Queue()
-        self.tasks = None
+        self.task = None
         self.metrics = Metrics()
 
     def on_load(self):
-        self.task = asyncio.create_task(self.maind())
+        self.task = asyncio.create_task(protect(self.maind()))
 
     def on_unload(self):
         if self.task is not None:
@@ -37,17 +38,19 @@ class MetricsExtension:
         self.metrics.close()
 
     async def maind(self):
-        temp_storage = []
         loop = asyncio.get_running_loop()
-        loading = asyncio.create_task(loop.run_in_executor(None, self.load_metrics))
-        while not loading.done():
-            temp_storage.append(await self.queue.get())
-            print(temp_storage)
-        logger.info("all metrics loaded")
+        
+        if not self.metrics.history:
+            temp_storage = []
+            loading = asyncio.create_task(loop.run_in_executor(None, self.load_metrics))
+            while not loading.done():
+                temp_storage.append(await self.queue.get())
+                print(temp_storage)
+            logger.info("all metrics loaded")
 
-        for event in temp_storage:
-            logger.debug(event)
-            self.metrics.log(event)
+            for event in temp_storage:
+                logger.debug(event)
+                self.metrics.log(event)
 
         last_update = None
         while True:
