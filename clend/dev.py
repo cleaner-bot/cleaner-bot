@@ -28,6 +28,7 @@ class DevExtension:
             "clend.sync",
             "clend.slash",
             "clend.analytics",
+            "clend.metrics",
             "clend.downdoom",
         ]
         self.listeners = [
