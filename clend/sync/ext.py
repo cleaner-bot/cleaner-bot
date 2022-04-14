@@ -34,8 +34,11 @@ class SyncExtension:
         self.task = None
 
     def on_load(self):
-        for guild in self.bot.bot.cache.get_guilds_view().values():
-            asyncio.create_task(protected_call(self.new_guild(guild)))
+        asyncio.create_task(protected_call(self.loader()))
+
+    async def loader(self):
+        for guild in tuple(self.bot.bot.cache.get_guilds_view().values()):
+            await self.new_guild(guild)
 
     async def on_new_guild(
         self, event: hikari.GuildJoinEvent | hikari.GuildAvailableEvent
