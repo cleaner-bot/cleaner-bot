@@ -67,7 +67,8 @@ class ConfigExtension:
             )
             # TODO: investigate usage of .construct() instead
             self._guilds[guild_id] = GuildData(
-                GuildConfig(**guild_config), GuildEntitlements(**guild_entitlements)
+                GuildConfig.construct(**guild_config),
+                GuildEntitlements.construct(**guild_entitlements),
             )
         except Exception as e:
             logger.error(
