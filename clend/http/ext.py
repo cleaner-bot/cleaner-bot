@@ -33,6 +33,3 @@ class HTTPExtension(threading.Thread):
         if self.tasks is not None:
             for task in self.tasks:
                 task.cancel()
-
-        self.http.metrics.flush()
-        self.http.metrics.close()

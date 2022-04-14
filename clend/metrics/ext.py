@@ -32,6 +32,9 @@ class MetricsExtension:
         if self.task is not None:
             self.task.cancel()
 
+        self.metrics.flush()
+        self.metrics.close()
+
     async def maind(self):
         temp_storage = []
         loop = asyncio.get_running_loop()
