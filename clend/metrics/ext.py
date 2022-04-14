@@ -52,12 +52,14 @@ class MetricsExtension:
         while True:
             now = time.monotonic()
             if last_update is None or now - last_update > 300:
+                logger.debug("updating radar")
                 await loop.run_in_executor(None, self.metrics.flush)
                 data, guilds = await loop.run_in_executor(None, self.gather_radar_data)
                 await self.bot.database.set("radar", data)
                 for guild_id, guild_data in guilds.items():
                     await self.bot.database.set(f"guild:{guild_id}:radar", guild_data)
                 last_update = now
+                logger.debug("radar updated")
 
             event = await self.queue.get()
             logger.debug(event)
