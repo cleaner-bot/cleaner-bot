@@ -423,7 +423,7 @@ class HTTPService:
 
     def put_in_metrics_queue(self, item):
         metrics = self.bot.extensions.get("clend.metrics")
-        if metrics is not None:
+        if metrics is None:
             logger.warning("unable to get metrics queue")
             return
         metrics.queue.put_nowait(item)
