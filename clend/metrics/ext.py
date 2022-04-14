@@ -108,39 +108,57 @@ class MetricsExtension:
         cutoff_previous = latest - timespan * 2
 
         result = {
-            "rules": {r: {"previous": 0, "now": 0} for r in all_rules},
-            "traffic": {t: {"previous": 0, "now": 0} for t in traffic},
-            "categories": {c: {"previous": 0, "now": 0} for c in categories},
-            "challenges": {c: {"previous": 0, "now": 0} for c in challenge_actions},
+            "rules": {r: {"total": 0, "previous": 0, "now": 0} for r in all_rules},
+            "traffic": {t: {"total": 0, "previous": 0, "now": 0} for t in traffic},
+            "categories": {
+                c: {"total": 0, "previous": 0, "now": 0} for c in categories
+            },
+            "challenges": {
+                c: {"total": 0, "previous": 0, "now": 0} for c in challenge_actions
+            },
             "stats": {
                 "guild_count": len(self.bot.bot.cache.get_guilds_view()),
                 "user_count": len(self.bot.bot.cache.get_users_view()),
             },
         }
         guild_template = {
-            "rules": {r: {"previous": 0, "now": 0} for r in all_rules},
-            "traffic": {t: {"previous": 0, "now": 0} for t in traffic},
-            "categories": {c: {"previous": 0, "now": 0} for c in categories},
-            "challenges": {c: {"previous": 0, "now": 0} for c in challenge_actions},
+            "rules": {r: {"total": 0, "previous": 0, "now": 0} for r in all_rules},
+            "traffic": {t: {"total": 0, "previous": 0, "now": 0} for t in traffic},
+            "categories": {
+                c: {"total": 0, "previous": 0, "now": 0} for c in categories
+            },
+            "challenges": {
+                c: {"total": 0, "previous": 0, "now": 0} for c in challenge_actions
+            },
         }
         guilds = {}
 
         for timestamp, data in self.metrics.history:
             if data["guild"] not in guilds:
                 guilds[data["guild"]] = copy.deepcopy(guild_template)
-            if cutoff_previous > timestamp:  # too old
-                continue
-            span = "previous" if cutoff_now > timestamp else "now"
+            span = (
+                None
+                if cutoff_previous > timestamp
+                else "previous"
+                if cutoff_now > timestamp
+                else "now"
+            )
             guild = guilds[data["guild"]]
             if data["name"] == "challenge":
-                result["challenges"][data["action"]][span] += 1
-                guild["challenges"][data["action"]][span] += 1
+                result["challenges"][data["action"]]["total"] += 1
+                guild["challenges"][data["action"]]["total"] += 1
+                if span is not None:
+                    result["challenges"][data["action"]][span] += 1
+                    guild["challenges"][data["action"]][span] += 1
             elif data["name"] == "delete":
                 rule = data["info"]["rule"]
                 category = None
                 if rule in all_rules:
-                    result["rules"][rule][span] += 1
-                    guild["rules"][rule][span] += 1
+                    result["rules"][rule]["total"] += 1
+                    guild["rules"][rule]["total"] += 1
+                    if span is not None:
+                        result["rules"][rule][span] += 1
+                        guild["rules"][rule][span] += 1
                     if rule in phishing_rules:
                         category = "phishing"
                     elif rule in advertisement:
@@ -148,15 +166,21 @@ class MetricsExtension:
                     else:
                         category = "other"
                 elif rule in traffic:
-                    result["traffic"][rule][span] += 1
-                    guild["traffic"][rule][span] += 1
+                    result["traffic"][rule]["total"] += 1
+                    guild["traffic"][rule]["total"] += 1
+                    if span is not None:
+                        result["traffic"][rule][span] += 1
+                        guild["traffic"][rule][span] += 1
                     category = "antispam"
                 else:
                     logger.warning(f"unknown rule: {rule}")
 
                 if category is not None:
-                    result["categories"][category][span] += 1
-                    guild["categories"][category][span] += 1
+                    result["categories"][category]["total"] += 1
+                    guild["categories"][category]["total"] += 1
+                    if span is not None:
+                        result["categories"][category][span] += 1
+                        guild["categories"][category][span] += 1
 
         return msgpack.packb(result), {
             guild_id: msgpack.packb(guild_data)
