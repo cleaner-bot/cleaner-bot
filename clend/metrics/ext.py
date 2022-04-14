@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import typing
 import logging
 import time
@@ -51,8 +52,11 @@ class MetricsExtension:
         while True:
             now = time.monotonic()
             if last_update is None or now - last_update > 300:
-                data = await loop.run_in_executor(None, self.gather_radar_data)
-                await self.bot.database.set("radar", msgpack.packb(data))
+                await loop.run_in_executor(None, self.metrics.flush)
+                data, guilds = await loop.run_in_executor(None, self.gather_radar_data)
+                await self.bot.database.set("radar", data)
+                for guild_id, guild_data in guilds.items():
+                    await self.bot.database.set(f"guild:{guild_id}:radar", guild_data)
                 last_update = now
 
             event = await self.queue.get()
@@ -106,18 +110,30 @@ class MetricsExtension:
                 "user_count": len(self.bot.bot.cache.get_users_view()),
             },
         }
+        guild_template = {
+            "rules": {r: {"previous": 0, "now": 0} for r in all_rules},
+            "traffic": {t: {"previous": 0, "now": 0} for t in traffic},
+            "categories": {c: {"previous": 0, "now": 0} for c in categories},
+            "challenges": {c: {"previous": 0, "now": 0} for c in challenge_actions},
+        }
+        guilds = {}
 
         for timestamp, data in self.metrics.history:
+            if data["guild"] not in guilds:
+                guilds[data["guild"]] = copy.deepcopy(guild_template)
             if cutoff_previous > timestamp:  # too old
                 continue
             span = "previous" if cutoff_now > timestamp else "now"
+            guild = guilds[data["guild"]]
             if data["name"] == "challenge":
                 result["challenges"][data["action"]][span] += 1
+                guild["challenges"][data["action"]][span] += 1
             elif data["name"] == "delete":
                 rule = data["info"]["rule"]
                 category = None
                 if rule in all_rules:
                     result["rules"][rule][span] += 1
+                    guild["rules"][rule][span] += 1
                     if rule in phishing_rules:
                         category = "phishing"
                     elif rule in advertisement:
@@ -126,11 +142,16 @@ class MetricsExtension:
                         category = "other"
                 elif rule in traffic:
                     result["traffic"][rule][span] += 1
+                    guild["traffic"][rule][span] += 1
                     category = "antispam"
                 else:
                     logger.warning(f"unknown rule: {rule}")
 
                 if category is not None:
                     result["categories"][category][span] += 1
+                    guild["categories"][category][span] += 1
 
-        return result
+        return msgpack.packb(result), {
+            guild_id: msgpack.packb(guild_data)
+            for guild_id, guild_data in guilds.items()
+        }
