@@ -29,7 +29,7 @@ class SlashExtension:
         passed = time_passed_since(interaction.id).total_seconds()
 
         if passed >= 2.5:
-            logger.error(f"received expired interaction ({passed:.3f}s)")
+            logger.warning(f"received expired interaction ({passed:.3f}s)")
             return  # dont even bother
         else:
             logger.debug(f"received interaction with age {passed:.3f}s")
