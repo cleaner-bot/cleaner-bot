@@ -45,6 +45,9 @@ def detection(
         score = len(all_tokens & tokens) / len(all_tokens)
         scores.append((score, tokens, 0.1 if is_exception else 1))
 
+    if len(scores) < MIN_DATA:
+        return
+
     # standard score
     median = statistics.median(x[0] for x in scores)
     if median < 10 / len(scores):
