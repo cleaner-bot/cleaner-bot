@@ -43,7 +43,8 @@ class GuildExtension:
     def on_load(self):
         self.workers = [GuildWorker(self, idx, WORKERS) for idx in range(WORKERS)]
         for worker in self.workers:
-            worker.start()
+            worker.thread = threading.Thread(target=worker.run)
+            worker.thread.start()
 
     def on_unload(self):
         if self.workers:
@@ -59,10 +60,18 @@ class GuildExtension:
         if guild_id is None:
             for worker in self.workers:
                 worker.queue.put(event)
+                if worker.thread is None or not worker.thread.is_alive():
+                    logger.warning(f"worker {worker.worker_index} thread died")
+                    worker.thread = threading.Thread(target=worker.run)
+                    worker.thread.start()
 
         else:
             worker = self.workers[guild_id % WORKERS]
             worker.queue.put(event)
+            if worker.thread is None or not worker.thread.is_alive():
+                logger.warning(f"worker {worker.worker_index} thread died")
+                worker.thread = threading.Thread(target=worker.run)
+                worker.thread.start()
 
         return True
 
@@ -70,8 +79,9 @@ class GuildExtension:
         self.send_event(event)
 
 
-class GuildWorker(threading.Thread):
+class GuildWorker:
     queue: queue.Queue[hikari.Event]
+    thread: threading.Thread | None = None
 
     def __init__(
         self, ext: GuildExtension, worker_index: int, worker_count: int
