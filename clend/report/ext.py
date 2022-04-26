@@ -32,8 +32,10 @@ class ReportExtension:
         }
 
     async def on_interaction_create(self, event: hikari.InteractionCreateEvent):
-        interaction = event.interaction
-        handler = None
+        InteractionType = hikari.CommandInteraction | hikari.ComponentInteraction
+        interaction: InteractionType = event.interaction  # type: ignore
+
+        handler = None  # type: typing.Any
         if (passed := time_passed_since(interaction.id).total_seconds()) >= 2.5:
             return
         elif isinstance(interaction, hikari.CommandInteraction):
@@ -51,6 +53,9 @@ class ReportExtension:
             logger.debug(f"used report button: {interaction.custom_id}")
         else:
             return
+
+        if handler is None:
+            return  # impossible, but lets make mypy happy
 
         try:
             try:
@@ -75,6 +80,17 @@ class ReportExtension:
 
     async def handle_phishing_report(self, interaction: hikari.CommandInteraction):
         database = self.bot.database
+
+        if interaction.member is None:
+            return await interaction.create_initial_response(
+                hikari.ResponseType.MESSAGE_CREATE,
+                content=translate(interaction.locale, "report_guildonly"),
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+        elif interaction.target_id is None:
+            return  # impossible, but makes mypy happy
+        elif interaction.resolved is None:
+            return  # ^
 
         t = lambda s, **k: translate(  # noqa E731
             interaction.locale, f"report_phishing_{s}", **k
@@ -175,20 +191,20 @@ class ReportExtension:
 
         component = interaction.app.rest.build_action_row()
         (
-            component.add_button(hikari.ButtonStyle.SUCCESS, f"report-phishing/accept")
+            component.add_button(hikari.ButtonStyle.SUCCESS, "report-phishing/accept")
             .set_label("Accept report")
-            .build()
+            .add_to_container()
         )
         (
             component.add_button(
                 hikari.ButtonStyle.DANGER, f"report-phishing/ban/{interaction.user.id}"
             )
             .set_label("Ban user from reporting")
-            .build()
+            .add_to_container()
         )
 
         await interaction.app.rest.create_message(
-            channel_id, embed=embed, component=component.build()
+            channel_id, embed=embed, component=component
         )
 
     async def handle_report_phishing_accept(
