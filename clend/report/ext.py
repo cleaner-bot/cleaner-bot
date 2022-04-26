@@ -126,7 +126,7 @@ class ReportExtension:
             )
 
         elif await database.exists(
-            (f"user:{interaction.user.id}:report:phishing:ban",)
+            (f"user:{interaction.user.id}:report:phishing:banned",)
         ):
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
