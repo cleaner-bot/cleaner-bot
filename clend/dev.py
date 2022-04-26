@@ -128,9 +128,8 @@ class DevExtension:
             #     "login", "Create a link to login immediately (useful for phones)"
             # ),
             event.app.rest.context_menu_command_builder(
-                hikari.CommandType.MESSAGE,
-                "Report as phishing"
-            )
+                hikari.CommandType.MESSAGE, "Report as phishing"
+            ),
         ]
 
         me = self.bot.bot.get_me()
