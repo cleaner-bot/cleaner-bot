@@ -35,15 +35,15 @@ async def report_phishing(ev: IActionDelete, bot: TheCleaner):
         embed.set_footer(text=str(ev.user_id))
     else:
         embed.set_footer(
-            text=f"{user} {ev.user_id}", icon=user.make_avatar_url(ext="webp", size=64)
+            text=f"{user} ({ev.user_id})", icon=user.make_avatar_url(ext="webp", size=64)
         )
 
-    embed.add_field("Channel", value=f"<#{ev.channel_id}>")
+    embed.add_field("Channel", f"<#{ev.channel_id}>")
 
     guild = bot.bot.cache.get_guild(ev.guild_id)
     if guild is None:
-        embed.add_field("Guild", value=str(ev.guild_id))
+        embed.add_field("Guild", str(ev.guild_id))
     else:
-        embed.add_field("Guild", value=f"{guild.name} ({ev.guild_id})")
+        embed.add_field("Guild", f"{guild.name} ({ev.guild_id})")
 
     await bot.bot.rest.create_message(channel_id, embed=embed)
