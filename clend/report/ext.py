@@ -188,7 +188,7 @@ class ReportExtension:
         )
 
         await interaction.app.rest.create_message(
-            channel_id, embed=embed, component=component
+            channel_id, embed=embed, component=component.build()
         )
 
     async def handle_report_phishing_accept(
