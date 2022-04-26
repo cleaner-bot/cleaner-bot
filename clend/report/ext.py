@@ -211,10 +211,10 @@ class ReportExtension:
     async def handle_report_phishing_accept(
         self, interaction: hikari.ComponentInteraction
     ):
-        await interaction.message.edit(component=None)
         await interaction.create_initial_response(
             hikari.ResponseType.DEFERRED_MESSAGE_UPDATE
         )
+        await interaction.message.edit(component=None)
 
     async def handle_report_phishing_ban(
         self, interaction: hikari.ComponentInteraction
@@ -224,8 +224,6 @@ class ReportExtension:
         user_id = parts[2]
 
         await database.set(f"user:{user_id}:report:phishing:banned", "1")
-
-        await interaction.message.edit(component=None)
 
         component = interaction.app.rest.build_action_row()
         (
@@ -242,6 +240,8 @@ class ReportExtension:
             component=component,
         )
 
+        await interaction.message.edit(component=None)
+
     async def handle_report_phishing_unban(
         self, interaction: hikari.ComponentInteraction
     ):
@@ -250,8 +250,6 @@ class ReportExtension:
         user_id = parts[2]
 
         await database.delete((f"user:{user_id}:report:phishing:banned",))
-
-        await interaction.message.edit(component=None)
 
         component = interaction.app.rest.build_action_row()
         (
@@ -267,3 +265,5 @@ class ReportExtension:
             "They have been unbanned.",
             component=component,
         )
+
+        await interaction.message.edit(component=None)
