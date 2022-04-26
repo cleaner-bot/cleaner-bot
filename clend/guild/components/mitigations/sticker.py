@@ -9,7 +9,7 @@ THRESHOLD = 3
 
 
 class StickerMitigation(typing.NamedTuple):
-    ids: tuple[int]
+    ids: tuple[int, ...]
 
 
 def match(mitigation: StickerMitigation, message: hikari.Message) -> bool:

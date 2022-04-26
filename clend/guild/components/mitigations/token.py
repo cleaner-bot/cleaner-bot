@@ -12,7 +12,7 @@ MIN_DATA = 10
 
 
 class TokenMessageMitigation(typing.NamedTuple):
-    tokens: tuple[str]
+    tokens: tuple[str, ...]
 
 
 def match(mitigation: TokenMessageMitigation, message: hikari.Message):
