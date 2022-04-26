@@ -4,6 +4,7 @@ import typing
 import hikari
 
 from cleaner_data.phishing_content import get_highest_phishing_match
+from cleaner_data.url import has_url
 from cleaner_i18n.translate import translate
 
 from ..bot import TheCleaner
@@ -147,6 +148,12 @@ class ReportExtension:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("nobot"),
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+        elif not has_url(message.content):
+            return await interaction.create_initial_response(
+                hikari.ResponseType.MESSAGE_CREATE,
+                content=t("nolink"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
