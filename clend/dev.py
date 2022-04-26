@@ -81,6 +81,8 @@ class DevExtension:
             await self.handle_update(event)
         elif event.content.startswith("clean!reload "):
             await self.handle_reload(event)
+        elif event.content.startswith("clean!emergency-ban"):
+            await self.handle_emergency_ban(event)
 
     async def handle_ping(self, event: hikari.GuildMessageCreateEvent):
         sent = utc_datetime()
@@ -207,6 +209,26 @@ class DevExtension:
 
         await msg.edit(
             "Success. Reloaded modules: " + ", ".join(f"`{x}`" for x in reloaded)
+        )
+
+    async def handle_emergency_ban(self, event: hikari.GuildMessageCreateEvent):
+        if event.message.referenced_message is None:
+            await event.message.respond("You have to reply to a message.")
+            return
+        content = event.message.referenced_message.content
+        if content is None:
+            await event.message.respond("Message is empty.")
+            return
+
+        from cleaner_data.normalize import normalize
+        from cleaner_data.auto.phishing_content import data
+
+        normalized = normalize(content, normalize_unicode=False)
+        data.add(normalized)
+
+        await event.message.respond(
+            "The message has been emergency banned. The ban will only exist "
+            "until the next reload. Please update `cleaner-data`."
         )
 
 
