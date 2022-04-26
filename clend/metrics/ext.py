@@ -118,7 +118,10 @@ class MetricsExtension:
             },
             "stats": {
                 "guild_count": len(self.bot.bot.cache.get_guilds_view()),
-                "user_count": len(self.bot.bot.cache.get_users_view()),
+                "user_count": sum(
+                    guild.member_count
+                    for guild in self.bot.bot.cache.get_guilds_view().values()
+                ),
             },
         }
         guild_template = {
