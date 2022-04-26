@@ -27,6 +27,7 @@ class DevExtension:
             "clend.verification",
             "clend.sync",
             "clend.slash",
+            "clend.report",
             "clend.analytics",
             "clend.metrics",
             "clend.downdoom",
@@ -126,11 +127,16 @@ class DevExtension:
             # event.app.rest.slash_command_builder(
             #     "login", "Create a link to login immediately (useful for phones)"
             # ),
+            event.app.rest.context_menu_command_builder(
+                hikari.CommandType.MESSAGE,
+                "Report as phishing"
+            )
         ]
 
         me = self.bot.bot.get_me()
         if me is None:
             return await event.message.respond("no me found")
+
         await event.app.rest.set_application_commands(
             application=me.id,
             commands=commands,
