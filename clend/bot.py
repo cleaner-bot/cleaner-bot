@@ -33,7 +33,6 @@ class TheCleaner:
         self.bot = hikari.GatewayBot(
             token=token, intents=intents, cache_settings=cache_settings
         )
-        logging.getLogger("pcex").setLevel(logging.DEBUG)
         logging.getLogger("clend").setLevel(logging.DEBUG)
         # spammy with pretty much useless info
         logging.getLogger("clend.conf").setLevel(logging.INFO)

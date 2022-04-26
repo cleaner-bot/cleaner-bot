@@ -82,6 +82,7 @@ class AnalyticsExtension:
         await channel.send(embed=embed)
 
     async def on_member_chunk(self, event: hikari.MemberChunkEvent):
+        # TODO: remove this (guild chunking is disabled!)
         if event.chunk_index != event.chunk_count - 1:
             return  # guild is not fully chunked yet
 

@@ -4,13 +4,13 @@ import logging
 import os
 
 from dotenv import load_dotenv
+from hikari.impl import event_manager
 
 load_dotenv(Path("~/.cleaner/secrets").expanduser())
 load_dotenv(Path("~/.cleaner/env").expanduser())
 load_dotenv(Path("~/.cleaner/env_bot").expanduser())
 
 from clend.bot import TheCleaner  # noqa: E402
-from pcex import inject  # noqa: E402
 
 
 try:
@@ -34,7 +34,6 @@ if sentry_dsn is not None:
     sentry_sdk.init(dsn=sentry_dsn)
 
 bot = TheCleaner(token=token)
-inject(bot.bot)
 bot.load_extension("clend.entry")
 
 # hikari logger is already inited, so we can add ours
@@ -44,5 +43,14 @@ fh.setFormatter(
     logging.Formatter("%(levelname)-1.1s %(asctime)23.23s %(name)s: %(message)s")
 )
 logging.getLogger().addHandler(fh)
+
+
+# patch hikari to not request guild members
+# TODO: use auto_chunk_members when we upgrade to dev109
+async def noop(*dev, **null):
+    pass
+
+
+event_manager._request_guild_members = noop
 
 bot.run(asyncio_debug=True)
