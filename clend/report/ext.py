@@ -29,6 +29,7 @@ class ReportExtension:
         self.buttons = {
             "accept": self.handle_report_phishing_accept,
             "ban": self.handle_report_phishing_ban,
+            "unban": self.handle_report_phishing_unban,
         }
 
     async def on_interaction_create(self, event: hikari.InteractionCreateEvent):
@@ -226,7 +227,43 @@ class ReportExtension:
 
         await interaction.message.edit(component=None)
 
+        component = interaction.app.rest.build_action_row()
+        (
+            component.add_button(
+                hikari.ButtonStyle.PRIMARY, f"report-phishing/unban/{user_id}"
+            )
+            .set_label("Unban")
+            .add_to_container()
+        )
+
         await interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_CREATE,
-            "They have been banned and can no longer report phishing."
+            "They have been banned and can no longer report phishing.",
+            component=component,
+        )
+
+    async def handle_report_phishing_unban(
+        self, interaction: hikari.ComponentInteraction
+    ):
+        database = self.bot.database
+        parts = interaction.custom_id.split("/")
+        user_id = parts[2]
+
+        await database.delete((f"user:{user_id}:report:phishing:banned",))
+
+        await interaction.message.edit(component=None)
+
+        component = interaction.app.rest.build_action_row()
+        (
+            component.add_button(
+                hikari.ButtonStyle.PRIMARY, f"report-phishing/ban/{user_id}"
+            )
+            .set_label("Ban")
+            .add_to_container()
+        )
+
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_CREATE,
+            "They have been unbanned.",
+            component=component,
         )
