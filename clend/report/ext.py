@@ -3,6 +3,7 @@ import typing
 
 import hikari
 
+from cleaner_data.phishing_content import get_highest_phishing_match
 from cleaner_i18n.translate import translate
 
 from ..bot import TheCleaner
@@ -136,10 +137,24 @@ class ReportExtension:
             )
 
         message = interaction.resolved.messages.get(interaction.target_id, None)
-        if message is None:
+        if message is None or message.content is None:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("nomessage"),
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+        elif message.author.is_bot:
+            return await interaction.create_initial_response(
+                hikari.ResponseType.MESSAGE_CREATE,
+                content=t("nobot"),
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+
+        match = get_highest_phishing_match(message.content)
+        if match > 0.9:
+            return await interaction.create_initial_response(
+                hikari.ResponseType.MESSAGE_CREATE,
+                content=t("detected"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
