@@ -28,7 +28,7 @@ class ReportExtension:
         }
         self.buttons = {
             "accept": self.handle_report_phishing_accept,
-            "ban": self.handle_report_phishing_ban
+            "ban": self.handle_report_phishing_ban,
         }
 
     async def on_interaction_create(self, event: hikari.InteractionCreateEvent):
@@ -80,11 +80,15 @@ class ReportExtension:
             interaction.locale, f"report_phishing_{s}", **k
         )
 
-        if interaction.member.permissions & (
-            hikari.Permissions.ADMINISTRATOR
-            | hikari.Permissions.MANAGE_MESSAGES
-            | hikari.Permissions.MANAGE_GUILD
-        ) == 0:
+        if (
+            interaction.member.permissions
+            & (
+                hikari.Permissions.ADMINISTRATOR
+                | hikari.Permissions.MANAGE_MESSAGES
+                | hikari.Permissions.MANAGE_GUILD
+            )
+            == 0
+        ):
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("noperms"),
@@ -176,15 +180,23 @@ class ReportExtension:
             .build()
         )
         (
-            component.add_button(hikari.ButtonStyle.DANGER, f"report-phishing/ban/{interaction.user.id}")
+            component.add_button(
+                hikari.ButtonStyle.DANGER, f"report-phishing/ban/{interaction.user.id}"
+            )
             .set_label("Ban user from reporting")
             .build()
         )
 
-        await interaction.app.rest.create_message(channel_id, embed=embed, component=component)
+        await interaction.app.rest.create_message(
+            channel_id, embed=embed, component=component
+        )
 
-    async def handle_report_phishing_accept(self, interaction: hikari.CommandInteraction):
+    async def handle_report_phishing_accept(
+        self, interaction: hikari.CommandInteraction
+    ):
         pass
 
-    async def handle_report_phishing_ban(self, interaction: hikari.ComponentInteraction):
+    async def handle_report_phishing_ban(
+        self, interaction: hikari.ComponentInteraction
+    ):
         pass

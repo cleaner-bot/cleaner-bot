@@ -35,7 +35,8 @@ async def report_phishing(ev: IActionDelete, bot: TheCleaner):
         embed.set_footer(text=str(ev.user_id))
     else:
         embed.set_footer(
-            text=f"{user} ({ev.user_id})", icon=user.make_avatar_url(ext="webp", size=64)
+            text=f"{user} ({ev.user_id})",
+            icon=user.make_avatar_url(ext="webp", size=64),
         )
 
     embed.add_field("Channel", f"<#{ev.channel_id}>")
