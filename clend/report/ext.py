@@ -64,6 +64,7 @@ class ReportExtension:
             if parts[0] not in self.modals:
                 return
             handler = self.modals[parts[0]]
+            logger.debug(f"used modal: {interaction.custom_id}")
 
         elif isinstance(interaction, hikari.ComponentInteraction):
             parts = interaction.custom_id.split("/")
@@ -138,6 +139,7 @@ class ReportExtension:
     async def handle_report_message(self, interaction: hikari.ModalInteraction):
         database = self.bot.database
         message = interaction.message
+        print(interaction)
         if message is None:
             return  # impossible, but makes mypy happy
         elif interaction.guild_id is None:
