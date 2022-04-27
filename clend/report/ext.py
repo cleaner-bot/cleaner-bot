@@ -139,7 +139,7 @@ class ReportExtension:
     async def handle_report_message(self, interaction: hikari.ModalInteraction):
         database = self.bot.database
         message = interaction.message
-        print(interaction)
+        print(interaction, interaction.message)
         if message is None:
             return  # impossible, but makes mypy happy
         elif interaction.guild_id is None:
