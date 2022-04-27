@@ -128,8 +128,8 @@ class ReportExtension:
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
-        elif await database.exists(
-            (f"user:{interaction.user.id}:report:phishing:banned",)
+        elif await database.sismember(
+            "report:phishing:banned", interaction.user.id
         ):
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
@@ -245,7 +245,7 @@ class ReportExtension:
         parts = interaction.custom_id.split("/")
         user_id = parts[2]
 
-        await database.set(f"user:{user_id}:report:phishing:banned", "1")
+        await database.sadd("report:phishing:banned", user_id)
 
         component = interaction.app.rest.build_action_row()
         (
@@ -271,7 +271,7 @@ class ReportExtension:
         parts = interaction.custom_id.split("/")
         user_id = parts[2]
 
-        await database.delete((f"user:{user_id}:report:phishing:banned",))
+        await database.srem("report:phishing:banned", user_id)
 
         component = interaction.app.rest.build_action_row()
         (
