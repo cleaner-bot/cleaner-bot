@@ -155,7 +155,7 @@ class ReportExtension:
 
         if interaction.guild_id is None:
             return  # impossible, but makes mypy happy
-            
+
         config = self.get_config(interaction.guild_id)
         if config is None:  # dont even bother handling this
             raise RuntimeError("config is None (something went very wrong)")
@@ -286,6 +286,7 @@ class ReportExtension:
                 or author_id is None
                 or (author := self.bot.bot.cache.get_user(int(author_id))) is None
             ):
+                print(content, author_id, author)
                 await interaction.create_initial_response(
                     hikari.ResponseType.MESSAGE_CREATE,
                     content=t("server_modal_expired"),
