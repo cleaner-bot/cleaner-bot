@@ -245,7 +245,7 @@ class ReportExtension:
         parts = interaction.custom_id.split("/")
         user_id = parts[2]
 
-        await database.sadd("report:phishing:banned", user_id)
+        await database.sadd("report:phishing:banned", (user_id,))
 
         component = interaction.app.rest.build_action_row()
         (
@@ -271,7 +271,7 @@ class ReportExtension:
         parts = interaction.custom_id.split("/")
         user_id = parts[2]
 
-        await database.srem("report:phishing:banned", user_id)
+        await database.srem("report:phishing:banned", (user_id,))
 
         component = interaction.app.rest.build_action_row()
         (

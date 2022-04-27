@@ -418,7 +418,7 @@ class ChallengeExtension:
             # delete flow if user left anyway
             await self.bot.database.delete((f"challenge:flow:{flow}",))
 
-        await self.bot.database.srem(f"guild:{guild.id}:challenged", user_id)
+        await self.bot.database.srem(f"guild:{guild.id}:challenged", (user_id,))
 
         if config.logging_enabled and config.logging_option_verify:
             log = ILog(
