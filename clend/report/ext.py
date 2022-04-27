@@ -113,8 +113,9 @@ class ReportExtension:
             interaction.locale, f"report_{s}", **k
         )
 
-        if await self.is_message_report_ok(interaction) is not True:
-            return
+        channel = await self.is_message_report_ok(interaction)
+        if not isinstance(channel, hikari.TextableGuildChannel):
+            return  # didnt go ok
 
         component = interaction.app.rest.build_action_row()
 
@@ -240,7 +241,6 @@ class ReportExtension:
 
         if isinstance(interaction, hikari.CommandInteraction):
             if interaction.target_id is None or interaction.resolved is None:
-                print("DEBUG 1")
                 return  # impossible, but make mypy happy
             message = interaction.resolved.messages.get(interaction.target_id, None)
         else:
@@ -301,7 +301,6 @@ class ReportExtension:
 
         guild = interaction.get_guild()
         if guild is None:
-            print("DEBUG 2")
             return  # impossible, but makes mypy happy (guild_id is checked earlier)
 
         channel = guild.get_channel(config.report_channel)
@@ -330,7 +329,6 @@ class ReportExtension:
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
-        print("DEBUG 4", channel)
         return channel
 
     async def handle_phishing_report(self, interaction: hikari.CommandInteraction):
