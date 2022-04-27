@@ -122,7 +122,7 @@ class ReportExtension:
             component.add_text_input("reason", t("server_modal_label"))
             .set_style(hikari.TextInputStyle.PARAGRAPH)
             .set_min_length(2)
-            .set_max_length(4096)
+            .set_max_length(1000)
             .add_to_container()
         )
 
