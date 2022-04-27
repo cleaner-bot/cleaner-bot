@@ -64,7 +64,6 @@ class ReportExtension:
 
         elif isinstance(interaction, hikari.ModalInteraction):
             parts = interaction.custom_id.split("/")
-            print(parts, self.modals, self.modals.get(parts[0]))
             if parts[0] not in self.modals:
                 return
             handler = self.modals[parts[0]]
@@ -149,7 +148,6 @@ class ReportExtension:
         )
 
         channel, message = await self.is_message_report_ok(interaction)
-        print("channel", channel)
         if channel is None or message is None:
             return  # didnt go ok
 
