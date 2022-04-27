@@ -138,7 +138,7 @@ class ReportExtension:
         )
 
         await self.bot.database.hset(
-            f"message:{message.id}:content",
+            f"message:{message.id}",
             {"author": message.author.id, "content": message.content},
         )
 
@@ -286,7 +286,11 @@ class ReportExtension:
                 or author_id is None
                 or (author := self.bot.bot.cache.get_user(int(author_id))) is None
             ):
-                print(content, author_id, author)
+                print(content, author_id)
+                try:
+                    print(author)
+                except UnboundLocalError:
+                    pass
                 await interaction.create_initial_response(
                     hikari.ResponseType.MESSAGE_CREATE,
                     content=t("server_modal_expired"),
