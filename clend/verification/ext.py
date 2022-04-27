@@ -121,7 +121,8 @@ class VerificationExtension:
 
         if config.logging_enabled and config.logging_option_verify:
             log = ILog(
-                guild.id, Message("components_log_verify_verification", {"user": user_id})
+                guild.id,
+                Message("components_log_verify_verification", {"user": user_id}),
             )
             http = self.bot.extensions.get("clend.http", None)
             if http is None:

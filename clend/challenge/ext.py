@@ -333,11 +333,14 @@ class ChallengeExtension:
                 await member.remove_role(role)
             else:
                 await member.add_role(role)
-            
+
             if config.logging_enabled and config.logging_option_verify:
                 log = ILog(
-                    interaction.guild_id,
-                    Message("components_log_verify_passthrough", {"user": interaction.user.id})
+                    guild.id,
+                    Message(
+                        "components_log_verify_passthrough",
+                        {"user": interaction.user.id},
+                    ),
                 )
                 http = self.bot.extensions.get("clend.http", None)
                 if http is None:
@@ -422,7 +425,8 @@ class ChallengeExtension:
 
         if config.logging_enabled and config.logging_option_verify:
             log = ILog(
-                guild.id, Message("components_log_verify_challenge", {"user": int(user_id)})
+                guild.id,
+                Message("components_log_verify_challenge", {"user": int(user_id)}),
             )
             http = self.bot.extensions.get("clend.http", None)
             if http is None:

@@ -128,9 +128,7 @@ class ReportExtension:
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
-        elif await database.sismember(
-            "report:phishing:banned", interaction.user.id
-        ):
+        elif await database.sismember("report:phishing:banned", interaction.user.id):
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("banned"),
