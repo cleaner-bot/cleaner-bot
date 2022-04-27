@@ -139,7 +139,7 @@ class ReportExtension:
 
         await self.bot.database.hset(
             f"message:{message.id}",
-            {"author": message.author.id, "content": message.content},
+            {"author": str(message.author.id), "content": message.content},
         )
 
     async def handle_report_message(self, interaction: hikari.ModalInteraction):
