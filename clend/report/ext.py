@@ -178,7 +178,7 @@ class ReportExtension:
 
         await interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_CREATE,
-            content=t("phishing_thanks"),
+            content=t("server_thanks"),
             flags=hikari.MessageFlag.EPHEMERAL,
         )
 
@@ -219,7 +219,10 @@ class ReportExtension:
         )
         for name in ("delete", "kick", "ban", "timeout_day", "timeout_week"):
             # TODO: add permissions checks
-            select.add_option(t(f"server_action_{name}"), name)
+            (
+                select.add_option(t(f"server_action_{name}"), name)
+                .add_to_menu()
+            )
         select.set_placeholder(t("server_action_placeholder"))
         select.add_to_container()
 
