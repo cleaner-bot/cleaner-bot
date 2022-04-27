@@ -60,6 +60,7 @@ class ReportExtension:
 
         elif isinstance(interaction, hikari.ModalInteraction):
             parts = interaction.custom_id.split("/")
+            print(parts, self.modals, self.modals.get(parts[0]))
             if parts[0] not in self.modals:
                 return
             handler = self.modals[parts[0]]
@@ -124,12 +125,13 @@ class ReportExtension:
             .set_style(hikari.TextInputStyle.PARAGRAPH)
             .set_min_length(2)
             .set_max_length(1000)
+            .set_placeholder("")
             .add_to_container()
         )
 
         await interaction.create_modal_response(
             t("server_modal_title"),
-            f"report-message/report/{interaction.target_id}",
+            "report-message",
             components=[component],
         )
 
