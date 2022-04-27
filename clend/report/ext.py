@@ -1,6 +1,5 @@
 import logging
 import typing
-from types import SimpleNamespace
 
 import hikari
 
@@ -8,10 +7,12 @@ from cleaner_conf.guild import GuildConfig, GuildEntitlements
 from cleaner_data.phishing_content import get_highest_phishing_match
 from cleaner_data.url import has_url
 from cleaner_i18n.translate import translate
+from expirepy.dict import ExpiringDict
 
 from ..bot import TheCleaner
 from ..shared.id import time_passed_since
 from ..shared.channel_perms import permissions_for
+from ..shared.custom_events import SlowTimerEvent
 
 logger = logging.getLogger(__name__)
 REPORT_MAXAGE = 60 * 60 * 24 * 7  # 7 days
@@ -31,6 +32,7 @@ class ReportExtension:
         self.bot = bot
         self.listeners = [
             (hikari.InteractionCreateEvent, self.on_interaction_create),
+            (SlowTimerEvent, self.on_slow_timer),
         ]
         self.task = None
         self.commands = {
@@ -44,6 +46,7 @@ class ReportExtension:
         }
         self.message_buttons = {}
         self.modals = {"report-message": self.handle_report_message}
+        self.message_cache = ExpiringDict(expires=900)
 
     async def on_interaction_create(self, event: hikari.InteractionCreateEvent):
         InteractionType = hikari.CommandInteraction | hikari.ComponentInteraction
@@ -137,10 +140,7 @@ class ReportExtension:
             components=[component],
         )
 
-        await self.bot.database.hset(
-            f"message:{message.id}",
-            {"author": str(message.author.id), "content": message.content},
-        )
+        self.message_cache[message.id] = message
 
     async def handle_report_message(self, interaction: hikari.ModalInteraction):
         database = self.bot.database
@@ -278,32 +278,14 @@ class ReportExtension:
                 return None, None  # impossible, but makes mypy happy
             message = interaction.resolved.messages.get(message_id, None)
         else:
-            content, author_id = await database.hmget(
-                f"message:{message_id}", ("content", "author")
-            )
-            if (
-                content is None
-                or author_id is None
-                or (author := self.bot.bot.cache.get_user(int(author_id))) is None
-            ):
-                print(content, author_id)
-                try:
-                    print(author)
-                except UnboundLocalError:
-                    pass
+            message = self.message_cache.get(message_id, None)
+            if message is None:
                 await interaction.create_initial_response(
                     hikari.ResponseType.MESSAGE_CREATE,
                     content=t("server_modal_expired"),
                     flags=hikari.MessageFlag.EPHEMERAL,
                 )
                 return None, None
-
-            message = SimpleNamespace(
-                id=message_id,
-                content=content,
-                is_bot=False,
-                author=author,
-            )  # type: ignore
 
         if message is None or message.content is None:
             await interaction.create_initial_response(
@@ -594,6 +576,9 @@ class ReportExtension:
         )
 
         await interaction.message.edit(component=None)
+
+    async def on_slow_timer(self, event: SlowTimerEvent):
+        self.message_cache.evict()
 
     def get_config(self, guild_id: int) -> GuildConfig | None:
         conf = self.bot.extensions.get("clend.conf", None)
