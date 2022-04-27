@@ -1,5 +1,6 @@
 import logging
 import typing
+from types import SimpleNamespace
 
 import hikari
 
@@ -115,8 +116,8 @@ class ReportExtension:
             interaction.locale, f"report_{s}", **k
         )
 
-        channel = await self.is_message_report_ok(interaction)
-        if not isinstance(channel, hikari.TextableGuildChannel):
+        channel, message = await self.is_message_report_ok(interaction)
+        if channel is None or message is None:
             return  # didnt go ok
 
         component = interaction.app.rest.build_action_row()
@@ -132,14 +133,18 @@ class ReportExtension:
 
         await interaction.create_modal_response(
             t("server_modal_title"),
-            "report-message",
+            f"report-message/{message.id}",
             components=[component],
+        )
+
+        await self.bot.database.hset(
+            f"message:{message.id}:content",
+            {"author": message.author.id, "content": message.content},
         )
 
     async def handle_report_message(self, interaction: hikari.ModalInteraction):
         database = self.bot.database
         message = interaction.message
-        print(interaction, interaction.message)
         if message is None:
             return  # impossible, but makes mypy happy
         elif interaction.guild_id is None:
@@ -149,9 +154,9 @@ class ReportExtension:
             interaction.locale, f"report_{s}", **k
         )
 
-        channel = await self.is_message_report_ok(interaction)
+        channel, message = await self.is_message_report_ok(interaction)
         print("channel", channel)
-        if not isinstance(channel, hikari.TextableGuildChannel):
+        if channel is None or message is None:
             return  # didnt go ok
 
         config = self.get_config(interaction.guild_id)
@@ -237,103 +242,145 @@ class ReportExtension:
         )
 
         if interaction.member is None or interaction.guild_id is None:
-            return await interaction.create_initial_response(
+            await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("guildonly"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
+            return None, None
 
         if isinstance(interaction, hikari.CommandInteraction):
-            if interaction.target_id is None or interaction.resolved is None:
-                return  # impossible, but make mypy happy
-            message = interaction.resolved.messages.get(interaction.target_id, None)
+            if interaction.target_id is None:
+                return None, None  # impossible, but makes mypy happy
+            message_id = interaction.target_id
         else:
-            message = interaction.message
+            parts = interaction.custom_id.split("/")
+            message_id = hikari.Snowflake(parts[1])
 
-        if message is None or message.content is None:
-            return await interaction.create_initial_response(
-                hikari.ResponseType.MESSAGE_CREATE,
-                content=t("nomessage"),
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-
-        if time_passed_since(message.id).total_seconds() > REPORT_MAXAGE:
-            return await interaction.create_initial_response(
+        if time_passed_since(message_id).total_seconds() > REPORT_MAXAGE:
+            await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("too_old"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
+            return None, None
 
         elif await database.exists(
-            (f"guild:{interaction.guild_id}:message:{message.id}:reported",)
+            (f"guild:{interaction.guild_id}:message:{message_id}:reported",)
         ):
-            return await interaction.create_initial_response(
+            await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("already"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
+            return None, None
 
-        if message.author.is_bot:
-            return await interaction.create_initial_response(
+        message: hikari.Message | None
+        if isinstance(interaction, hikari.CommandInteraction):
+            if interaction.resolved is None:
+                return None, None  # impossible, but makes mypy happy
+            message = interaction.resolved.messages.get(message_id, None)
+        else:
+            content, author_id = await database.hmget(
+                f"message:{message_id}", ("content", "author")
+            )
+            if (
+                content is None
+                or author_id is None
+                or (author := self.bot.bot.cache.get_user(int(author_id))) is None
+            ):
+                await interaction.create_initial_response(
+                    hikari.ResponseType.MESSAGE_CREATE,
+                    content=t("server_modal_expired"),
+                    flags=hikari.MessageFlag.EPHEMERAL,
+                )
+                return None, None
+
+            message = SimpleNamespace(
+                id=message_id,
+                content=content,
+                is_bot=False,
+                author=author,
+            )  # type: ignore
+
+        if message is None or message.content is None:
+            await interaction.create_initial_response(
+                hikari.ResponseType.MESSAGE_CREATE,
+                content=t("nomessage"),
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+            return None, None
+        elif message.author.is_bot:
+            await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("nobot"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
+            return None, None
         elif message.author.id == interaction.user.id:
-            return await interaction.create_initial_response(
+            await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("noself"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
+            return None, None
 
         # TODO: prevent reporting mods
 
         config = self.get_config(interaction.guild_id)
         entitlements = self.get_entitlements(interaction.guild_id)
         if config is None or entitlements is None:
-            return await interaction.create_initial_response(
+            await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("server_nosettings"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
+            return None, None
         elif not config.report_channel or entitlements.report > entitlements.plan:
-            return await interaction.create_initial_response(
+            await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("server_disabled"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
+            return None, None
 
         guild = interaction.get_guild()
         if guild is None:
-            return  # impossible, but makes mypy happy (guild_id is checked earlier)
+            return (
+                None,
+                None,
+            )  # impossible, but makes mypy happy (guild_id is checked earlier)
 
         channel = guild.get_channel(config.report_channel)
         if channel is None or channel.guild_id != interaction.guild_id:
-            return await interaction.create_initial_response(
+            await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("server_channelnotfound"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
+            return None, None
 
         me = guild.get_my_member()
         if me is None:
-            return await interaction.create_initial_response(
+            await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("server_nomyself"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
+            return None, None
 
         perms = permissions_for(me, channel)
         if perms & hikari.Permissions.ADMINISTRATOR:
             pass
         elif perms & PERMS_SEND != PERMS_SEND:
-            return await interaction.create_initial_response(
+            await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("server_noperms"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
+            return None, None
 
-        return channel
+        return channel, message
 
     async def handle_phishing_report(self, interaction: hikari.CommandInteraction):
         database = self.bot.database
