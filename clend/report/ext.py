@@ -194,7 +194,14 @@ class ReportExtension:
         component1 = interaction.app.rest.build_action_row()
         (
             component1.add_button(hikari.ButtonStyle.SECONDARY, "report-message/close")
-            .set_label(t("server_embed_close"))
+            .set_label(t("server_button_close"))
+            .add_to_container()
+        )
+        (
+            component1.add_button(
+                hikari.ButtonStyle.LINK, message.make_link(interaction.guild_id)
+            )
+            .set_label(t("server_button_jump"))
             .add_to_container()
         )
 
@@ -202,7 +209,7 @@ class ReportExtension:
         select = component2.add_select_menu(
             f"report-message/action/{message.author.id}"
         )
-        for name in ("kick", "ban", "timeout_day", "timeout_week"):
+        for name in ("delete", "kick", "ban", "timeout_day", "timeout_week"):
             # TODO: add permissions checks
             select.add_option(t(f"server_action_{name}"), name)
         select.set_placeholder(t("server_action_placeholder"))
