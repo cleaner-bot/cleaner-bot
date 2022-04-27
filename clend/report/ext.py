@@ -144,12 +144,6 @@ class ReportExtension:
 
     async def handle_report_message(self, interaction: hikari.ModalInteraction):
         database = self.bot.database
-        message = interaction.message
-        if message is None:
-            return  # impossible, but makes mypy happy
-        elif interaction.guild_id is None:
-            return  # ^
-
         t = lambda s, **k: translate(  # noqa E731
             interaction.locale, f"report_{s}", **k
         )
@@ -159,6 +153,9 @@ class ReportExtension:
         if channel is None or message is None:
             return  # didnt go ok
 
+        if interaction.guild_id is None:
+            return  # impossible, but makes mypy happy
+            
         config = self.get_config(interaction.guild_id)
         if config is None:  # dont even bother handling this
             raise RuntimeError("config is None (something went very wrong)")
