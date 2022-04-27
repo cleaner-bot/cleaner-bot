@@ -5,11 +5,13 @@ import typing
 import hikari
 import msgpack  # type: ignore
 
+from cleaner_i18n.translate import Message
 from cleaner_conf.guild import GuildConfig, GuildEntitlements
 
 from ..bot import TheCleaner
+from ..shared.event import ILog
 from ..shared.protect import protect, protected_call
-from ..shared.sub import listen as pubsub_listen, Message
+from ..shared.sub import listen as pubsub_listen, Message as PubMessage
 from ..shared.dangerous import DANGEROUS_PERMISSIONS
 
 logger = logging.getLogger(__name__)
@@ -60,7 +62,7 @@ class VerificationExtension:
         pubsub = self.bot.database.pubsub()
         await pubsub.subscribe("pubsub:verification-verify")
         async for event in pubsub_listen(pubsub):
-            if not isinstance(event, Message):
+            if not isinstance(event, PubMessage):
                 continue
 
             data = msgpack.unpackb(event.data)
@@ -116,6 +118,16 @@ class VerificationExtension:
             return
 
         await self.bot.bot.rest.add_role_to_member(guild.id, user_id, role.id)
+
+        if config.logging_enabled and config.logging_option_verify:
+            log = ILog(
+                guild.id, Message("components_log_verify_verification", {"user": user_id})
+            )
+            http = self.bot.extensions.get("clend.http", None)
+            if http is None:
+                logger.warning("tried to log http extension is not loaded")
+            else:
+                http.queue.sync_q.put(log)
 
     def get_config(self, guild_id: int) -> GuildConfig | None:
         conf = self.bot.extensions.get("clend.conf", None)

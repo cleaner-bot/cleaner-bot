@@ -7,13 +7,14 @@ import hikari
 import msgpack  # type: ignore
 
 from cleaner_conf.guild import GuildConfig, GuildEntitlements
-from cleaner_i18n.translate import translate
+from cleaner_i18n.translate import translate, Message
 
 from ..bot import TheCleaner
 from ..shared.button import add_link
 from ..shared.channel_perms import permissions_for
+from ..shared.event import ILog
 from ..shared.protect import protect, protected_call
-from ..shared.sub import listen as pubsub_listen, Message
+from ..shared.sub import listen as pubsub_listen, Message as PubMessage
 from ..shared.risk import calculate_risk_score
 from ..shared.dangerous import DANGEROUS_PERMISSIONS
 from ..shared.id import time_passed_since
@@ -332,13 +333,24 @@ class ChallengeExtension:
                 await member.remove_role(role)
             else:
                 await member.add_role(role)
+            
+            if config.logging_enabled and config.logging_option_verify:
+                log = ILog(
+                    interaction.guild_id,
+                    Message("components_log_verify_passthrough", {"user": interaction.user.id})
+                )
+                http = self.bot.extensions.get("clend.http", None)
+                if http is None:
+                    logger.warning("tried to log http extension is not loaded")
+                else:
+                    http.queue.sync_q.put(log)
 
     async def verifyd(self):
         pubsub = self.bot.database.pubsub()
         await pubsub.subscribe("pubsub:challenge-verify")
         await pubsub.subscribe("pubsub:challenge-send")
         async for event in pubsub_listen(pubsub):
-            if not isinstance(event, Message):
+            if not isinstance(event, PubMessage):
                 continue
 
             if event.channel == b"pubsub:challenge-verify":
@@ -398,8 +410,23 @@ class ChallengeExtension:
         if config.challenge_interactive_take_role:
             routine = self.bot.bot.rest.remove_role_from_member
 
-        await routine(guild.id, int(user_id), role.id)
-        await self.bot.database.delete((f"challenge:flow:{flow}",))
+        try:
+            await routine(guild.id, int(user_id), role.id)
+        except hikari.NotFoundError:
+            return  # use left the guild
+        finally:
+            # delete flow if user left anyway
+            await self.bot.database.delete((f"challenge:flow:{flow}",))
+
+        if config.logging_enabled and config.logging_option_verify:
+            log = ILog(
+                guild.id, Message("components_log_verify_challenge", {"user": int(user_id)})
+            )
+            http = self.bot.extensions.get("clend.http", None)
+            if http is None:
+                logger.warning("tried to log http extension is not loaded")
+            else:
+                http.queue.sync_q.put(log)
 
     def get_message(self, guild: hikari.GatewayGuild) -> dict:
         t = lambda s: translate(  # noqa E731
