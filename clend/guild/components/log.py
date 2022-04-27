@@ -13,15 +13,19 @@ def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
         return
     age = event.member.joined_at - event.member.created_at
     hours = age.total_seconds() // 3600
-    age_string = f"{age.days} days" if hours >= 48 else f"{hours} hours"
     risk = calculate_risk_score(event.user)
 
     return (
         ILog(
             event.guild_id,
             Message(
-                "components_log_join",
-                {"user": event.user_id, "age": age_string, "risk": int(risk * 100)},
+                "components_log_join_" + ("day" if hours >= 48 else "hour"),
+                {
+                    "user": event.user_id,
+                    "name": str(event.user),
+                    "age": age.days if hours >= 48 else hours,
+                    "risk": int(risk * 100),
+                },
             ),
         ),
     )
