@@ -84,6 +84,8 @@ class DevExtension:
             await self.handle_reload(event)
         elif event.content.startswith("clean!emergency-ban"):
             await self.handle_emergency_ban(event)
+        elif event.content == "clean!test":
+            await self.handle_test(event)
 
     async def handle_ping(self, event: hikari.GuildMessageCreateEvent):
         sent = utc_datetime()
@@ -127,6 +129,9 @@ class DevExtension:
             # event.app.rest.slash_command_builder(
             #     "login", "Create a link to login immediately (useful for phones)"
             # ),
+            event.app.rest.context_menu_command_builder(
+                hikari.CommandType.MESSAGE, "Report to server staff"
+            ),
             event.app.rest.context_menu_command_builder(
                 hikari.CommandType.MESSAGE, "Report as phishing"
             ),
@@ -235,6 +240,10 @@ class DevExtension:
             "The message has been emergency banned. The ban will only exist "
             "until the next reload. Please update `cleaner-data`."
         )
+
+    async def handle_test(self, event: hikari.GuildMessageCreateEvent):
+        embed = hikari.Embed(description="a" * 4096)
+        await event.message.respond(embeds=[embed, embed])
 
 
 extension = DevExtension
