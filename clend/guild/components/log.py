@@ -22,11 +22,16 @@ def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
             Message(
                 "components_log_join",
                 {"user": event.user_id, "age": age_string, "risk": int(risk * 100)},
+            ),
+        ),
+    )
+
+
 def on_member_delete(event: hikari.MemberDeleteEvent, guild: CleanerGuild):
     config = guild.get_config()
     if config is None or not config.logging_enabled or not config.logging_option_leave:
         return
-        
+
     return (
         ILog(
             event.guild_id,
