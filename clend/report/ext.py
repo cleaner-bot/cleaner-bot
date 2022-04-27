@@ -125,7 +125,7 @@ class ReportExtension:
             .set_style(hikari.TextInputStyle.PARAGRAPH)
             .set_min_length(2)
             .set_max_length(1000)
-            .set_placeholder("")
+            .set_placeholder(t("server_modal_placeholder"))
             .add_to_container()
         )
 
