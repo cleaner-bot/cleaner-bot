@@ -205,10 +205,12 @@ class ReportExtension:
         )
         embed.add_field(t("message_embed_channel"), f"<#{message.channel_id}>")
 
-        reason = hikari.Embed(
-            author=t("message_embed_reason"),
-            description=interaction.components[0].components[0].value,  # type: ignore
-            color=0xE74C3C,
+        reason = (
+            hikari.Embed(
+                description=interaction.components[0].components[0].value,  # type: ignore
+                color=0xE74C3C,
+            )
+            .set_author(name=t("message_embed_reason"))
         )
 
         component1 = interaction.app.rest.build_action_row()
