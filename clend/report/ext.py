@@ -55,7 +55,7 @@ class ReportExtension:
             "kick": self.handle_report_message_action_kick,
             "ban": self.handle_report_message_action_ban,
             "timeout_day": self.handle_report_message_action_timeout_day,
-            "timeout_week": self.handle_report_message_action_timeout_week
+            "timeout_week": self.handle_report_message_action_timeout_week,
         }
         self.modals = {"report-message": self.handle_message_report_modal}
         self.message_cache = ExpiringDict(expires=900)
@@ -84,14 +84,14 @@ class ReportExtension:
         elif isinstance(interaction, hikari.ComponentInteraction):
             parts = interaction.custom_id.split("/")
             if parts[0] == "report-phishing":
-                if parts[1] not in self.phishing_buttons:
+                if parts[1] not in self.phishing_report_buttons:
                     return
-                handler = self.phishing_buttons[parts[1]]
+                handler = self.phishing_report_buttons[parts[1]]
 
             elif parts[0] == "report-message":
-                if parts[1] not in self.message_buttons:
+                if parts[1] not in self.message_report_buttons:
                     return
-                handler = self.message_buttons[parts[1]]
+                handler = self.message_report_buttons[parts[1]]
 
             else:
                 return
@@ -208,7 +208,7 @@ class ReportExtension:
         reason = hikari.Embed(
             author=t("message_embed_reason"),
             description=interaction.components[0].components[0].value,  # type: ignore
-            color=0xE74C3C
+            color=0xE74C3C,
         )
 
         component1 = interaction.app.rest.build_action_row()
@@ -227,14 +227,12 @@ class ReportExtension:
 
         component2 = interaction.app.rest.build_action_row()
         select = component2.add_select_menu(
-            f"report-message/action/{message.author.id}/{message.channel_id}/{message.id}"
+            f"report-message/action/{message.author.id}"
+            f"/{message.channel_id}/{message.id}"
         )
         for name in ("delete", "kick", "ban", "timeout_day", "timeout_week"):
             # TODO: add permissions checks
-            (
-                select.add_option(t(f"message_action_{name}"), name)
-                .add_to_menu()
-            )
+            (select.add_option(t(f"message_action_{name}"), name).add_to_menu())
         select.set_placeholder(t("message_action_placeholder"))
         select.add_to_container()
 
@@ -381,17 +379,21 @@ class ReportExtension:
 
         return channel, message
 
-    async def handle_report_message_close(self, interaction: hikari.ComponentInteraction):
+    async def handle_report_message_close(
+        self, interaction: hikari.ComponentInteraction
+    ):
         await interaction.message.edit(components=[])
 
-    async def handle_report_message_action(self, interaction: hikari.ComponentInteraction):
+    async def handle_report_message_action(
+        self, interaction: hikari.ComponentInteraction
+    ):
         parts = interaction.custom_id.split("/")
         user_id, channel_id, message_id = parts[2:]
 
         action = interaction.values[0]
         if action not in self.message_report_action_buttons:
             raise RuntimeError(f"unexpected action: {action}")
-        
+
         handler = self.message_report_action_buttons[action]
         msg = await handler(interaction, int(user_id), int(channel_id), int(message_id))
 
@@ -401,7 +403,13 @@ class ReportExtension:
             flags=hikari.MessageFlag.EPHEMERAL,
         )
 
-    async def handle_report_message_action_delete(self, interaction: hikari.ComponentInteraction, user_id: int, channel_id: int, message_id: int) -> Message:
+    async def handle_report_message_action_delete(
+        self,
+        interaction: hikari.ComponentInteraction,
+        user_id: int,
+        channel_id: int,
+        message_id: int,
+    ) -> Message:
         name = "success"
         try:
             await self.bot.bot.rest.delete_message(channel_id, message_id)
@@ -411,16 +419,30 @@ class ReportExtension:
             name = "failed"
         return Message(f"report_message_action_delete_{name}")
 
-    async def handle_report_message_action_ban(self, interaction: hikari.ComponentInteraction, user_id: int, channel_id: int, message_id: int) -> Message:
+    async def handle_report_message_action_ban(
+        self,
+        interaction: hikari.ComponentInteraction,
+        user_id: int,
+        channel_id: int,
+        message_id: int,
+    ) -> Message:
         name = "success"
+        assert interaction.guild_id is not None  # impossible, but makes mypy happy
         try:
             await self.bot.bot.rest.ban_member(interaction.guild_id, user_id)
         except hikari.ForbiddenError:
             name = "failed"
         return Message(f"report_message_action_ban_{name}", {"user": user_id})
 
-    async def handle_report_message_action_kick(self, interaction: hikari.ComponentInteraction, user_id: int, channel_id: int, message_id: int) -> Message:
+    async def handle_report_message_action_kick(
+        self,
+        interaction: hikari.ComponentInteraction,
+        user_id: int,
+        channel_id: int,
+        message_id: int,
+    ) -> Message:
         name = "success"
+        assert interaction.guild_id is not None  # impossible, but makes mypy happy
         try:
             await self.bot.bot.rest.kick_member(interaction.guild_id, user_id)
         except hikari.NotFoundError:
@@ -429,22 +451,40 @@ class ReportExtension:
             name = "failed"
         return Message(f"report_message_action_kick_{name}", {"user": user_id})
 
-    async def handle_report_message_action_timeout_day(self, interaction: hikari.ComponentInteraction, user_id: int, channel_id: int, message_id: int) -> Message:
+    async def handle_report_message_action_timeout_day(
+        self,
+        interaction: hikari.ComponentInteraction,
+        user_id: int,
+        channel_id: int,
+        message_id: int,
+    ) -> Message:
         name = "success"
         until = utc_datetime() + timedelta(days=1)
+        assert interaction.guild_id is not None  # impossible, but makes mypy happy
         try:
-            await self.bot.bot.rest.edit_member(interaction.guild_id, user_id, communication_disabled_until=until)
+            await self.bot.bot.rest.edit_member(
+                interaction.guild_id, user_id, communication_disabled_until=until
+            )
         except hikari.NotFoundError:
             name = "notfound"
         except hikari.ForbiddenError:
             name = "failed"
         return Message(f"report_message_action_timeout_day_{name}", {"user": user_id})
 
-    async def handle_report_message_action_timeout_week(self, interaction: hikari.ComponentInteraction, user_id: int, channel_id: int, message_id: int) -> Message:
+    async def handle_report_message_action_timeout_week(
+        self,
+        interaction: hikari.ComponentInteraction,
+        user_id: int,
+        channel_id: int,
+        message_id: int,
+    ) -> Message:
         name = "success"
         until = utc_datetime() + timedelta(days=7)
+        assert interaction.guild_id is not None  # impossible, but makes mypy happy
         try:
-            await self.bot.bot.rest.edit_member(interaction.guild_id, user_id, communication_disabled_until=until)
+            await self.bot.bot.rest.edit_member(
+                interaction.guild_id, user_id, communication_disabled_until=until
+            )
         except hikari.NotFoundError:
             name = "notfound"
         except hikari.ForbiddenError:
