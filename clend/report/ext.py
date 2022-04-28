@@ -432,7 +432,9 @@ class ReportExtension:
             flags=hikari.MessageFlag.EPHEMERAL,
         )
 
-        select_menu = interaction.message.components[1]
+        action_row = interaction.message.components[1]
+        assert isinstance(action_row, hikari.ActionRowComponent)
+        select_menu = action_row.components[1]
         assert isinstance(select_menu, hikari.SelectMenuComponent)
         only_include = set(x.value for x in select_menu.options)
         only_include.remove(action)
