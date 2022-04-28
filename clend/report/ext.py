@@ -351,8 +351,6 @@ class ReportExtension:
             )
             return None, None
 
-        # TODO: prevent reporting mods
-
         config = self.get_config(interaction.guild_id)
         entitlements = self.get_entitlements(interaction.guild_id)
         if config is None or entitlements is None:
@@ -376,6 +374,23 @@ class ReportExtension:
                 None,
                 None,
             )  # impossible, but makes mypy happy (guild_id is checked earlier)
+
+        if message.author.id == guild.owner_id:
+            await interaction.create_initial_response(
+                hikari.ResponseType.MESSAGE_CREATE,
+                content=t("message_nostaff"),
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+            return None, None
+        elif message.member is not None:
+            for role_id in message.member.role_ids:
+                if role_id in config.general_modroles:
+                    await interaction.create_initial_response(
+                        hikari.ResponseType.MESSAGE_CREATE,
+                        content=t("message_nostaff"),
+                        flags=hikari.MessageFlag.EPHEMERAL,
+                    )
+                    return None, None
 
         channel = guild.get_channel(config.report_channel)
         if channel is None or channel.guild_id != interaction.guild_id:
