@@ -23,14 +23,14 @@ def rand_string(length=None):
 def test_token_simple():
     messages = ["hello world"] * 100
     mitigation = use_detection(messages)
-    assert mitigation.tokens == {"hello", "world"}
+    assert mitigation.tokens == ("uorld", "hello")
 
 
 def test_token_one():
     random.seed(0)
     messages = ["hello world " + rand_string(32) for _ in range(100)]
     mitigation = use_detection(messages)
-    assert mitigation.tokens == {"hello", "world"}
+    assert mitigation.tokens == ("uorld", "hello")
 
 
 def test_token_chatter():
@@ -40,4 +40,4 @@ def test_token_chatter():
         for _ in range(100)
     ]
     mitigation = use_detection(messages)
-    assert mitigation.tokens == {"hello", "world"}
+    assert mitigation.tokens == ("uorld", "hello")
