@@ -3,6 +3,7 @@ import logging
 import typing
 
 import hikari
+from hikari import urls
 from hikari.internal.time import utc_datetime
 
 from cleaner_conf.guild import GuildConfig, GuildEntitlements
@@ -205,13 +206,34 @@ class ReportExtension:
         )
         embed.add_field(t("message_embed_channel"), f"<#{message.channel_id}>")
 
-        reason = (
-            hikari.Embed(
-                description=interaction.components[0].components[0].value,  # type: ignore
-                color=0xE74C3C,
-            )
-            .set_author(name=t("message_embed_reason"))
+        reason = hikari.Embed(
+            description=interaction.components[0].components[0].value,  # type: ignore
+            color=0xE74C3C,
+        ).set_author(name=t("message_embed_reason"))
+
+        await interaction.app.rest.create_message(
+            config.report_channel,
+            embeds=[embed, reason],
+            components=self.make_message_report_components(
+                interaction, message.author.id, message.channel_id, message.id
+            ),
         )
+
+    def make_message_report_components(
+        self,
+        interaction: hikari.ComponentInteraction | hikari.ModalInteraction,
+        message_author_id: int,
+        message_channel_id: int,
+        message_id: int,
+        only_include: set[str] = None,
+    ):
+        t = lambda s, **k: translate(  # noqa E731
+            interaction.locale, f"report_{s}", **k
+        )
+
+        assert interaction.guild_id is not None
+
+        components = []
 
         component1 = interaction.app.rest.build_action_row()
         (
@@ -219,30 +241,35 @@ class ReportExtension:
             .set_label(t("message_button_close"))
             .add_to_container()
         )
+        link = (
+            f"{urls.BASE_URL}/channels/{interaction.guild_id}"
+            f"/{message_channel_id}/{message_id}"
+        )
         (
-            component1.add_button(
-                hikari.ButtonStyle.LINK, message.make_link(interaction.guild_id)
-            )
+            component1.add_button(hikari.ButtonStyle.LINK, link)
             .set_label(t("message_button_jump"))
             .add_to_container()
         )
 
+        components.append(component1)
+
         component2 = interaction.app.rest.build_action_row()
         select = component2.add_select_menu(
-            f"report-message/action/{message.author.id}"
-            f"/{message.channel_id}/{message.id}"
+            f"report-message/action/{message_author_id}"
+            f"/{message_channel_id}/{message_id}"
         )
         for name in ("delete", "kick", "ban", "timeout_day", "timeout_week"):
             # TODO: add permissions checks
-            (select.add_option(t(f"message_action_{name}"), name).add_to_menu())
+            if only_include is not None and name not in only_include:
+                continue
+            select.add_option(t(f"message_action_{name}"), name).add_to_menu()
         select.set_placeholder(t("message_action_placeholder"))
         select.add_to_container()
 
-        await interaction.app.rest.create_message(
-            config.report_channel,
-            embeds=[embed, reason],
-            components=[component1, component2],
-        )
+        if select.options:
+            components.append(component2)
+
+        return components
 
     async def is_message_report_ok(
         self, interaction: hikari.CommandInteraction | hikari.ModalInteraction
@@ -390,20 +417,30 @@ class ReportExtension:
         self, interaction: hikari.ComponentInteraction
     ):
         parts = interaction.custom_id.split("/")
-        user_id, channel_id, message_id = parts[2:]
+        user_id, channel_id, message_id = map(int, parts[2:])
 
         action = interaction.values[0]
         if action not in self.message_report_action_buttons:
             raise RuntimeError(f"unexpected action: {action}")
 
         handler = self.message_report_action_buttons[action]
-        msg = await handler(interaction, int(user_id), int(channel_id), int(message_id))
+        msg = await handler(interaction, user_id, channel_id, message_id)
 
-        return await interaction.create_initial_response(
+        await interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_CREATE,
             content=msg.translate(interaction.locale),
             flags=hikari.MessageFlag.EPHEMERAL,
         )
+
+        select_menu = interaction.message.components[1]
+        assert isinstance(select_menu, hikari.SelectMenuComponent)
+        only_include = set(x.value for x in select_menu.options)
+        only_include.remove(action)
+
+        components = self.make_message_report_components(
+            interaction, user_id, channel_id, message_id, only_include
+        )
+        await interaction.message.edit(components=components)
 
     async def handle_report_message_action_delete(
         self,
@@ -431,7 +468,9 @@ class ReportExtension:
         name = "success"
         assert interaction.guild_id is not None  # impossible, but makes mypy happy
         try:
-            await self.bot.bot.rest.ban_member(interaction.guild_id, user_id)
+            await self.bot.bot.rest.ban_member(
+                interaction.guild_id, user_id, delete_message_days=1
+            )
         except hikari.ForbiddenError:
             name = "failed"
         return Message(f"report_message_action_ban_{name}", {"user": user_id})
