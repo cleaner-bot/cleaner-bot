@@ -443,7 +443,7 @@ class HTTPService:
                 )
 
                 if (
-                    entitlements.logging_downloads >= entitlements.plan
+                    entitlements.plan >= entitlements.logging_downloads
                     and config.logging_downloads_enabled
                 ):
                     guildlog = self.bot.extensions.get("clend.guildlog", None)
