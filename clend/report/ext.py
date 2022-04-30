@@ -374,6 +374,7 @@ class ReportExtension:
                 None,
             )  # impossible, but makes mypy happy (guild_id is checked earlier)
 
+        print("member", message.member)
         if message.author.id == guild.owner_id:
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
