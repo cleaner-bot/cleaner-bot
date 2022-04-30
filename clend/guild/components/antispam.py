@@ -99,7 +99,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
         "mit_data": mitigation,
     }
     actions: list[IGuildEvent] = []
-    actions.append(ILog(event.guild_id, reason))
+    actions.append(ILog(event.guild_id, reason, event.message_id.created_at))
     for old_message in messages:
         if mit.match(mitigation, old_message):
             if old_message.member is None:

@@ -1,3 +1,4 @@
+from datetime import datetime
 import typing
 
 import hikari
@@ -78,5 +79,6 @@ class IActionChannelRatelimit(typing.NamedTuple):
 class ILog(typing.NamedTuple):
     guild_id: int
     message: Message
+    created_at: datetime
     reason: Message | None = None
     referenced_message: hikari.Message | None = None

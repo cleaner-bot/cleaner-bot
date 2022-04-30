@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 import logging
 import typing
 
@@ -123,6 +124,7 @@ class VerificationExtension:
             log = ILog(
                 guild.id,
                 Message("components_log_verify_verification", {"user": user_id}),
+                datetime.utcnow(),
             )
             http = self.bot.extensions.get("clend.http", None)
             if http is None:

@@ -32,8 +32,7 @@ VOTING_REMINDER_COOLDOWN = 60 * 60 * 24 * 3
 
 
 def format_log(log: ILog, locale: str):
-    now = datetime.utcnow()
-    time_string = now.strftime("%H:%M:%S")
+    time_string = log.created_at.strftime("%H:%M:%S")
     reason = ""
     if log.reason:
         reason = f"` Reason ` {log.reason.translate(locale)}\n"
@@ -180,7 +179,9 @@ class HTTPService:
             self.banned_users.add(f"{ev.guild_id}-{ev.user_id}")
 
         translated = Message(message, {"user": ev.user_id})
-        self.log_queue.put_nowait(ILog(ev.guild_id, translated, ev.reason))
+        self.log_queue.put_nowait(
+            ILog(ev.guild_id, translated, datetime.utcnow(), ev.reason)
+        )
         self.put_in_metrics_queue(
             {
                 "name": "challenge",
@@ -205,7 +206,9 @@ class HTTPService:
         message = "log_delete_success" if ev.can_delete else "log_delete_failure"
 
         translated = Message(message, {"user": ev.user_id, "channel": ev.channel_id})
-        self.log_queue.put_nowait(ILog(ev.guild_id, translated, ev.reason, ev.message))
+        self.log_queue.put_nowait(
+            ILog(ev.guild_id, translated, datetime.utcnow(), ev.reason, ev.message)
+        )
         self.put_in_metrics_queue(
             {
                 "name": "delete",
@@ -259,7 +262,9 @@ class HTTPService:
                 )
 
         translated = Message(message, {"user": ev.user_id})
-        self.log_queue.put_nowait(ILog(ev.guild_id, translated, ev.reason))
+        self.log_queue.put_nowait(
+            ILog(ev.guild_id, translated, datetime.utcnow(), ev.reason)
+        )
         self.put_in_metrics_queue(
             {
                 "name": "nickname",
@@ -277,7 +282,7 @@ class HTTPService:
             return
         elif not ev.can_send:
             translated = Message("log_announcement_failure", {"channel": ev.channel_id})
-            self.log_queue.put_nowait(ILog(ev.guild_id, translated))
+            self.log_queue.put_nowait(ILog(ev.guild_id, translated, datetime.utcnow()))
             return
 
         guild = self.bot.bot.cache.get_guild(ev.guild_id)
@@ -303,7 +308,7 @@ class HTTPService:
             "log_channelratelimit_success",
             {"channel": ev.channel_id, "ratelimit": ev.ratelimit},
         )
-        self.log_queue.put_nowait(ILog(ev.guild_id, translated))
+        self.log_queue.put_nowait(ILog(ev.guild_id, translated, datetime.utcnow()))
 
         await self.bot.bot.rest.edit_channel(
             ev.channel_id,

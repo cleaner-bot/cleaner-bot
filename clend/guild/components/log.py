@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import hikari
 
 from cleaner_i18n.translate import Message
@@ -27,6 +29,7 @@ def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
                     "risk": int(risk * 100),
                 },
             ),
+            event.member.joined_at,
         ),
     )
 
@@ -43,6 +46,7 @@ def on_member_delete(event: hikari.MemberDeleteEvent, guild: CleanerGuild):
                 "components_log_leave",
                 {"user": event.user_id, "name": str(event.user)},
             ),
+            datetime.utcnow(),
         ),
     )
 

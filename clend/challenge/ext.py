@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 import hashlib
 import logging
 import typing
@@ -341,6 +342,7 @@ class ChallengeExtension:
                         "components_log_verify_passthrough",
                         {"user": interaction.user.id},
                     ),
+                    datetime.utcnow(),
                 )
                 http = self.bot.extensions.get("clend.http", None)
                 if http is None:
@@ -427,6 +429,7 @@ class ChallengeExtension:
             log = ILog(
                 guild.id,
                 Message("components_log_verify_challenge", {"user": int(user_id)}),
+                datetime.utcnow(),
             )
             http = self.bot.extensions.get("clend.http", None)
             if http is None:
