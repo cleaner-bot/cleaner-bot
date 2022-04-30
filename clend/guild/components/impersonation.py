@@ -69,11 +69,11 @@ def on_new_member(
 def is_custom_blacklist(name: str, words: list[str], subwords: list[str]) -> bool:
     name = normalize(name)
     for subword in subwords:
-        if subword in name:
+        if normalize(subword) in name:
             return True
     split_name = name.split()
     for word in words:
-        if word in split_name:
+        if normalize(word) in split_name:
             return True
     return False
 
