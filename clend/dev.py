@@ -30,6 +30,7 @@ class DevExtension:
             "clend.report",
             "clend.analytics",
             "clend.metrics",
+            "clend.guildlog",
             "clend.downdoom",
         ]
         self.listeners = [

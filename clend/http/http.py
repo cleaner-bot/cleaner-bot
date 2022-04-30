@@ -334,7 +334,7 @@ class HTTPService:
                 referenced_message = None
                 result = []
                 length = 0
-                for i, log in enumerate(logs):
+                for log_index, log in enumerate(logs):
                     formatted_log = format_log(log, locale)
                     log_length = len(formatted_log)
                     if log_length + length > 2000:
@@ -347,7 +347,7 @@ class HTTPService:
                         referenced_message = log.referenced_message
                     result.append(formatted_log)
 
-                guilds[guild_id] = logs[i + 1 :]
+                guilds[guild_id] = logs[log_index + 1 :]
                 message = "".join(result)
 
                 embed = hikari.UNDEFINED
@@ -441,6 +441,18 @@ class HTTPService:
                         embeds=embeds if embeds else hikari.UNDEFINED,
                     )
                 )
+
+            if (
+                entitlements.logging_downloads >= entitlements.plan
+                and config.logging_downloads_enabled
+            ):
+                guildlog = self.bot.extensions.get("clend.guildlog", None)
+                if guildlog is None:
+                    logger.warning("unable to find clend.guildlog extension")
+                    return None
+                else:
+                    for log in logs[:log_index]:
+                        guildlog.queue.put_nowait(log)
 
             for guild_id in tuple(guilds.keys()):
                 if not guilds[guild_id]:
