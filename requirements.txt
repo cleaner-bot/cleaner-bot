@@ -1,4 +1,3 @@
-hikari==2.0.0.dev108
 python-Levenshtein==0.12.2
 coredis>=3.4,<3.5
 quickjs>=1.16,<1.19
@@ -8,6 +7,7 @@ sentry_sdk>=1.5,<1.6
 janus>=1.0,<1.1
 msgpack>=1,<1.1
 aiofiles>=0.8,<0.9
+hikari@git+https://github.com/cleaner-bot/hikari.git
 downdoom@git+https://github.com/cleaner-bot/downdoom.git
 expirepy@git+ssh://git@github.com/cleaner-bot/expirepy.git
 cleaner_conf@git+ssh://git@github.com/cleaner-bot/cleaner-config
