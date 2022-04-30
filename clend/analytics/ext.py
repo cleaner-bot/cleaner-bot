@@ -8,6 +8,7 @@ import msgpack  # type: ignore
 from cleaner_conf.guild import GuildEntitlements
 
 from ..bot import TheCleaner
+from ..shared.id import time_passed_since
 
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,8 @@ class AnalyticsExtension:
         self.listeners = [
             (hikari.GuildJoinEvent, self.on_guild_join),
             (hikari.GuildLeaveEvent, self.on_guild_leave),
-            (hikari.MemberChunkEvent, self.on_member_chunk),
+            # (hikari.MemberChunkEvent, self.on_member_chunk),
+            (hikari.InteractionCreateEvent, self.on_interaction_create),
         ]
 
     async def on_guild_join(self, event: hikari.GuildJoinEvent):
@@ -92,6 +94,53 @@ class AnalyticsExtension:
         if guild is not None:
             await self.acheck_guild(guild)
 
+    async def on_interaction_create(self, event: hikari.InteractionCreateEvent):
+        interaction = event.interaction
+        if not isinstance(interaction, hikari.ComponentInteraction):
+            return
+        elif not interaction.custom_id.startswith("suspend/"):
+            return
+        elif time_passed_since(interaction.id).total_seconds() >= 2.5:
+            return
+
+        try:
+            parts = interaction.custom_id.split("/")
+            message = "wot"
+            if parts[1] == "leave":
+                try:
+                    await self.bot.bot.rest.leave_guild(int(parts[2]))
+                except hikari.NotFoundError:
+                    message = "not even in it lol"
+                else:
+                    message = "left"
+
+            elif parts[1] == "remove":
+                database = self.bot.database
+                entitlements = self.get_entitlements(int(parts[2]))
+                if entitlements is not None and entitlements.suspended:
+                    await database.hset(
+                        f"guild:{parts[2]}:entitlements",
+                        {"suspended": msgpack.packb(False)},
+                    )
+                    entitlements.suspended = False
+                    message = "remove the suspension"
+                else:
+                    message = "not suspended"
+
+            await interaction.create_initial_response(
+                hikari.ResponseType.MESSAGE_CREATE,
+                content=message,
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+
+        except Exception as e:
+            logger.exception("Error occured during component interaction", exc_info=e)
+            await interaction.create_initial_response(
+                hikari.ResponseType.MESSAGE_CREATE,
+                content="something went wrong",
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+
     async def acheck_guild(self, guild: hikari.GatewayGuild):
         loop = asyncio.get_running_loop()
         is_farm, humans, bots = await loop.run_in_executor(
@@ -147,7 +196,24 @@ class AnalyticsExtension:
         if guild.vanity_url_code:
             vanity = guild.vanity_url_code
             embed.add_field("Vanity Invite", f"https://discord.gg/{vanity}")
-        await channel.send(embed=embed)
+
+        component = self.bot.bot.rest.build_action_row()
+        (
+            component.add_button(
+                hikari.ButtonStyle.PRIMARY, f"suspend/leave/{guild.id}"
+            )
+            .set_label("Leave guild")
+            .add_to_container()
+        )
+        (
+            component.add_button(
+                hikari.ButtonStyle.DANGER, f"suspend/remove/{guild.id}"
+            )
+            .set_label("Remove suspension")
+            .add_to_container()
+        )
+
+        await channel.send(embed=embed, component=component)
 
     def get_channel(self) -> hikari.TextableGuildChannel | None:
         channel_id = 963043465355206716
