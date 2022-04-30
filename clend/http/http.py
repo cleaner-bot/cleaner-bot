@@ -58,8 +58,6 @@ class HTTPService:
         self.deleted_messages = ExpiringSet(expires=60)
         self.bulk_delete_cooldown = ExpiringSet(expires=3)
 
-        self.guild_voting_reminder = ExpiringSet(expires=VOTING_REMINDER_COOLDOWN)
-
     async def ind(self):
         while True:
             ev: IGuildEvent = await self.main_queue.async_q.get()
@@ -425,7 +423,9 @@ class HTTPService:
                     if (
                         (entitlements is None or entitlements.plan == 0)
                         and random.random() < 0.05
-                        and guild_id not in self.guild_voting_reminder
+                        and not await self.bot.database.exists(
+                            (f"guild:{guild_id}:logging:voting-reminder",)
+                        )
                     ):
                         embed = hikari.Embed(
                             title=translate(locale, "log_vote_title"),
@@ -433,7 +433,11 @@ class HTTPService:
                             color=0x6366F1,
                         ).set_footer(text=translate(locale, "log_vote_footer"))
                         embeds.append(embed)
-                        self.guild_voting_reminder.add(guild_id)
+                        await self.bot.database.set(
+                            f"guild:{guild_id}:logging:voting-reminder",
+                            "1",
+                            ex=VOTING_REMINDER_COOLDOWN,
+                        )
 
                 sends.append(
                     self.bot.bot.rest.create_message(
