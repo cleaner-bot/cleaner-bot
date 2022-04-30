@@ -16,12 +16,13 @@ from ..shared.custom_events import SlowTimerEvent
 
 logger = logging.getLogger(__name__)
 HANDLE_LIMIT = resource.getrlimit(resource.RLIMIT_NOFILE)[0]
+INITIAL_WRITES = 4
 
 
 @dataclass
 class OpenFileHandle:
     file_handle: aiofiles.threadpool.text.AsyncTextIOWrapper
-    writes: int = 0
+    writes: int
 
 
 class GuildLogExtension:
@@ -47,12 +48,15 @@ class GuildLogExtension:
         if self.task is not None:
             self.task.cancel()
 
+        # cleanup job
+        if self.handles:
+            asyncio.create_task(self.close_all_handles())
+
     async def logd(self):
         while True:
             log = await self.queue.get()
             handle = await self.get_handle(log.guild_id)
             formatted_log = self.format_log(log)
-            logger.debug(log)
             await handle.write(formatted_log)
 
     async def get_handle(
@@ -73,10 +77,14 @@ class GuildLogExtension:
             if not await aiofiles.os.path.exists(f"guild-log/{guild_id}"):
                 await aiofiles.os.makedirs(f"guild-log/{guild_id}")
 
-            filename = f"guild-log/{guild_id}/{self.now.year:>04}-{self.now.month:>02}.log"
+            filename = (
+                f"guild-log/{guild_id}/{self.now.year:>04}-{self.now.month:>02}.log"
+            )
             logger.debug(f"opened file: {filename!r} ({guild_id})")
             file_handle = await aiofiles.open(filename, "a")
-            self.handles[guild_id] = handle = OpenFileHandle(file_handle)
+            self.handles[guild_id] = handle = OpenFileHandle(
+                file_handle, INITIAL_WRITES
+            )
 
         handle.writes += 1
         return handle.file_handle
@@ -112,11 +120,19 @@ class GuildLogExtension:
         now = datetime.utcnow()
         if now.year > self.now.year or now.month > self.now.month:
             # new month, reopen all handles
-            for handle in self.handles.values():
-                await handle.file_handle.close()
-
-            self.handles.clear()
+            await self.close_all_handles()
 
         else:
-            for handle in self.handles.values():
+            for guild_id, handle in tuple(self.handles.items()):
                 handle.writes //= 2
+                if handle.writes == 0:
+                    logger.debug(f"evicted {guild_id} because of no writes")
+                    del self.handles[guild_id]
+                    await handle.file_handle.close()
+
+    async def close_all_handles(self):
+        logger.info("closing all file handles")
+        futures = [handle.file_handle.close() for handle in self.handles.values()]
+        self.handles.clear()
+        await asyncio.gather(*futures)
+        logger.info("all file handles closed")

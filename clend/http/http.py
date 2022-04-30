@@ -451,7 +451,7 @@ class HTTPService:
                         logger.warning("unable to find clend.guildlog extension")
                         return None
                     else:
-                        for log in logs[:log_index + 1]:
+                        for log in logs[: log_index + 1]:
                             guildlog.queue.put_nowait(log)
 
             for guild_id in tuple(guilds.keys()):
