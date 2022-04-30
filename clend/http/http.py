@@ -490,12 +490,12 @@ class HTTPService:
                     deletes.clear()
                 elif channel_id not in self.bulk_delete_cooldown:
                     self.bulk_delete_cooldown.add(channel_id)
-                    messages = [x.message_id for x in deletes]
+                    messages = [x.message_id for x in deletes[:100]]
                     futures.append(
                         self.bot.bot.rest.delete_messages(channel_id, messages)
                     )
                     logger.debug(f"bulk deleted {len(deletes)} messages")
-                    deletes.clear()
+                    deletes = deletes[100:]
 
                 if not deletes:
                     del channels[channel_id]
