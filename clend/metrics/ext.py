@@ -22,7 +22,9 @@ class MetricsExtension:
     def __init__(self, bot: TheCleaner) -> None:
         super().__init__()
         self.bot = bot
-        self.listeners = []
+        self.listeners = [
+            (hikari.GuildLeaveEvent, self.on_destroy_guild),
+        ]
         self.queue = asyncio.Queue()
         self.task = None
         self.metrics = Metrics()
@@ -36,6 +38,10 @@ class MetricsExtension:
 
         self.metrics.flush()
         self.metrics.close()
+
+    async def on_destroy_guild(self, event: hikari.GuildLeaveEvent):
+        database = self.bot.database
+        await database.delete((f"guild:{event.guild_id}:radar",))
 
     async def maind(self):
         loop = asyncio.get_running_loop()
