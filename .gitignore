@@ -154,3 +154,4 @@ cython_debug/
 .DS_Store
 metrics.bin
 debug.log
+guild-log
