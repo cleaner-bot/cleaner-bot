@@ -85,8 +85,10 @@ class DevExtension:
             await self.handle_update(event)
         elif event.content.startswith("clean!reload "):
             await self.handle_reload(event)
-        elif event.content.startswith("clean!emergency-ban"):
+        elif event.content == "clean!emergency-ban":
             await self.handle_emergency_ban(event)
+        elif event.content.startswith("clean!suspend "):
+            await self.handle_suspend(event)
         elif event.content == "clean!test":
             await self.handle_test(event)
 
@@ -256,6 +258,23 @@ class DevExtension:
             "The message has been emergency banned. The ban will only exist "
             "until the next reload. Please update `cleaner-data`."
         )
+
+    async def handle_suspend(self, event: hikari.GuildMessageCreateEvent):
+        assert event.message.content
+        parts = event.message.content.split(" ")
+        guild_id = parts[1]
+        reason = " ".join(parts[2:])
+
+        analytics = self.bot.extensions.get("clend.analytics")
+        if analytics is None:
+            return await event.message.respond("`clend.analytics` not loaded")
+
+        guild = self.bot.bot.cache.get_guild(int(guild_id))
+        if guild is None:
+            return await event.message.respond("guild not found")
+
+        await analytics.suspend(guild, reason)
+        await event.message.respond("suspended!")
 
     async def handle_test(self, event: hikari.GuildMessageCreateEvent):
         embed = hikari.Embed(description="a" * 4096)
