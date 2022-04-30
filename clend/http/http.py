@@ -491,8 +491,8 @@ class HTTPService:
                 if not deletes:
                     del channels[channel_id]
 
-            if futures:
-                asyncio.create_task(asyncio.gather(*futures))
+            for coro in futures:
+                asyncio.create_task(coro)
 
     def get_config(self, guild_id: int) -> GuildConfig | None:
         conf = self.bot.extensions.get("clend.conf", None)
