@@ -56,7 +56,7 @@ class HTTPService:
         self.challenged_users = ExpiringSet(expires=5)
         self.banned_users = ExpiringSet(expires=60)
         self.deleted_messages = ExpiringSet(expires=60)
-        self.bulk_delete_cooldown = ExpiringDict(expires=3)
+        self.bulk_delete_cooldown = ExpiringSet(expires=3)
 
         self.guild_voting_reminder = ExpiringSet(expires=VOTING_REMINDER_COOLDOWN)
 
