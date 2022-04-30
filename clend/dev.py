@@ -74,6 +74,8 @@ class DevExtension:
             await self.handle_stop(event)
         elif event.content in ("clean!register-slash", "clean!register-slash-global"):
             await self.handle_register_slash(event)
+        elif event.content == "clean!reset-slash":
+            await self.handle_reset_slash(event)
         elif event.content == "clean!info":
             await self.handle_info(event)
         elif event.content == "clean!pull":
@@ -145,6 +147,19 @@ class DevExtension:
             application=me.id,
             commands=commands,
             guild=hikari.UNDEFINED if is_global else event.guild_id,
+        )
+
+        await event.message.respond("done")
+
+    async def handle_reset_slash(self, event: hikari.GuildMessageCreateEvent):
+        me = self.bot.bot.get_me()
+        if me is None:
+            return await event.message.respond("no me found")
+
+        await event.app.rest.set_application_commands(
+            application=me.id,
+            commands=[],
+            guild=event.guild_id,
         )
 
         await event.message.respond("done")
