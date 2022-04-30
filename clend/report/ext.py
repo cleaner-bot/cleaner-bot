@@ -393,9 +393,8 @@ class ReportExtension:
                     )
                     return None, None
             for role in message.member.get_roles():
-                if role & (
-                    hikari.Permissions.ADMINISTRATOR
-                    | hikari.Permissions.MANAGE_GUILD
+                if role.permissions & (
+                    hikari.Permissions.ADMINISTRATOR | hikari.Permissions.MANAGE_GUILD
                 ):
                     await interaction.create_initial_response(
                         hikari.ResponseType.MESSAGE_CREATE,
