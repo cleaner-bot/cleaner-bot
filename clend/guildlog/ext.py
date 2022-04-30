@@ -1,6 +1,7 @@
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime
+import logging
 import resource
 import typing
 
@@ -13,6 +14,7 @@ from ..shared.protect import protect
 from ..shared.event import ILog
 from ..shared.custom_events import SlowTimerEvent
 
+logger = logging.getLogger(__name__)
 HANDLE_LIMIT = resource.getrlimit(resource.RLIMIT_NOFILE)[0]
 
 
@@ -50,6 +52,7 @@ class GuildLogExtension:
             log = await self.queue.get()
             handle = await self.get_handle(log.guild_id)
             formatted_log = self.format_log(log)
+            logger.debug(log)
             await handle.write(formatted_log)
 
     async def get_handle(
@@ -62,6 +65,7 @@ class GuildLogExtension:
                 least_guild_id = min(
                     self.handles, key=lambda gid: self.handles[gid].writes
                 )
+                logger.debug(f"evicted {least_guild_id} file handle")
                 handle = self.handles[least_guild_id]
                 del self.handles[least_guild_id]
                 await handle.file_handle.close()
@@ -69,10 +73,9 @@ class GuildLogExtension:
             if not await aiofiles.os.path.exists(f"guild-log/{guild_id}"):
                 await aiofiles.os.makedirs(f"guild-log/{guild_id}")
 
-            file_handle = await aiofiles.open(
-                f"guild-log/{guild_id}/{self.now.year:>04}-{self.now.month:>02}.log",
-                "a",
-            )
+            filename = f"guild-log/{guild_id}/{self.now.year:>04}-{self.now.month:>02}.log"
+            logger.debug(f"opened file: {filename!r} ({guild_id})")
+            file_handle = await aiofiles.open(filename, "a")
             self.handles[guild_id] = handle = OpenFileHandle(file_handle)
 
         handle.writes += 1
