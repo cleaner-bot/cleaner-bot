@@ -190,7 +190,7 @@ class AnalyticsExtension:
             .set_thumbnail(guild.make_icon_url())
             .add_field(name="Name", value=guild.name)
             .add_field(name="Members", value=str(guild.member_count))
-            .add_field(name="Features", value=str(guild.features))
+            .add_field(name="Features", value=", ".join(guild.features))
             .set_footer(str(guild.id))
         )
         if guild.vanity_url_code:
