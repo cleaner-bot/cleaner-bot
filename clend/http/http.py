@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta
 import logging
+import random
 import typing
 
 import hikari
@@ -27,6 +28,7 @@ from ..shared.event import (
 
 logger = logging.getLogger(__name__)
 REQUIRED_TO_SEND = hikari.Permissions.VIEW_CHANNEL | hikari.Permissions.SEND_MESSAGES
+VOTING_REMINDER_COOLDOWN = 60 * 60 * 24 * 3
 
 
 def format_log(log: ILog, locale: str):
@@ -53,6 +55,8 @@ class HTTPService:
         self.challenged_users = ExpiringSet(expires=5)
         self.banned_users = ExpiringSet(expires=60)
         self.deleted_messages = ExpiringSet(expires=60)
+
+        self.guild_voting_reminder = ExpiringSet(expires=VOTING_REMINDER_COOLDOWN)
 
     async def ind(self):
         while True:
@@ -375,6 +379,8 @@ class HTTPService:
 
                 config = self.get_config(guild_id)
                 channel_id = fallback_id = 963043115730608188
+
+                can_send_embed = True
                 if (
                     config is not None
                     and config.logging_enabled
@@ -395,17 +401,38 @@ class HTTPService:
                                 elif my_perms & REQUIRED_TO_SEND == REQUIRED_TO_SEND:
                                     channel_id = the_channel_id
                                     if my_perms & hikari.Permissions.EMBED_LINKS == 0:
-                                        embed = hikari.UNDEFINED
+                                        can_send_embed = False
 
-                if channel_id == fallback_id and embed is not hikari.UNDEFINED:
-                    guild = self.bot.bot.cache.get_guild(guild_id)
-                    if guild is None:
-                        embed.add_field("Guild", guild_id)
-                    else:
-                        embed.add_field("Guild", f"{guild.name} ({guild.id})")
+                embeds = []
+                if can_send_embed:
+                    if embed is not hikari.UNDEFINED:
+                        if channel_id == fallback_id:
+                            guild = self.bot.bot.cache.get_guild(guild_id)
+                            if guild is None:
+                                embed.add_field("Guild", guild_id)
+                            else:
+                                embed.add_field("Guild", f"{guild.name} ({guild.id})")
+
+                        embeds.append(embed)
+
+                    if (
+                        random.random() < 0.05
+                        and guild_id not in self.guild_voting_reminder
+                    ):
+                        embed = hikari.Embed(
+                            title=translate(locale, "log_vote_title"),
+                            description=translate(locale, "log_vote_description"),
+                            color=0x6366F1,
+                        ).set_footer(text=translate(locale, "log_vote_footer"))
+                        embeds.append(embed)
+                        self.guild_voting_reminder.add(guild_id)
 
                 sends.append(
-                    self.bot.bot.rest.create_message(channel_id, message, embed=embed)
+                    self.bot.bot.rest.create_message(
+                        channel_id,
+                        message,
+                        embeds=embeds if embeds else hikari.UNDEFINED,
+                    )
                 )
 
             for guild_id in tuple(guilds.keys()):
