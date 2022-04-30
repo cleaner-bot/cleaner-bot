@@ -80,6 +80,7 @@ class ConfigExtension:
             logger.debug(f"fetched settings for {guild_id}")
         finally:
             event.set()
+            del self._races[guild_id]
 
         guild = self.bot.extensions.get("clend.guild", None)
         if guild is None:
