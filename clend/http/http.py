@@ -482,6 +482,7 @@ class HTTPService:
                                 channel_id, delete.message_id
                             )
                         )
+                    logger.debug(f"deleted {len(deletes)} messages")
                     deletes.clear()
                 elif channel_id not in self.bulk_delete_cooldown:
                     self.bulk_delete_cooldown.add(channel_id)
@@ -489,6 +490,7 @@ class HTTPService:
                     futures.append(
                         self.bot.bot.rest.delete_messages(channel_id, messages)
                     )
+                    logger.debug(f"bulk deleted {len(deletes)} messages")
                     deletes.clear()
 
                 if not deletes:
