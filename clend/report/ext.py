@@ -37,7 +37,6 @@ class ReportExtension:
             (hikari.InteractionCreateEvent, self.on_interaction_create),
             (SlowTimerEvent, self.on_slow_timer),
         ]
-        self.task = None
         self.commands = {
             "Report as phishing": self.handle_phishing_report,
             "Report to server staff": self.handle_message_report,
