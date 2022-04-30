@@ -27,13 +27,27 @@ class AnalyticsExtension:
         ]
 
     async def on_guild_join(self, event: hikari.GuildJoinEvent):
+        database = self.bot.database
+        suspended_field = await database.hget(
+            f"guild:{event.guild_id}:entitlements", "suspended"
+        )
+        is_suspended = False
+        if suspended_field is not None:
+            is_suspended = msgpack.unpackb(suspended_field)
+
+        if is_suspended:
+            await self.bot.bot.rest.leave_guild(event.guild_id)
+
         channel = self.get_channel()
         if channel is None:
             return
 
+        title = (
+            "Automatically left suspended guild!" if is_suspended else "Joined guild!"
+        )
         embed = (
             hikari.Embed(color=0x34D399)
-            .set_author(name="Joined guild!")
+            .set_author(name=title)
             .set_thumbnail(event.guild.make_icon_url())
             .add_field(name="Name", value=event.guild.name)
             .add_field(name="Members", value=str(event.guild.member_count))
