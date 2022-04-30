@@ -29,9 +29,11 @@ class TheCleaner:
             | CacheComponents.ME
         )
 
-        # TODO: hikari@2.0.0dev109 add auto_chunk_members=False
         self.bot = hikari.GatewayBot(
-            token=token, intents=intents, cache_settings=cache_settings
+            token=token,
+            intents=intents,
+            cache_settings=cache_settings,
+            auto_chunk_members=False,
         )
         logging.getLogger("clend").setLevel(logging.DEBUG)
         # spammy with pretty much useless info

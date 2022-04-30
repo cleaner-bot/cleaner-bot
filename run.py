@@ -4,7 +4,6 @@ import logging
 import os
 
 from dotenv import load_dotenv
-from hikari.impl import event_manager
 
 load_dotenv(Path("~/.cleaner/secrets").expanduser())
 load_dotenv(Path("~/.cleaner/env").expanduser())
@@ -44,13 +43,5 @@ fh.setFormatter(
 )
 logging.getLogger().addHandler(fh)
 
-
-# patch hikari to not request guild members
-# TODO: use auto_chunk_members when we upgrade to dev109
-async def noop(*dev, **null):
-    pass
-
-
-event_manager._request_guild_members = noop
 
 bot.run(asyncio_debug=True)
