@@ -393,7 +393,7 @@ class ReportExtension:
                 member = None
 
         if member is not None:
-            for role_id in message.member.role_ids:
+            for role_id in member.role_ids:
                 if str(role_id) in config.general_modroles:
                     await interaction.create_initial_response(
                         hikari.ResponseType.MESSAGE_CREATE,
@@ -401,7 +401,7 @@ class ReportExtension:
                         flags=hikari.MessageFlag.EPHEMERAL,
                     )
                     return None, None
-            for role in message.member.get_roles():
+            for role in member.get_roles():
                 if role.permissions & (
                     hikari.Permissions.ADMINISTRATOR | hikari.Permissions.MANAGE_GUILD
                 ):
