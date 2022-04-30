@@ -70,7 +70,7 @@ def action_challenge(
     can_timeout = (
         (config is None or config.challenge_timeout_enabled)
         and his_perms & hikari.Permissions.ADMINISTRATOR == 0
-        and member.id != guild.owner_id
+        and above_role
         and my_perms & PERM_TIMEOUT > 0
     )
     can_role = (
