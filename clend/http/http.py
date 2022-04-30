@@ -442,17 +442,17 @@ class HTTPService:
                     )
                 )
 
-            if (
-                entitlements.logging_downloads >= entitlements.plan
-                and config.logging_downloads_enabled
-            ):
-                guildlog = self.bot.extensions.get("clend.guildlog", None)
-                if guildlog is None:
-                    logger.warning("unable to find clend.guildlog extension")
-                    return None
-                else:
-                    for log in logs[:log_index]:
-                        guildlog.queue.put_nowait(log)
+                if (
+                    entitlements.logging_downloads >= entitlements.plan
+                    and config.logging_downloads_enabled
+                ):
+                    guildlog = self.bot.extensions.get("clend.guildlog", None)
+                    if guildlog is None:
+                        logger.warning("unable to find clend.guildlog extension")
+                        return None
+                    else:
+                        for log in logs[:log_index]:
+                            guildlog.queue.put_nowait(log)
 
             for guild_id in tuple(guilds.keys()):
                 if not guilds[guild_id]:

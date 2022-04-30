@@ -105,7 +105,7 @@ class GuildLogExtension:
 
         return "\n".join(lines) + "\n"
 
-    async def on_slow_timer(self):
+    async def on_slow_timer(self, event: SlowTimerEvent):
         now = datetime.utcnow()
         if now.year > self.now.year or now.month > self.now.month:
             # new month, reopen all handles
