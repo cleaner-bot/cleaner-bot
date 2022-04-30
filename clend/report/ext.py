@@ -374,7 +374,6 @@ class ReportExtension:
                 None,
             )  # impossible, but makes mypy happy (guild_id is checked earlier)
 
-        print("member", message.member)
         if message.author.id == guild.owner_id:
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
@@ -383,7 +382,17 @@ class ReportExtension:
             )
             return None, None
 
-        elif message.member is not None:
+        member = message.member
+        if member is None:
+            member = guild.get_member(message.author)
+        if member is None:
+            logger.debug("fetching message author :(")
+            try:
+                member = await self.bot.bot.rest.fetch_member(guild.id, message.author)
+            except hikari.NotFoundError:
+                member = None
+
+        if member is not None:
             for role_id in message.member.role_ids:
                 if str(role_id) in config.general_modroles:
                     await interaction.create_initial_response(
