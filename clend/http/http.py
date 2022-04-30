@@ -42,11 +42,13 @@ def format_log(log: ILog, locale: str):
 class HTTPService:
     main_queue: janus.Queue[IGuildEvent]
     log_queue: asyncio.Queue[ILog]
+    delete_queue: asyncio.Queue[IActionDelete]
 
     def __init__(self, bot: TheCleaner) -> None:
         self.bot = bot
         self.main_queue = janus.Queue()
         self.log_queue = asyncio.Queue()
+        self.delete_queue = asyncio.Queue()
 
         self.guild_strikes = ExpiringDict(expires=300)
         self.member_strikes = ExpiringDict(expires=3600)
@@ -54,6 +56,7 @@ class HTTPService:
         self.challenged_users = ExpiringSet(expires=5)
         self.banned_users = ExpiringSet(expires=60)
         self.deleted_messages = ExpiringSet(expires=60)
+        self.bulk_delete_cooldown = ExpiringDict(expires=3)
 
         self.guild_voting_reminder = ExpiringSet(expires=VOTING_REMINDER_COOLDOWN)
 
@@ -199,9 +202,6 @@ class HTTPService:
         elif f"{ev.guild_id}-{ev.user_id}" in self.banned_users:
             return
         self.deleted_messages.add(ev.message_id)
-        coro: typing.Coroutine[typing.Any, typing.Any, typing.Any] | None = None
-        if ev.can_delete:
-            coro = self.bot.bot.rest.delete_message(ev.channel_id, ev.message_id)
 
         message = "log_delete_success" if ev.can_delete else "log_delete_failure"
 
@@ -217,11 +217,9 @@ class HTTPService:
                 "info": ev.info,
             }
         )
-        if coro is not None:
-            try:
-                await coro
-            except hikari.NotFoundError:
-                pass
+
+        if ev.can_delete:
+            self.delete_queue.put_nowait(ev)
 
         if ev.message is not None and is_likely_phishing(ev):
             guild_strikes = self.guild_strikes.get(ev.guild_id, 0)
@@ -459,6 +457,42 @@ class HTTPService:
                     del guilds[guild_id]
 
             await asyncio.gather(*sends)
+
+    async def deleted(self):
+        channels: dict[int, list[IActionDelete]] = {}
+        while True:
+            await asyncio.sleep(1)
+            futures = []
+            while not self.delete_queue.empty():
+                delete = self.delete_queue.get_nowait()
+                if f"{delete.guild_id}-{delete.user_id}" in self.banned_users:
+                    continue
+                if delete.channel_id not in channels:
+                    channels[delete.channel_id] = []
+                channels[delete.channel_id].append(delete)
+
+            for channel_id, deletes in tuple(channels.items()):
+                if len(deletes) <= 3:
+                    for delete in deletes:
+                        futures.append(
+                            self.bot.bot.rest.delete_message(
+                                channel_id, delete.message_id
+                            )
+                        )
+                    deletes.clear()
+                elif channel_id not in self.bulk_delete_cooldown:
+                    self.bulk_delete_cooldown.add(channel_id)
+                    messages = [x.message_id for x in deletes]
+                    futures.append(
+                        self.bot.bot.rest.delete_messages(channel_id, messages)
+                    )
+                    deletes.clear()
+
+                if not deletes:
+                    del channels[channel_id]
+
+            if futures:
+                asyncio.create_task(asyncio.gather(*futures))
 
     def get_config(self, guild_id: int) -> GuildConfig | None:
         conf = self.bot.extensions.get("clend.conf", None)

@@ -27,6 +27,7 @@ class HTTPExtension(threading.Thread):
         self.tasks = [
             asyncio.create_task(protect(self.http.ind)),
             asyncio.create_task(protect(self.http.logd)),
+            asyncio.create_task(protect(self.http.deleted)),
         ]
 
     def on_unload(self):
