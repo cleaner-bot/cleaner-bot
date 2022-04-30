@@ -381,9 +381,21 @@ class ReportExtension:
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return None, None
+
         elif message.member is not None:
             for role_id in message.member.role_ids:
-                if role_id in config.general_modroles:
+                if str(role_id) in config.general_modroles:
+                    await interaction.create_initial_response(
+                        hikari.ResponseType.MESSAGE_CREATE,
+                        content=t("message_nostaff"),
+                        flags=hikari.MessageFlag.EPHEMERAL,
+                    )
+                    return None, None
+            for role in message.member.get_roles():
+                if role & (
+                    hikari.Permissions.ADMINISTRATOR
+                    | hikari.Permissions.MANAGE_GUILD
+                ):
                     await interaction.create_initial_response(
                         hikari.ResponseType.MESSAGE_CREATE,
                         content=t("message_nostaff"),
