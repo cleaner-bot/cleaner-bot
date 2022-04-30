@@ -8,7 +8,7 @@ import hikari
 from hikari.internal.time import utc_datetime
 import janus
 
-from cleaner_conf.guild import GuildConfig
+from cleaner_conf.guild import GuildConfig, GuildEntitlements
 from cleaner_i18n.translate import Message, translate
 from expirepy import ExpiringSet, ExpiringDict
 
@@ -378,6 +378,7 @@ class HTTPService:
                         )
 
                 config = self.get_config(guild_id)
+                entitlements = self.get_entitlements(guild_id)
                 channel_id = fallback_id = 963043115730608188
 
                 can_send_embed = True
@@ -416,7 +417,8 @@ class HTTPService:
                         embeds.append(embed)
 
                     if (
-                        random.random() < 0.05
+                        (entitlements is None or entitlements.plan == 0)
+                        and random.random() < 0.05
                         and guild_id not in self.guild_voting_reminder
                     ):
                         embed = hikari.Embed(
@@ -447,6 +449,14 @@ class HTTPService:
             logger.warning("unable to find clend.conf extension")
             return None
         return conf.get_config(guild_id)
+
+    def get_entitlements(self, guild_id: int) -> GuildEntitlements | None:
+        conf = self.bot.extensions.get("clend.conf", None)
+        if conf is None:
+            logger.warning("unable to find clend.conf extension")
+            return None
+
+        return conf.get_entitlements(guild_id)
 
     def put_in_metrics_queue(self, item):
         metrics = self.bot.extensions.get("clend.metrics")
