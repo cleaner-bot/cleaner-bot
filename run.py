@@ -31,7 +31,7 @@ sentry_dsn = os.getenv("SECRET_SENTRY_DSN")
 if sentry_dsn is not None:
     import sentry_sdk
 
-    sentry_sdk.init(dsn=sentry_dsn)
+    sentry_sdk.init(dsn=sentry_dsn)  # type: ignore
 
 bot = TheCleaner(token=token)
 bot.load_extension("clend.entry")
