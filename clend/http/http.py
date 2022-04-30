@@ -91,6 +91,9 @@ class HTTPService:
             logger.exception("Error occured during http run", exc_info=e)
 
     async def handle_action_challenge(self, ev: IActionChallenge):
+        if f"{ev.guild_id}-{ev.user_id}" in self.challenged_users:
+            return
+
         can_timeout = ev.can_timeout
         can_role = ev.can_role
         can_kick = ev.can_kick
