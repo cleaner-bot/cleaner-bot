@@ -130,7 +130,7 @@ class VerificationExtension:
             if http is None:
                 logger.warning("tried to log http extension is not loaded")
             else:
-                http.queue.sync_q.put(log)
+                http.queue.async_q.put_nowait(log)
 
     def get_config(self, guild_id: int) -> GuildConfig | None:
         conf = self.bot.extensions.get("clend.conf", None)

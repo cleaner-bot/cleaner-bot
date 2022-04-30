@@ -348,7 +348,7 @@ class ChallengeExtension:
                 if http is None:
                     logger.warning("tried to log http extension is not loaded")
                 else:
-                    http.queue.sync_q.put(log)
+                    http.queue.async_q.put_nowait(log)
 
     async def verifyd(self):
         pubsub = self.bot.database.pubsub()
@@ -435,7 +435,7 @@ class ChallengeExtension:
             if http is None:
                 logger.warning("tried to log http extension is not loaded")
             else:
-                http.queue.sync_q.put(log)
+                http.queue.async_q.put_nowait(log)
 
     def get_message(self, guild: hikari.GatewayGuild) -> dict:
         t = lambda s: translate(  # noqa E731
