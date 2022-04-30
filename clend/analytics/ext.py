@@ -117,15 +117,14 @@ class AnalyticsExtension:
             elif parts[1] == "remove":
                 database = self.bot.database
                 entitlements = self.get_entitlements(int(parts[2]))
+                await database.hset(
+                    f"guild:{parts[2]}:entitlements",
+                    {"suspended": msgpack.packb(False)},
+                )
                 if entitlements is not None and entitlements.suspended:
-                    await database.hset(
-                        f"guild:{parts[2]}:entitlements",
-                        {"suspended": msgpack.packb(False)},
-                    )
                     entitlements.suspended = False
-                    message = "remove the suspension"
-                else:
-                    message = "not suspended"
+
+                message = "removed the suspension"
 
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
