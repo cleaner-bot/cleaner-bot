@@ -1,7 +1,6 @@
 import logging
 import os
 import typing
-from typing_extensions import reveal_type
 from urllib.parse import urlencode
 
 import hikari
