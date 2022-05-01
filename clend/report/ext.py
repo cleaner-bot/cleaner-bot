@@ -481,6 +481,7 @@ class ReportExtension:
                 f"log_user_{simple_name}", {"mod": interaction.user.id, "user": user_id}
             ),
             interaction.id.created_at,
+            Message("report_message_action_reason"),
         )
         http = self.app.extensions.get("clend.http", None)
         if http is None:
