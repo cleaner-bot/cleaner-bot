@@ -9,7 +9,7 @@ import aiofiles
 import aiofiles.os
 import hikari
 
-from ..bot import TheCleaner
+from ..app import TheCleanerApp
 from ..shared.protect import protect
 from ..shared.event import ILog
 from ..shared.custom_events import SlowTimerEvent
@@ -30,8 +30,8 @@ class GuildLogExtension:
     queue: asyncio.Queue[ILog]
     handles: dict[int, OpenFileHandle]
 
-    def __init__(self, bot: TheCleaner):
-        self.bot = bot
+    def __init__(self, app: TheCleanerApp):
+        self.app = app
         self.listeners = [
             (SlowTimerEvent, self.on_slow_timer),
         ]

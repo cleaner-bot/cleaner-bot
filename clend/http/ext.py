@@ -6,7 +6,7 @@ import hikari
 import janus
 
 from .http import HTTPService
-from ..bot import TheCleaner
+from ..app import TheCleanerApp
 from ..shared.event import IGuildEvent
 from ..shared.protect import protect
 
@@ -15,11 +15,11 @@ class HTTPExtension(threading.Thread):
     queue: janus.Queue[IGuildEvent]
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
 
-    def __init__(self, bot: TheCleaner) -> None:
+    def __init__(self, app: TheCleanerApp) -> None:
         super().__init__()
-        self.bot = bot
+        self.app = app
         self.listeners = []
-        self.http = HTTPService(self.bot)
+        self.http = HTTPService(app)
         self.queue = self.http.main_queue
         self.tasks = None
 

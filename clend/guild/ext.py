@@ -8,7 +8,7 @@ import queue
 import hikari
 
 from .guild import CleanerGuild
-from ..bot import TheCleaner
+from ..app import TheCleanerApp
 from ..shared.event import IGuildSettingsAvailable, IAction
 
 
@@ -25,8 +25,8 @@ class GuildExtension:
     workers: list[GuildWorker] | None = None
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
 
-    def __init__(self, bot: TheCleaner) -> None:
-        self.bot = bot
+    def __init__(self, app: TheCleanerApp) -> None:
+        self.app = app
         self.guilds = {}
         self.listeners = []
 
@@ -112,7 +112,7 @@ class GuildWorker:
     def send_event(self, event: hikari.Event, guild_id: int):
         guild = self.ext.guilds.get(guild_id, None)
         if guild is None:
-            self.ext.guilds[guild_id] = guild = CleanerGuild(guild_id, self.ext.bot)
+            self.ext.guilds[guild_id] = guild = CleanerGuild(guild_id, self.ext.app)
             if guild.get_config() is not None:
                 guild.settings_loaded = True
 
@@ -138,7 +138,7 @@ class GuildWorker:
         else:
             return
 
-        http = self.ext.bot.extensions.get("clend.http", None)
+        http = self.ext.app.extensions.get("clend.http", None)
         if http is None:
             logger.warning("action required but http extension is not loaded")
         else:

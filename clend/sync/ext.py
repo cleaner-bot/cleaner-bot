@@ -5,7 +5,7 @@ import logging
 import hikari
 import msgpack  # type: ignore
 
-from ..bot import TheCleaner
+from ..app import TheCleanerApp
 from ..shared.channel_perms import permissions_for
 from ..shared.protect import protected_call
 from ..shared.dangerous import DANGEROUS_PERMISSIONS
@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 class SyncExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
 
-    def __init__(self, bot: TheCleaner):
-        self.bot = bot
+    def __init__(self, app: TheCleanerApp):
+        self.app = app
         self.listeners = [
             (hikari.GuildJoinEvent, self.on_new_guild),
             (hikari.GuildAvailableEvent, self.on_new_guild),
@@ -37,7 +37,7 @@ class SyncExtension:
         asyncio.create_task(protected_call(self.loader()))
 
     async def loader(self):
-        for guild in tuple(self.bot.bot.cache.get_guilds_view().values()):
+        for guild in tuple(self.app.bot.cache.get_guilds_view().values()):
             await self.new_guild(guild)
         logger.info("initial sync done")
 
@@ -49,19 +49,19 @@ class SyncExtension:
             await self.new_guild(guild)
 
     async def new_guild(self, guild: hikari.GatewayGuild):
-        database = self.bot.database
+        database = self.app.database
         await database.hset(f"guild:{guild.id}:sync", {"added": 1})
         await self.sync_myself(guild)
         await self.sync_roles(guild)
         await self.sync_channels(guild)
 
     async def on_destroy_guild(self, event: hikari.GuildLeaveEvent):
-        database = self.bot.database
+        database = self.app.database
         await database.delete((f"guild:{event.guild_id}:sync",))
 
     async def on_update_role(self, event: hikari.RoleEvent):
         # TODO: add role.get_guild() to hikari
-        guild = self.bot.bot.cache.get_guild(event.guild_id)
+        guild = self.app.bot.cache.get_guild(event.guild_id)
         if guild is not None:
             await self.sync_roles(guild)
             await self.sync_channels(guild)
@@ -73,7 +73,7 @@ class SyncExtension:
             await self.sync_channels(guild)
 
     async def on_member_update(self, event: hikari.MemberUpdateEvent):
-        me = self.bot.bot.get_me()
+        me = self.app.bot.get_me()
         if me is None or event.user_id != me.id:
             return
         guild = event.get_guild()
@@ -91,7 +91,7 @@ class SyncExtension:
 
         data = {"permissions": {k.name: True for k in perms}}
 
-        database = self.bot.database
+        database = self.app.database
         await database.hset(f"guild:{guild.id}:sync", {"myself": msgpack.packb(data)})
 
     async def sync_roles(self, guild: hikari.GatewayGuild):
@@ -114,7 +114,7 @@ class SyncExtension:
             for role in guild.get_roles().values()
         ]
 
-        database = self.bot.database
+        database = self.app.database
         await database.hset(f"guild:{guild.id}:sync", {"roles": msgpack.packb(data)})
 
     async def sync_channels(self, guild: hikari.GatewayGuild):
@@ -132,5 +132,5 @@ class SyncExtension:
             if isinstance(channel, hikari.TextableGuildChannel)
         ]
 
-        database = self.bot.database
+        database = self.app.database
         await database.hset(f"guild:{guild.id}:sync", {"channels": msgpack.packb(data)})

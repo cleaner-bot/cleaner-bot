@@ -1,13 +1,19 @@
+"""
+This is the first stage entry loader.
+Any changes to this loader need a full bot reload.
+"""
+
 import sys
 import typing
 import logging
 
 import hikari
 
-from .bot import TheCleaner
+from ..app import TheCleanerApp
 
 
 logger = logging.getLogger(__name__)
+ENTRY_EXTENSION = "clend.core.entry"
 MODULES_TO_RELOAD = (
     "clend",
     "expirepy",
@@ -28,8 +34,8 @@ MODULES_TO_NOT_RELOAD = (
 class EntryExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
 
-    def __init__(self, bot: TheCleaner) -> None:
-        self.bot = bot
+    def __init__(self, app: TheCleanerApp) -> None:
+        self.app = app
         self.extensions = [
             "clend.guild",
             "clend.http",
@@ -71,7 +77,7 @@ class EntryExtension:
 
     def load_dev(self):
         before = set(sys.modules.keys())
-        self.bot.load_extension("clend.dev")
+        self.app.load_extension("clend.entry.entry")
         after = set(sys.modules.keys())
 
         for module in before:
@@ -83,10 +89,10 @@ class EntryExtension:
                 logger.warning(f"dynamic module that is not reloaded: {module}")
 
     async def on_stopping(self, event: hikari.StoppingEvent):
-        self.bot.unload_extension("clend.dev")
+        self.app.unload_extension(ENTRY_EXTENSION)
 
     async def on_message_create(self, event: hikari.GuildMessageCreateEvent):
-        if not self.bot.is_developer(event.author_id):
+        if not self.app.is_developer(event.author_id):
             return
         if event.content == "clean!full-reload":
             await self.handle_full_reload(event)
@@ -96,18 +102,18 @@ class EntryExtension:
         ext_errors = ext_unloaded = 0
 
         try:
-            self.bot.unload_extension("clend.dev")
+            self.app.unload_extension(ENTRY_EXTENSION)
         except Exception as e:
             ext_errors += 1
-            logger.error("Error unloading clend.dev", exc_info=e)
+            logger.error(f"Error unloading {ENTRY_EXTENSION}", exc_info=e)
         else:
             ext_unloaded += 1
 
-        for extension in tuple(self.bot.extensions):
+        for extension in tuple(self.app.extensions):
             if extension != __name__:
                 logger.warning(f"extension was not unloaded: {extension}")
                 try:
-                    self.bot.unload_extension(extension)
+                    self.app.unload_extension(extension)
                 except Exception as e:
                     ext_errors += 1
                     logger.error(
@@ -127,12 +133,12 @@ class EntryExtension:
             self.load_dev()
         except Exception as e:
             load_dev_error = True
-            logger.error("Error while loading clend.dev", exc_info=e)
+            logger.error(f"Error while loading {ENTRY_EXTENSION}", exc_info=e)
 
         await msg.edit(
             f"Unloaded {ext_unloaded} extensions ({ext_errors} errors)\n"
             f"Removed {mod_removed} modules from sys.modules.\n"
-            f"Error while loading clend.dev: {'yes' if load_dev_error else 'no'}"
+            f"Error while loading {ENTRY_EXTENSION}: {load_dev_error}"
         )
 
 

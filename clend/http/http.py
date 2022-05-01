@@ -13,7 +13,7 @@ from cleaner_i18n.translate import Message, translate
 from expirepy import ExpiringSet, ExpiringDict
 
 from .likely_phishing import is_likely_phishing, report_phishing
-from ..bot import TheCleaner
+from ..app import TheCleanerApp
 from ..shared.channel_perms import permissions_for
 from ..shared.event import (
     IActionChallenge,
@@ -44,8 +44,8 @@ class HTTPService:
     log_queue: asyncio.Queue[ILog]
     delete_queue: asyncio.Queue[IActionDelete]
 
-    def __init__(self, bot: TheCleaner) -> None:
-        self.bot = bot
+    def __init__(self, app: TheCleanerApp) -> None:
+        self.app = app
         self.main_queue = janus.Queue()
         self.log_queue = asyncio.Queue()
         self.delete_queue = asyncio.Queue()
@@ -130,7 +130,7 @@ class HTTPService:
 
         coro: typing.Coroutine[typing.Any, typing.Any, typing.Any] | None = None
 
-        guild = self.bot.bot.cache.get_guild(ev.guild_id)
+        guild = self.app.bot.cache.get_guild(ev.guild_id)
         locale = "en-US" if guild is None else guild.preferred_locale
 
         if can_timeout:
@@ -140,7 +140,7 @@ class HTTPService:
                 seconds=30 * strikes
             )
             message = "log_challenge_timeout"
-            coro = self.bot.bot.rest.edit_member(
+            coro = self.app.bot.rest.edit_member(
                 ev.guild_id,
                 ev.user_id,
                 communication_disabled_until=communication_disabled_until,
@@ -151,9 +151,9 @@ class HTTPService:
             self.member_edit[ev.guild_id] = self.member_edit.get(ev.guild_id, 0) + 1
 
             message = "log_challenge_role"
-            routine = self.bot.bot.rest.remove_role_from_member
+            routine = self.app.bot.rest.remove_role_from_member
             if ev.take_role:
-                routine = self.bot.bot.rest.add_role_to_member
+                routine = self.app.bot.rest.add_role_to_member
             coro = routine(
                 ev.guild_id,
                 ev.user_id,
@@ -161,12 +161,12 @@ class HTTPService:
                 reason=ev.reason.translate(locale),
             )
 
-            database = self.bot.database
+            database = self.app.database
             await database.sadd(f"guild:{ev.guild_id}:challenged", (ev.user_id,))
 
         elif can_kick:
             message = "log_challenge_kick"
-            coro = self.bot.bot.rest.kick_user(
+            coro = self.app.bot.rest.kick_user(
                 ev.guild_id,
                 ev.user_id,
                 reason=ev.reason.translate(locale),
@@ -174,7 +174,7 @@ class HTTPService:
 
         elif ev.can_ban:
             message = "log_challenge_ban"
-            coro = self.bot.bot.rest.ban_user(
+            coro = self.app.bot.rest.ban_user(
                 ev.guild_id,
                 ev.user_id,
                 delete_message_days=1,
@@ -226,13 +226,13 @@ class HTTPService:
             guild_strikes = self.guild_strikes.get(ev.guild_id, 0)
             if guild_strikes >= 30:
                 return
-            await report_phishing(ev, self.bot)
+            await report_phishing(ev, self.app)
 
     async def handle_action_nickname(self, ev: IActionNickname):
         coro: typing.Coroutine[typing.Any, typing.Any, typing.Any] | None = None
         message = "log_nickname_reset_failure"
 
-        guild = self.bot.bot.cache.get_guild(ev.guild_id)
+        guild = self.app.bot.cache.get_guild(ev.guild_id)
         locale = "en-US" if guild is None else guild.preferred_locale
 
         if ev.can_reset:
@@ -240,12 +240,12 @@ class HTTPService:
             self.member_edit[ev.guild_id] = current
             if current >= 8:
                 if ev.can_kick:
-                    coro = self.bot.bot.rest.kick_user(
+                    coro = self.app.bot.rest.kick_user(
                         ev.guild_id, ev.user_id, reason=ev.reason.translate(locale)
                     )
                     message = "log_nickname_reset_kick"
                 elif ev.can_ban:
-                    coro = self.bot.bot.rest.ban_user(
+                    coro = self.app.bot.rest.ban_user(
                         ev.guild_id, ev.user_id, reason=ev.reason.translate(locale)
                     )
                     message = "log_nickname_reset_ban"
@@ -253,7 +253,7 @@ class HTTPService:
                     message = "log_nickname_failure"
             else:
                 message = "log_nickname_reset_success"
-                coro = self.bot.bot.rest.edit_member(
+                coro = self.app.bot.rest.edit_member(
                     ev.guild_id,
                     ev.user_id,
                     nickname=None,
@@ -284,11 +284,11 @@ class HTTPService:
             self.log_queue.put_nowait(ILog(ev.guild_id, translated, datetime.utcnow()))
             return
 
-        guild = self.bot.bot.cache.get_guild(ev.guild_id)
+        guild = self.app.bot.cache.get_guild(ev.guild_id)
         locale = "en-US" if guild is None else guild.preferred_locale
 
         announcement = ev.announcement.translate(locale)
-        message = await self.bot.bot.rest.create_message(ev.channel_id, announcement)
+        message = await self.app.bot.rest.create_message(ev.channel_id, announcement)
         if ev.delete_after > 0:
             await asyncio.sleep(ev.delete_after)
             try:
@@ -300,7 +300,7 @@ class HTTPService:
         if not ev.can_modify:
             return  # silently ignore
 
-        guild = self.bot.bot.cache.get_guild(ev.guild_id)
+        guild = self.app.bot.cache.get_guild(ev.guild_id)
         locale = "en-US" if guild is None else guild.preferred_locale
 
         translated = Message(
@@ -309,7 +309,7 @@ class HTTPService:
         )
         self.log_queue.put_nowait(ILog(ev.guild_id, translated, datetime.utcnow()))
 
-        await self.bot.bot.rest.edit_channel(
+        await self.app.bot.rest.edit_channel(
             ev.channel_id,
             rate_limit_per_user=ev.ratelimit,
             reason=translated.translate(locale),
@@ -327,7 +327,7 @@ class HTTPService:
 
             sends = []
             for guild_id, logs in guilds.items():
-                guild = self.bot.bot.cache.get_guild(guild_id)
+                guild = self.app.bot.cache.get_guild(guild_id)
                 locale = "en-US" if guild is None else guild.preferred_locale
 
                 referenced_message = None
@@ -392,7 +392,7 @@ class HTTPService:
                     and int(config.logging_channel) > 0
                 ):
                     the_channel_id = int(config.logging_channel)
-                    guild = self.bot.bot.cache.get_guild(guild_id)
+                    guild = self.app.bot.cache.get_guild(guild_id)
                     if guild is not None:
                         me = guild.get_my_member()
                         if me is not None:
@@ -412,7 +412,7 @@ class HTTPService:
                 if can_send_embed:
                     if embed is not hikari.UNDEFINED:
                         if channel_id == fallback_id:
-                            guild = self.bot.bot.cache.get_guild(guild_id)
+                            guild = self.app.bot.cache.get_guild(guild_id)
                             if guild is None:
                                 embed.add_field("Guild", guild_id)
                             else:
@@ -423,7 +423,7 @@ class HTTPService:
                     if (
                         (entitlements is None or entitlements.plan == 0)
                         and random.random() < 0.05
-                        and not await self.bot.database.exists(
+                        and not await self.app.database.exists(
                             (f"guild:{guild_id}:logging:voting-reminder",)
                         )
                     ):
@@ -433,14 +433,14 @@ class HTTPService:
                             color=0x6366F1,
                         ).set_footer(text=translate(locale, "log_vote_footer"))
                         embeds.append(embed)
-                        await self.bot.database.set(
+                        await self.app.database.set(
                             f"guild:{guild_id}:logging:voting-reminder",
                             "1",
                             ex=VOTING_REMINDER_COOLDOWN,
                         )
 
                 sends.append(
-                    self.bot.bot.rest.create_message(
+                    self.app.bot.rest.create_message(
                         channel_id,
                         message,
                         embeds=embeds if embeds else hikari.UNDEFINED,
@@ -451,7 +451,7 @@ class HTTPService:
                     entitlements.plan >= entitlements.logging_downloads
                     and config.logging_downloads_enabled
                 ):
-                    guildlog = self.bot.extensions.get("clend.guildlog", None)
+                    guildlog = self.app.extensions.get("clend.guildlog", None)
                     if guildlog is None:
                         logger.warning("unable to find clend.guildlog extension")
                         return None
@@ -482,7 +482,7 @@ class HTTPService:
                 if len(deletes) <= 3:
                     for delete in deletes:
                         futures.append(
-                            self.bot.bot.rest.delete_message(
+                            self.app.bot.rest.delete_message(
                                 channel_id, delete.message_id
                             )
                         )
@@ -492,7 +492,7 @@ class HTTPService:
                     self.bulk_delete_cooldown.add(channel_id)
                     messages = [x.message_id for x in deletes[:100]]
                     futures.append(
-                        self.bot.bot.rest.delete_messages(channel_id, messages)
+                        self.app.bot.rest.delete_messages(channel_id, messages)
                     )
                     logger.debug(f"bulk deleted {len(deletes)} messages")
                     deletes = deletes[100:]
@@ -504,14 +504,14 @@ class HTTPService:
                 asyncio.create_task(coro)
 
     def get_config(self, guild_id: int) -> GuildConfig | None:
-        conf = self.bot.extensions.get("clend.conf", None)
+        conf = self.app.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")
             return None
         return conf.get_config(guild_id)
 
     def get_entitlements(self, guild_id: int) -> GuildEntitlements | None:
-        conf = self.bot.extensions.get("clend.conf", None)
+        conf = self.app.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")
             return None
@@ -519,7 +519,7 @@ class HTTPService:
         return conf.get_entitlements(guild_id)
 
     def put_in_metrics_queue(self, item):
-        metrics = self.bot.extensions.get("clend.metrics")
+        metrics = self.app.extensions.get("clend.metrics")
         if metrics is None:
             logger.warning("unable to get metrics queue")
             return

@@ -2,7 +2,7 @@ import hikari
 
 from cleaner_data.url import has_url
 
-from ..bot import TheCleaner
+from ..app import TheCleanerApp
 from ..shared.event import IActionDelete
 
 
@@ -19,7 +19,7 @@ def is_likely_phishing(ev: IActionDelete) -> bool:
     )
 
 
-async def report_phishing(ev: IActionDelete, bot: TheCleaner):
+async def report_phishing(ev: IActionDelete, app: TheCleanerApp):
     if ev.message is None:
         return
 
@@ -30,7 +30,7 @@ async def report_phishing(ev: IActionDelete, bot: TheCleaner):
 
     embed.set_author(name=f"Suspicious message | {rule}")
 
-    user = bot.bot.cache.get_user(ev.user_id)
+    user = app.bot.cache.get_user(ev.user_id)
     if user is None:
         embed.set_footer(text=str(ev.user_id))
     else:
@@ -41,10 +41,10 @@ async def report_phishing(ev: IActionDelete, bot: TheCleaner):
 
     embed.add_field("Channel", f"<#{ev.channel_id}>")
 
-    guild = bot.bot.cache.get_guild(ev.guild_id)
+    guild = app.bot.cache.get_guild(ev.guild_id)
     if guild is None:
         embed.add_field("Guild", str(ev.guild_id))
     else:
         embed.add_field("Guild", f"{guild.name} ({ev.guild_id})")
 
-    await bot.bot.rest.create_message(channel_id, embed=embed)
+    await app.bot.rest.create_message(channel_id, embed=embed)

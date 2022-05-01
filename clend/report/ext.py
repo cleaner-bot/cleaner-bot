@@ -12,7 +12,7 @@ from cleaner_data.url import has_url
 from cleaner_i18n.translate import translate, Message
 from expirepy.dict import ExpiringDict
 
-from ..bot import TheCleaner
+from ..app import TheCleanerApp
 from ..shared.id import time_passed_since
 from ..shared.channel_perms import permissions_for
 from ..shared.custom_events import SlowTimerEvent
@@ -31,8 +31,8 @@ PERMS_SEND = (
 class ReportExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
 
-    def __init__(self, bot: TheCleaner):
-        self.bot = bot
+    def __init__(self, app: TheCleanerApp):
+        self.app = app
         self.listeners = [
             (hikari.InteractionCreateEvent, self.on_interaction_create),
             (SlowTimerEvent, self.on_slow_timer),
@@ -154,7 +154,7 @@ class ReportExtension:
         self.message_cache[message.id] = message
 
     async def handle_message_report_modal(self, interaction: hikari.ModalInteraction):
-        database = self.bot.database
+        database = self.app.database
         t = lambda s, **k: translate(  # noqa E731
             interaction.locale, f"report_{s}", **k
         )
@@ -273,7 +273,7 @@ class ReportExtension:
     async def is_message_report_ok(
         self, interaction: hikari.CommandInteraction | hikari.ModalInteraction
     ):
-        database = self.bot.database
+        database = self.app.database
 
         t = lambda s, **k: translate(  # noqa E731
             interaction.locale, f"report_{s}", **k
@@ -388,7 +388,7 @@ class ReportExtension:
         if member is None:
             logger.debug("fetching message author :(")
             try:
-                member = await self.bot.bot.rest.fetch_member(guild.id, message.author)
+                member = await self.app.bot.rest.fetch_member(guild.id, message.author)
             except hikari.NotFoundError:
                 member = None
 
@@ -488,7 +488,7 @@ class ReportExtension:
     ) -> Message:
         name = "success"
         try:
-            await self.bot.bot.rest.delete_message(channel_id, message_id)
+            await self.app.bot.rest.delete_message(channel_id, message_id)
         except hikari.NotFoundError:
             name = "deleted"
         except hikari.ForbiddenError:
@@ -505,7 +505,7 @@ class ReportExtension:
         name = "success"
         assert interaction.guild_id is not None  # impossible, but makes mypy happy
         try:
-            await self.bot.bot.rest.ban_member(
+            await self.app.bot.rest.ban_member(
                 interaction.guild_id, user_id, delete_message_days=1
             )
         except hikari.ForbiddenError:
@@ -522,7 +522,7 @@ class ReportExtension:
         name = "success"
         assert interaction.guild_id is not None  # impossible, but makes mypy happy
         try:
-            await self.bot.bot.rest.kick_member(interaction.guild_id, user_id)
+            await self.app.bot.rest.kick_member(interaction.guild_id, user_id)
         except hikari.NotFoundError:
             name = "notfound"
         except hikari.ForbiddenError:
@@ -540,7 +540,7 @@ class ReportExtension:
         until = utc_datetime() + timedelta(days=1)
         assert interaction.guild_id is not None  # impossible, but makes mypy happy
         try:
-            await self.bot.bot.rest.edit_member(
+            await self.app.bot.rest.edit_member(
                 interaction.guild_id, user_id, communication_disabled_until=until
             )
         except hikari.NotFoundError:
@@ -560,7 +560,7 @@ class ReportExtension:
         until = utc_datetime() + timedelta(days=7)
         assert interaction.guild_id is not None  # impossible, but makes mypy happy
         try:
-            await self.bot.bot.rest.edit_member(
+            await self.app.bot.rest.edit_member(
                 interaction.guild_id, user_id, communication_disabled_until=until
             )
         except hikari.NotFoundError:
@@ -570,7 +570,7 @@ class ReportExtension:
         return Message(f"report_message_action_timeout_week_{name}", {"user": user_id})
 
     async def handle_phishing_report(self, interaction: hikari.CommandInteraction):
-        database = self.bot.database
+        database = self.app.database
 
         t = lambda s, **k: translate(  # noqa E731
             interaction.locale, f"report_{s}", **k
@@ -731,7 +731,7 @@ class ReportExtension:
     async def handle_report_phishing_ban(
         self, interaction: hikari.ComponentInteraction
     ):
-        database = self.bot.database
+        database = self.app.database
         parts = interaction.custom_id.split("/")
         user_id = parts[2]
 
@@ -757,7 +757,7 @@ class ReportExtension:
     async def handle_report_phishing_unban(
         self, interaction: hikari.ComponentInteraction
     ):
-        database = self.bot.database
+        database = self.app.database
         parts = interaction.custom_id.split("/")
         user_id = parts[2]
 
@@ -784,7 +784,7 @@ class ReportExtension:
         self.message_cache.evict()
 
     def get_config(self, guild_id: int) -> GuildConfig | None:
-        conf = self.bot.extensions.get("clend.conf", None)
+        conf = self.app.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")
             return None
@@ -792,7 +792,7 @@ class ReportExtension:
         return conf.get_config(guild_id)
 
     def get_entitlements(self, guild_id: int) -> GuildEntitlements | None:
-        conf = self.bot.extensions.get("clend.conf", None)
+        conf = self.app.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")
             return None

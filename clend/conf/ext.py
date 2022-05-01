@@ -7,7 +7,7 @@ import msgpack  # type: ignore
 
 from cleaner_conf.guild import GuildConfig, GuildEntitlements
 
-from ..bot import TheCleaner
+from ..app import TheCleanerApp
 from ..shared.event import IGuildSettingsAvailable
 from ..shared.sub import listen as pubsub_listen, Message
 from ..shared.protect import protect, protected_call
@@ -26,8 +26,8 @@ class ConfigExtension:
     _guilds: dict[int, GuildData]
     _races: dict[int, asyncio.Event]
 
-    def __init__(self, bot: TheCleaner):
-        self.bot = bot
+    def __init__(self, app: TheCleanerApp):
+        self.app = app
         self.listeners = [
             (hikari.GuildJoinEvent, self.on_new_guild),
             (hikari.GuildAvailableEvent, self.on_new_guild),
@@ -43,7 +43,7 @@ class ConfigExtension:
         self.task = asyncio.create_task(protect(self.updated))
 
     async def loader(self):
-        for guild_id in tuple(self.bot.bot.cache.get_guilds_view().keys()):
+        for guild_id in tuple(self.app.bot.cache.get_guilds_view().keys()):
             if guild_id not in self._guilds:
                 await self.fetch_guild(guild_id)
         logger.info("initial setting fetch done")
@@ -82,13 +82,13 @@ class ConfigExtension:
             event.set()
             del self._races[guild_id]
 
-        guild = self.bot.extensions.get("clend.guild", None)
+        guild = self.app.extensions.get("clend.guild", None)
         if guild is None:
             return logger.warning("unable to find clend.guild extension")
         guild.send_event(IGuildSettingsAvailable(guild_id))
 
     async def fetch_dict(self, key: str, keys: typing.Sequence[str]):
-        database = self.bot.database
+        database = self.app.database
         values = await database.hmget(key, keys)
         return {k: msgpack.unpackb(v) for k, v in zip(keys, values) if v is not None}
 
@@ -119,7 +119,7 @@ class ConfigExtension:
             del self._guilds[event.guild_id]
 
     async def updated(self):
-        pubsub = self.bot.database.pubsub()
+        pubsub = self.app.database.pubsub()
         await pubsub.subscribe("pubsub:settings-update")
         async for event in pubsub_listen(pubsub):
             if not isinstance(event, Message):

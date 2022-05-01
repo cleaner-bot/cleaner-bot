@@ -7,7 +7,7 @@ import msgpack  # type: ignore
 
 from cleaner_conf.guild import GuildEntitlements
 
-from ..bot import TheCleaner
+from ..app import TheCleanerApp
 from ..shared.id import time_passed_since
 
 
@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 class AnalyticsExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
 
-    def __init__(self, bot: TheCleaner):
-        self.bot = bot
+    def __init__(self, app: TheCleanerApp):
+        self.app = app
         self.listeners = [
             (hikari.GuildJoinEvent, self.on_guild_join),
             (hikari.GuildLeaveEvent, self.on_guild_leave),
@@ -27,7 +27,7 @@ class AnalyticsExtension:
         ]
 
     async def on_guild_join(self, event: hikari.GuildJoinEvent):
-        database = self.bot.database
+        database = self.app.database
         suspended_field = await database.hget(
             f"guild:{event.guild_id}:entitlements", "suspended"
         )
@@ -36,7 +36,7 @@ class AnalyticsExtension:
             is_suspended = msgpack.unpackb(suspended_field)
 
         if is_suspended:
-            await self.bot.bot.rest.leave_guild(event.guild_id)
+            await self.app.bot.rest.leave_guild(event.guild_id)
 
         channel = self.get_channel()
         if channel is None:
@@ -53,7 +53,7 @@ class AnalyticsExtension:
             .add_field(name="Members", value=str(event.guild.member_count))
             .set_footer(str(event.guild_id))
         )
-        owner = self.bot.bot.cache.get_user(event.guild.owner_id)
+        owner = self.app.bot.cache.get_user(event.guild.owner_id)
         if owner is None:
             embed.add_field(name="Owner ID", value=str(event.guild.owner_id))
         else:
@@ -80,7 +80,7 @@ class AnalyticsExtension:
             embed.add_field(name="Name", value=event.old_guild.name)
             embed.add_field(name="Members", value=str(event.old_guild.member_count))
 
-            owner = self.bot.bot.cache.get_user(event.old_guild.owner_id)
+            owner = self.app.bot.cache.get_user(event.old_guild.owner_id)
             if owner is None:
                 embed.add_field(name="Owner ID", value=str(event.old_guild.owner_id))
             else:
@@ -102,9 +102,9 @@ class AnalyticsExtension:
         if event.chunk_index != event.chunk_count - 1:
             return  # guild is not fully chunked yet
 
-        self.bot.guild_has_members_cached.add(event.guild_id)
+        self.app.guild_has_members_cached.add(event.guild_id)
 
-        guild = self.bot.bot.cache.get_guild(event.guild_id)
+        guild = self.app.bot.cache.get_guild(event.guild_id)
         if guild is not None:
             await self.acheck_guild(guild)
 
@@ -122,14 +122,14 @@ class AnalyticsExtension:
             message = "wot"
             if parts[1] == "leave":
                 try:
-                    await self.bot.bot.rest.leave_guild(int(parts[2]))
+                    await self.app.bot.rest.leave_guild(int(parts[2]))
                 except hikari.NotFoundError:
                     message = "not even in it lol"
                 else:
                     message = "left"
 
             elif parts[1] == "remove":
-                database = self.bot.database
+                database = self.app.database
                 entitlements = self.get_entitlements(int(parts[2]))
                 await database.hset(
                     f"guild:{parts[2]}:entitlements",
@@ -181,7 +181,7 @@ class AnalyticsExtension:
         return is_farm, humans, bots
 
     async def suspend(self, guild: hikari.GatewayGuild, reason: str):
-        database = self.bot.database
+        database = self.app.database
         entitlements = self.get_entitlements(guild.id)
         if entitlements is None:
             return
@@ -210,7 +210,7 @@ class AnalyticsExtension:
             vanity = guild.vanity_url_code
             embed.add_field("Vanity Invite", f"https://discord.gg/{vanity}")
 
-        component = self.bot.bot.rest.build_action_row()
+        component = self.app.bot.rest.build_action_row()
         (
             component.add_button(
                 hikari.ButtonStyle.PRIMARY, f"suspend/leave/{guild.id}"
@@ -231,11 +231,11 @@ class AnalyticsExtension:
     def get_channel(self) -> hikari.TextableGuildChannel | None:
         channel_id = 963043465355206716
 
-        channel = self.bot.bot.cache.get_guild_channel(channel_id)
+        channel = self.app.bot.cache.get_guild_channel(channel_id)
         return channel  # type: ignore
 
     def get_entitlements(self, guild_id: int) -> GuildEntitlements | None:
-        conf = self.bot.extensions.get("clend.conf", None)
+        conf = self.app.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")
             return None

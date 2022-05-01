@@ -6,8 +6,7 @@ import typing
 import hikari
 from hikari.internal.time import utc_datetime
 
-from .bot import TheCleaner
-from .shared.timing import timer_generator
+from ..app import TheCleanerApp
 
 
 logger = logging.getLogger(__name__)
@@ -16,58 +15,14 @@ logger = logging.getLogger(__name__)
 class DevExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
 
-    def __init__(self, bot: TheCleaner) -> None:
-        self.bot = bot
-        self.extensions = [
-            "clend.timer",
-            "clend.conf",
-            "clend.http",
-            "clend.guild",
-            "clend.challenge",
-            "clend.verification",
-            "clend.sync",
-            "clend.slash",
-            "clend.report",
-            "clend.analytics",
-            "clend.metrics",
-            "clend.guildlog",
-            "clend.downdoom",
-        ]
+    def __init__(self, app: TheCleanerApp) -> None:
+        self.app = app
         self.listeners = [
             (hikari.GuildMessageCreateEvent, self.on_message_create),
         ]
 
-    def on_load(self):
-        timer = timer_generator()
-        next(timer)  # skip first 0
-        for ext in self.extensions:
-            if ext in self.bot.extensions:
-                logger.warning(f"loading already loaded extension: {ext}")
-            else:
-                try:
-                    self.bot.load_extension(ext)
-                except Exception as e:
-                    logger.exception(
-                        f"An error occured while loading extension: {ext}", exc_info=e
-                    )
-
-            if (time_taken := next(timer)) >= 0.5:
-                logger.info(f"spent {time_taken:.3f}s loading {ext}")
-
-    def on_unload(self):
-        for ext in self.extensions:
-            if ext in self.bot.extensions:
-                try:
-                    self.bot.unload_extension(ext)
-                except Exception as e:
-                    logger.exception(
-                        f"An error occured while unloading extension: {ext}", exc_info=e
-                    )
-            else:
-                logger.warning(f"extension was never loaded: {ext}")
-
     async def on_message_create(self, event: hikari.GuildMessageCreateEvent):
-        if not self.bot.is_developer(event.author_id) or event.content is None:
+        if not self.app.is_developer(event.author_id) or event.content is None:
             return
         if event.content == "clean!ping":
             await self.handle_ping(event)
@@ -94,7 +49,7 @@ class DevExtension:
 
     async def handle_ping(self, event: hikari.GuildMessageCreateEvent):
         sent = utc_datetime()
-        ws_latency = self.bot.bot.heartbeat_latency * 1000
+        ws_latency = self.app.bot.heartbeat_latency * 1000
 
         msg = await event.message.respond(
             embed=hikari.Embed(
@@ -116,7 +71,7 @@ class DevExtension:
 
     async def handle_stop(self, event: hikari.GuildMessageCreateEvent):
         await event.message.respond("Bye!")
-        await self.bot.bot.close()
+        await self.app.bot.close()
 
     async def handle_register_slash(self, event: hikari.GuildMessageCreateEvent):
         is_global = event.content and event.content.endswith("-global")
@@ -142,7 +97,7 @@ class DevExtension:
             ),
         ]
 
-        me = self.bot.bot.get_me()
+        me = self.app.bot.get_me()
         if me is None:
             return await event.message.respond("no me found")
 
@@ -155,7 +110,7 @@ class DevExtension:
         await event.message.respond("done")
 
     async def handle_reset_slash(self, event: hikari.GuildMessageCreateEvent):
-        me = self.bot.bot.get_me()
+        me = self.app.bot.get_me()
         if me is None:
             return await event.message.respond("no me found")
 
@@ -168,7 +123,7 @@ class DevExtension:
         await event.message.respond("done")
 
     async def handle_info(self, event: hikari.GuildMessageCreateEvent):
-        bot = self.bot.bot
+        bot = self.app.bot
         guilds = len(bot.cache.get_guilds_view())
         users = len(bot.cache.get_users_view())
         members = sum(
@@ -216,9 +171,9 @@ class DevExtension:
         name = event.message.content[13:]
         msg = await event.message.respond(f"Reloading `{name}`")
 
-        if name in self.bot.extensions:
+        if name in self.app.extensions:
             try:
-                self.bot.unload_extension(name)
+                self.app.unload_extension(name)
             except Exception as e:
                 logger.error(f"Error unloading {name}", exc_info=e)
                 return await msg.edit("Failed. Unload error.")
@@ -230,7 +185,7 @@ class DevExtension:
                 reloaded.append(module)
 
         try:
-            self.bot.load_extension(name)
+            self.app.load_extension(name)
         except Exception as e:
             logger.error(f"Error loading {name}", exc_info=e)
             return await msg.edit("Failed. Load error.")
@@ -265,11 +220,11 @@ class DevExtension:
         guild_id = parts[1]
         reason = " ".join(parts[2:])
 
-        analytics = self.bot.extensions.get("clend.analytics")
+        analytics = self.app.extensions.get("clend.analytics")
         if analytics is None:
             return await event.message.respond("`clend.analytics` not loaded")
 
-        guild = self.bot.bot.cache.get_guild(int(guild_id))
+        guild = self.app.bot.cache.get_guild(int(guild_id))
         if guild is None:
             return await event.message.respond("guild not found")
 

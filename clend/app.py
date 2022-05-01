@@ -13,7 +13,7 @@ DEVELOPERS = {
 }
 
 
-class TheCleaner:
+class TheCleanerApp:
     extensions: dict[str, typing.Any]
     guild_has_members_cached: set[int]
 

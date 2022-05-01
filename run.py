@@ -9,7 +9,7 @@ load_dotenv(Path("~/.cleaner/secrets").expanduser())
 load_dotenv(Path("~/.cleaner/env").expanduser())
 load_dotenv(Path("~/.cleaner/env_bot").expanduser())
 
-from clend.bot import TheCleaner  # noqa: E402
+from clend.app import TheCleanerApp  # noqa: E402
 
 
 try:
@@ -32,8 +32,8 @@ if sentry_dsn is not None:
 
     sentry_sdk.init(dsn=sentry_dsn)  # type: ignore
 
-bot = TheCleaner(token=token)
-bot.load_extension("clend.entry")
+bot = TheCleanerApp(token=token)
+bot.load_extension("clend.core.boot")
 
 # hikari logger is already inited, so we can add ours
 fh = logging.FileHandler("debug.log")

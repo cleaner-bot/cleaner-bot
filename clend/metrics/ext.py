@@ -8,7 +8,7 @@ import hikari
 import msgpack  # type: ignore
 
 from .metrics import Metrics, metrics_reader
-from ..bot import TheCleaner
+from ..app import TheCleanerApp
 from ..shared.protect import protect
 
 logger = logging.getLogger(__name__)
@@ -19,9 +19,9 @@ class MetricsExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
     metrics: Metrics
 
-    def __init__(self, bot: TheCleaner) -> None:
+    def __init__(self, app: TheCleanerApp) -> None:
         super().__init__()
-        self.bot = bot
+        self.app = app
         self.listeners = [
             (hikari.GuildLeaveEvent, self.on_destroy_guild),
         ]
@@ -40,7 +40,7 @@ class MetricsExtension:
         self.metrics.close()
 
     async def on_destroy_guild(self, event: hikari.GuildLeaveEvent):
-        database = self.bot.database
+        database = self.app.database
         await database.delete((f"guild:{event.guild_id}:radar",))
 
     async def maind(self):
@@ -64,9 +64,9 @@ class MetricsExtension:
                 logger.debug("updating radar")
                 await loop.run_in_executor(None, self.metrics.flush)
                 data, guilds = await loop.run_in_executor(None, self.gather_radar_data)
-                await self.bot.database.set("radar", data)
+                await self.app.database.set("radar", data)
                 for guild_id, guild_data in guilds.items():
-                    await self.bot.database.set(f"guild:{guild_id}:radar", guild_data)
+                    await self.app.database.set(f"guild:{guild_id}:radar", guild_data)
                 last_update = now
                 logger.debug("radar updated")
 
@@ -123,10 +123,10 @@ class MetricsExtension:
                 c: {"total": 0, "previous": 0, "now": 0} for c in challenge_actions
             },
             "stats": {
-                "guild_count": len(self.bot.bot.cache.get_guilds_view()),
+                "guild_count": len(self.app.bot.cache.get_guilds_view()),
                 "user_count": sum(
                     guild.member_count
-                    for guild in self.bot.bot.cache.get_guilds_view().values()
+                    for guild in self.app.bot.cache.get_guilds_view().values()
                 ),
             },
         }

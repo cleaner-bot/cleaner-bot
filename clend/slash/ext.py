@@ -8,7 +8,7 @@ from hikari.urls import BASE_URL
 
 from cleaner_i18n.translate import translate
 
-from ..bot import TheCleaner
+from ..app import TheCleanerApp
 from ..shared.button import add_link
 from ..shared.id import time_passed_since
 
@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 class SlashExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
 
-    def __init__(self, bot: TheCleaner):
-        self.bot = bot
+    def __init__(self, app: TheCleanerApp):
+        self.app = app
         self.listeners = [
             (hikari.InteractionCreateEvent, self.on_interaction_create),
         ]
@@ -158,7 +158,7 @@ class SlashExtension:
         )
         client_id = os.getenv("CLIENT_ID")
         if client_id is None:
-            me = self.bot.bot.cache.get_me()
+            me = self.app.bot.cache.get_me()
             if me is None:
                 # dont bother handling because this should NEVER happen
                 raise RuntimeError("no client_id for invite command")
@@ -190,7 +190,7 @@ class SlashExtension:
     async def handle_login(self, interaction: hikari.CommandInteraction):
         locale = interaction.locale
         t = lambda s: translate(locale, f"slash_login_{s}")  # noqa E731
-        database = self.bot.database
+        database = self.app.database
 
         if not await database.exists((f"user:{interaction.user.id}:oauth:token",)):
             return await interaction.create_initial_response(
@@ -216,7 +216,7 @@ class SlashExtension:
     async def handle_login_button(self, interaction: hikari.ComponentInteraction):
         locale = interaction.locale
         t = lambda s: translate(locale, f"slash_login_{s}")  # noqa E731
-        database = self.bot.database
+        database = self.app.database
 
         code = os.urandom(32).hex()
         await database.set(f"remote-auth:{code}", interaction.user.id, ex=300)

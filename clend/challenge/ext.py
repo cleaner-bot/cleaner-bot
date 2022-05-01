@@ -10,7 +10,7 @@ import msgpack  # type: ignore
 from cleaner_conf.guild import GuildConfig, GuildEntitlements
 from cleaner_i18n.translate import translate, Message
 
-from ..bot import TheCleaner
+from ..app import TheCleanerApp
 from ..shared.button import add_link
 from ..shared.channel_perms import permissions_for
 from ..shared.event import ILog
@@ -38,8 +38,8 @@ def get_min_risk(config: GuildConfig, entitlements: GuildEntitlements) -> float 
 class ChallengeExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
 
-    def __init__(self, bot: TheCleaner):
-        self.bot = bot
+    def __init__(self, app: TheCleanerApp):
+        self.app = app
         self.listeners = [
             (hikari.MemberCreateEvent, self.on_member_create),
             (hikari.MemberUpdateEvent, self.on_member_update),
@@ -163,7 +163,7 @@ class ChallengeExtension:
                 await self.migrate_embed(interaction.message, guild)
 
     async def create_flow(self, interaction: hikari.ComponentInteraction):
-        database = self.bot.database
+        database = self.app.database
         guild = interaction.get_guild()
         if guild is None:
             return
@@ -175,7 +175,7 @@ class ChallengeExtension:
         entitlements = self.get_entitlements(guild.id)
         if config is None or entitlements is None:
             logger.warning(f"uncached guild settings: {guild.id}")
-            component = self.bot.bot.rest.build_action_row()
+            component = self.app.bot.rest.build_action_row()
             add_link(component, t("discord"), "https://cleaner.leodev.xyz/discord")
 
             return await interaction.create_initial_response(
@@ -246,7 +246,7 @@ class ChallengeExtension:
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
         elif role.permissions & DANGEROUS_PERMISSIONS:
-            component = self.bot.bot.rest.build_action_row()
+            component = self.app.bot.rest.build_action_row()
             add_link(
                 component,
                 t("role_dangerous_link"),
@@ -263,7 +263,7 @@ class ChallengeExtension:
 
         me = guild.get_my_member()
         if me is None:
-            component = self.bot.bot.rest.build_action_row()
+            component = self.app.bot.rest.build_action_row()
             add_link(component, "Support", "https://cleaner.leodev.xyz/discord")
 
             return await interaction.create_initial_response(
@@ -275,7 +275,7 @@ class ChallengeExtension:
 
         top_role = me.get_top_role()
         if top_role is not None and role.position >= top_role.position:
-            component = self.bot.bot.rest.build_action_row()
+            component = self.app.bot.rest.build_action_row()
             add_link(
                 component,
                 t("hierarchy_link"),
@@ -307,13 +307,13 @@ class ChallengeExtension:
                 f"created flow for {interaction.user.id}@{interaction.guild_id}: {flow}"
             )
 
-            await self.bot.database.hset(
+            await self.app.database.hset(
                 f"challenge:flow:{flow}",
                 {"user": interaction.user.id, "guild": guild.id},
             )
-            await self.bot.database.expire(f"challenge:flow:{flow}", 300)
+            await self.app.database.expire(f"challenge:flow:{flow}", 300)
 
-            component = self.bot.bot.rest.build_action_row()
+            component = self.app.bot.rest.build_action_row()
             url = f"https://cleaner.leodev.xyz/challenge?flow={flow}"
             add_link(component, t("link"), url)
 
@@ -344,14 +344,14 @@ class ChallengeExtension:
                     ),
                     datetime.utcnow(),
                 )
-                http = self.bot.extensions.get("clend.http", None)
+                http = self.app.extensions.get("clend.http", None)
                 if http is None:
                     logger.warning("tried to log http extension is not loaded")
                 else:
                     http.queue.async_q.put_nowait(log)
 
     async def verifyd(self):
-        pubsub = self.bot.database.pubsub()
+        pubsub = self.app.database.pubsub()
         await pubsub.subscribe("pubsub:challenge-verify")
         await pubsub.subscribe("pubsub:challenge-send")
         async for event in pubsub_listen(pubsub):
@@ -370,13 +370,13 @@ class ChallengeExtension:
     async def verify_flow(self, flow: str):
         logger.debug(f"flow has been solved: {flow}")
 
-        user_id, guild_id = await self.bot.database.hmget(
+        user_id, guild_id = await self.app.database.hmget(
             f"challenge:flow:{flow}", ("user", "guild")
         )
         if user_id is None or guild_id is None:
             return  # the flow expired, F
 
-        guild = self.bot.bot.cache.get_guild(int(guild_id))
+        guild = self.app.bot.cache.get_guild(int(guild_id))
         if guild is None:
             logger.warning(f"uncached guild: {int(guild_id)}")
             return
@@ -411,9 +411,9 @@ class ChallengeExtension:
         else:
             return
 
-        routine = self.bot.bot.rest.add_role_to_member
+        routine = self.app.bot.rest.add_role_to_member
         if config.challenge_interactive_take_role:
-            routine = self.bot.bot.rest.remove_role_from_member
+            routine = self.app.bot.rest.remove_role_from_member
 
         try:
             await routine(guild.id, int(user_id), role.id)
@@ -421,9 +421,9 @@ class ChallengeExtension:
             return  # use left the guild
         finally:
             # delete flow if user left anyway
-            await self.bot.database.delete((f"challenge:flow:{flow}",))
+            await self.app.database.delete((f"challenge:flow:{flow}",))
 
-        await self.bot.database.srem(f"guild:{guild.id}:challenged", (user_id,))
+        await self.app.database.srem(f"guild:{guild.id}:challenged", (user_id,))
 
         if config.logging_enabled and config.logging_option_verify:
             log = ILog(
@@ -431,7 +431,7 @@ class ChallengeExtension:
                 Message("components_log_verify_challenge", {"user": int(user_id)}),
                 datetime.utcnow(),
             )
-            http = self.bot.extensions.get("clend.http", None)
+            http = self.app.extensions.get("clend.http", None)
             if http is None:
                 logger.warning("tried to log http extension is not loaded")
             else:
@@ -441,7 +441,7 @@ class ChallengeExtension:
         t = lambda s: translate(  # noqa E731
             guild.preferred_locale, f"challenge_embed_{s}"
         )
-        component = self.bot.bot.rest.build_action_row()
+        component = self.app.bot.rest.build_action_row()
         (
             component.add_button(hikari.ButtonStyle.PRIMARY, "challenge")
             .set_label(t("verify"))
@@ -456,14 +456,14 @@ class ChallengeExtension:
         return dict(embed=embed, component=component)
 
     async def send_embed(self, channel_id: int, guild_id: int):
-        channel = self.bot.bot.cache.get_guild_channel(channel_id)
+        channel = self.app.bot.cache.get_guild_channel(channel_id)
         if channel is None or not isinstance(channel, hikari.TextableGuildChannel):
             return
 
         if channel.guild_id != guild_id:
             return
 
-        guild = self.bot.bot.cache.get_guild(guild_id)
+        guild = self.app.bot.cache.get_guild(guild_id)
         if guild is None:
             logger.warning(f"uncached guild: {guild_id}")
             return
@@ -490,7 +490,7 @@ class ChallengeExtension:
         await message.edit(**self.get_message(guild))
 
     def get_config(self, guild_id: int) -> GuildConfig | None:
-        conf = self.bot.extensions.get("clend.conf", None)
+        conf = self.app.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")
             return None
@@ -498,7 +498,7 @@ class ChallengeExtension:
         return conf.get_config(guild_id)
 
     def get_entitlements(self, guild_id: int) -> GuildEntitlements | None:
-        conf = self.bot.extensions.get("clend.conf", None)
+        conf = self.app.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")
             return None

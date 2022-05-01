@@ -6,15 +6,15 @@ import hikari
 
 from downdoom import Client
 
-from ..bot import TheCleaner
+from ..app import TheCleanerApp
 
 
 class DowndoomExtension:
     task: asyncio.Task | None = None
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
 
-    def __init__(self, bot: TheCleaner) -> None:
-        self.bot = bot
+    def __init__(self, app: TheCleanerApp) -> None:
+        self.app = app
         self.listeners = []
 
         host = os.getenv("DOWNDOOM_HOST")
