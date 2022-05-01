@@ -133,8 +133,8 @@ class DevExtension:
         member_count = sum(guild.member_count for guild in bot.cache.get_guilds_view().values())
         await event.message.respond(
             f"__Total__:\n"
-            f"Guilds: {guilds}\n\n"
-            f"Member count (approximate): {member_count}\n"
+            f"Guilds: {guilds}\n"
+            f"Member count (approximate): {member_count}\n\n"
             f"__Cache stats__\n"
             f"Users: {users}\n"
             f"Members: {members}\n"
