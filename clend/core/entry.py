@@ -49,9 +49,9 @@ class EntryExtension:
 
     def on_unload(self):
         for ext in EXTENSIONS:
-            if ext in self.bot.extensions:
+            if ext in self.app.extensions:
                 try:
-                    self.bot.unload_extension(ext)
+                    self.app.unload_extension(ext)
                 except Exception as e:
                     logger.exception(
                         f"An error occured while unloading extension: {ext}", exc_info=e
