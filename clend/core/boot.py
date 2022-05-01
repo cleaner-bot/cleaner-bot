@@ -31,7 +31,7 @@ MODULES_TO_NOT_RELOAD = (
 )
 
 
-class EntryExtension:
+class BootExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
 
     def __init__(self, app: TheCleanerApp) -> None:
@@ -89,7 +89,8 @@ class EntryExtension:
                 logger.warning(f"dynamic module that is not reloaded: {module}")
 
     async def on_stopping(self, event: hikari.StoppingEvent):
-        self.app.unload_extension(ENTRY_EXTENSION)
+        if ENTRY_EXTENSION in self.app.extensions:
+            self.app.unload_extension(ENTRY_EXTENSION)
 
     async def on_message_create(self, event: hikari.GuildMessageCreateEvent):
         if not self.app.is_developer(event.author_id):
@@ -142,4 +143,4 @@ class EntryExtension:
         )
 
 
-extension = EntryExtension
+extension = BootExtension

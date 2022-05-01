@@ -28,7 +28,7 @@ EXTENSIONS = [
 ]
 
 
-class Entry2Extension:
+class EntryExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
 
     def __init__(self, app: TheCleanerApp) -> None:
@@ -58,3 +58,6 @@ class Entry2Extension:
                     )
             else:
                 logger.warning(f"extension was never loaded: {ext}")
+
+
+extension = EntryExtension
