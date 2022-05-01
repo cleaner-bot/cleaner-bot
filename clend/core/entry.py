@@ -36,7 +36,7 @@ class EntryExtension:
         self.listeners = []
 
     def on_load(self):
-        for ext in self.extensions:
+        for ext in EXTENSIONS:
             if ext in self.app.extensions:
                 logger.warning(f"loading already loaded extension: {ext}")
             else:
@@ -48,7 +48,7 @@ class EntryExtension:
                     )
 
     def on_unload(self):
-        for ext in self.extensions:
+        for ext in EXTENSIONS:
             if ext in self.bot.extensions:
                 try:
                     self.bot.unload_extension(ext)
