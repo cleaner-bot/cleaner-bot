@@ -89,7 +89,7 @@ class HTTPService:
             logger.exception("Error occured during http run", exc_info=e)
 
     async def handle_action_challenge(self, ev: IActionChallenge):
-        if f"{ev.guild_id}-{ev.user_id}" in self.challenged_users:
+        if f"{ev.guild_id}-{ev.user.id}" in self.challenged_users:
             return
 
         can_timeout = ev.can_timeout
@@ -100,14 +100,14 @@ class HTTPService:
             can_timeout = can_timeout and can_due_to_ratelimits
             can_role = can_role and can_due_to_ratelimits
 
-        user_strikes = self.member_strikes.get(f"{ev.guild_id}-{ev.user_id}", 0)
+        user_strikes = self.member_strikes.get(f"{ev.guild_id}-{ev.user.id}", 0)
         guild_strikes = self.guild_strikes.get(ev.guild_id, 0)
 
         worth = 3
         if ev.block and user_strikes < 2 and guild_strikes < 10:
             worth = 1
 
-        self.member_strikes[f"{ev.guild_id}-{ev.user_id}"] = user_strikes + worth
+        self.member_strikes[f"{ev.guild_id}-{ev.user.id}"] = user_strikes + worth
         self.guild_strikes[ev.guild_id] = guild_strikes + worth
 
         user_strikes += worth
@@ -126,7 +126,7 @@ class HTTPService:
 
         message = "log_challenge_failure"
         if can_timeout or can_role or ev.can_kick or ev.can_ban:
-            self.challenged_users.add(f"{ev.guild_id}-{ev.user_id}")
+            self.challenged_users.add(f"{ev.guild_id}-{ev.user.id}")
 
         coro: typing.Coroutine[typing.Any, typing.Any, typing.Any] | None = None
 
@@ -142,7 +142,7 @@ class HTTPService:
             message = "log_challenge_timeout"
             coro = self.app.bot.rest.edit_member(
                 ev.guild_id,
-                ev.user_id,
+                ev.user.id,
                 communication_disabled_until=communication_disabled_until,
                 reason=ev.reason.translate(locale),
             )
@@ -156,19 +156,19 @@ class HTTPService:
                 routine = self.app.bot.rest.add_role_to_member
             coro = routine(
                 ev.guild_id,
-                ev.user_id,
+                ev.user.id,
                 ev.role_id,
                 reason=ev.reason.translate(locale),
             )
 
             database = self.app.database
-            await database.sadd(f"guild:{ev.guild_id}:challenged", (ev.user_id,))
+            await database.sadd(f"guild:{ev.guild_id}:challenged", (ev.user.id,))
 
         elif can_kick:
             message = "log_challenge_kick"
             coro = self.app.bot.rest.kick_user(
                 ev.guild_id,
-                ev.user_id,
+                ev.user.id,
                 reason=ev.reason.translate(locale),
             )
 
@@ -176,13 +176,13 @@ class HTTPService:
             message = "log_challenge_ban"
             coro = self.app.bot.rest.ban_user(
                 ev.guild_id,
-                ev.user_id,
+                ev.user.id,
                 delete_message_days=1,
                 reason=ev.reason.translate(locale),
             )
-            self.banned_users.add(f"{ev.guild_id}-{ev.user_id}")
+            self.banned_users.add(f"{ev.guild_id}-{ev.user.id}")
 
-        translated = Message(message, {"user": ev.user_id})
+        translated = Message(message, {"user": ev.user.id})
         self.log_queue.put_nowait(
             ILog(ev.guild_id, translated, datetime.utcnow(), ev.reason)
         )
@@ -200,13 +200,13 @@ class HTTPService:
     async def handle_action_delete(self, ev: IActionDelete):
         if ev.message_id in self.deleted_messages:
             return
-        elif f"{ev.guild_id}-{ev.user_id}" in self.banned_users:
+        elif f"{ev.guild_id}-{ev.user.id}" in self.banned_users:
             return
         self.deleted_messages.add(ev.message_id)
 
         message = "log_delete_success" if ev.can_delete else "log_delete_failure"
 
-        translated = Message(message, {"user": ev.user_id, "channel": ev.channel_id})
+        translated = Message(message, {"user": ev.user.id, "channel": ev.channel_id})
         self.log_queue.put_nowait(
             ILog(ev.guild_id, translated, datetime.utcnow(), ev.reason, ev.message)
         )
@@ -241,12 +241,12 @@ class HTTPService:
             if current >= 8:
                 if ev.can_kick:
                     coro = self.app.bot.rest.kick_user(
-                        ev.guild_id, ev.user_id, reason=ev.reason.translate(locale)
+                        ev.guild_id, ev.user.id, reason=ev.reason.translate(locale)
                     )
                     message = "log_nickname_reset_kick"
                 elif ev.can_ban:
                     coro = self.app.bot.rest.ban_user(
-                        ev.guild_id, ev.user_id, reason=ev.reason.translate(locale)
+                        ev.guild_id, ev.user.id, reason=ev.reason.translate(locale)
                     )
                     message = "log_nickname_reset_ban"
                 else:
@@ -255,12 +255,12 @@ class HTTPService:
                 message = "log_nickname_reset_success"
                 coro = self.app.bot.rest.edit_member(
                     ev.guild_id,
-                    ev.user_id,
+                    ev.user.id,
                     nickname=None,
                     reason=ev.reason.translate(locale),
                 )
 
-        translated = Message(message, {"user": ev.user_id})
+        translated = Message(message, {"user": ev.user.id})
         self.log_queue.put_nowait(
             ILog(ev.guild_id, translated, datetime.utcnow(), ev.reason)
         )
@@ -472,7 +472,7 @@ class HTTPService:
             futures = []
             while not self.delete_queue.empty():
                 delete = self.delete_queue.get_nowait()
-                if f"{delete.guild_id}-{delete.user_id}" in self.banned_users:
+                if f"{delete.guild_id}-{delete.user.id}" in self.banned_users:
                     continue
                 if delete.channel_id not in channels:
                     channels[delete.channel_id] = []

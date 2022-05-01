@@ -30,14 +30,10 @@ async def report_phishing(ev: IActionDelete, app: TheCleanerApp):
 
     embed.set_author(name=f"Suspicious message | {rule}")
 
-    user = app.bot.cache.get_user(ev.user_id)
-    if user is None:
-        embed.set_footer(text=str(ev.user_id))
-    else:
-        embed.set_footer(
-            text=f"{user} ({ev.user_id})",
-            icon=user.make_avatar_url(ext="webp", size=64),
-        )
+    embed.set_footer(
+        text=f"{ev.user} ({ev.user.id})",
+        icon=ev.user.make_avatar_url(ext="webp", size=64),
+    )
 
     embed.add_field("Channel", f"<#{ev.channel_id}>")
 

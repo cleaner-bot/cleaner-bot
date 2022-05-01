@@ -21,14 +21,14 @@ class IAction(typing.Protocol):
     def guild_id(self) -> int:
         ...
 
-    user_id: int
+    user: hikari.User
     reason: Message
     info: typing.Any
 
 
 class IActionChallenge(typing.NamedTuple):
     guild_id: int
-    user_id: int
+    user: hikari.User
     block: bool
     can_ban: bool
     can_kick: bool
@@ -42,7 +42,7 @@ class IActionChallenge(typing.NamedTuple):
 
 class IActionDelete(typing.NamedTuple):
     guild_id: int
-    user_id: int
+    user: hikari.User
     channel_id: int
     message_id: int
     can_delete: bool
@@ -53,7 +53,7 @@ class IActionDelete(typing.NamedTuple):
 
 class IActionNickname(typing.NamedTuple):
     guild_id: int
-    user_id: int
+    user: hikari.User
     can_reset: bool
     can_kick: bool
     can_ban: bool

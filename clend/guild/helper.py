@@ -31,7 +31,7 @@ def action_challenge(
     if guild is None or member.id == guild.owner_id:
         return IActionChallenge(
             guild_id=member.guild_id,
-            user_id=member.id,
+            user=member.user,
             block=block,
             can_ban=False,
             can_kick=False,
@@ -86,7 +86,7 @@ def action_challenge(
     )
     action = IActionChallenge(
         guild_id=guild.id,
-        user_id=member.id,
+        user=member.user,
         block=block,
         can_ban=above_role and my_perms & PERM_BAN > 0,
         can_kick=above_role and my_perms & PERM_KICK > 0,
@@ -104,7 +104,7 @@ def action_nickname(member: hikari.Member, **kwargs) -> IActionNickname:
     guild = member.get_guild()
     if guild is None or member.id == guild.owner_id:
         return IActionNickname(
-            guild_id=member.guild_id, user_id=member.id, can_reset=False, **kwargs
+            guild_id=member.guild_id, user=member.user, can_reset=False, **kwargs
         )
 
     me = guild.get_my_member()
@@ -122,7 +122,7 @@ def action_nickname(member: hikari.Member, **kwargs) -> IActionNickname:
 
     action = IActionNickname(
         guild_id=guild.id,
-        user_id=member.id,
+        user=member.user,
         can_reset=above_role and my_perms & PERM_NICK > 0,
         can_ban=above_role and my_perms & PERM_BAN > 0,
         can_kick=above_role and my_perms & PERM_KICK > 0,
@@ -139,7 +139,7 @@ def action_delete(
     if guild is None:
         return IActionDelete(
             guild_id=member.guild_id,
-            user_id=member.id,
+            user=member.user,
             channel_id=message.channel_id,
             message_id=message.id,
             can_delete=False,
@@ -153,7 +153,7 @@ def action_delete(
     if me is None or channel is None:
         return IActionDelete(
             guild_id=member.guild_id,
-            user_id=member.id,
+            user=member.user,
             channel_id=message.channel_id,
             message_id=message.id,
             can_delete=False,
@@ -178,7 +178,7 @@ def action_delete(
 
     return IActionDelete(
         guild_id=guild.id,
-        user_id=member.id,
+        user=member.user,
         channel_id=channel.id,
         message_id=message.id,
         can_delete=can_delete,
