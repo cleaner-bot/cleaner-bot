@@ -340,7 +340,7 @@ class ChallengeExtension:
                     guild.id,
                     Message(
                         "components_log_verify_passthrough",
-                        {"user": interaction.user.id},
+                        {"user": interaction.user.id, "name": str(interaction.user)},
                     ),
                     datetime.utcnow(),
                 )

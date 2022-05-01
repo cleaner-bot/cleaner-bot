@@ -182,7 +182,7 @@ class HTTPService:
             )
             self.banned_users.add(f"{ev.guild_id}-{ev.user.id}")
 
-        translated = Message(message, {"user": ev.user.id})
+        translated = Message(message, {"user": ev.user.id, "name": str(ev.user)})
         self.log_queue.put_nowait(
             ILog(ev.guild_id, translated, datetime.utcnow(), ev.reason)
         )
@@ -206,7 +206,10 @@ class HTTPService:
 
         message = "log_delete_success" if ev.can_delete else "log_delete_failure"
 
-        translated = Message(message, {"user": ev.user.id, "channel": ev.channel_id})
+        translated = Message(
+            message,
+            {"user": ev.user.id, "channel": ev.channel_id, "name": str(ev.user)},
+        )
         self.log_queue.put_nowait(
             ILog(ev.guild_id, translated, datetime.utcnow(), ev.reason, ev.message)
         )
@@ -260,7 +263,7 @@ class HTTPService:
                     reason=ev.reason.translate(locale),
                 )
 
-        translated = Message(message, {"user": ev.user.id})
+        translated = Message(message, {"user": ev.user.id, "name": str(ev.user)})
         self.log_queue.put_nowait(
             ILog(ev.guild_id, translated, datetime.utcnow(), ev.reason)
         )
