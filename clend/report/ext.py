@@ -14,6 +14,7 @@ from expirepy.dict import ExpiringDict
 
 from ..app import TheCleanerApp
 from ..shared.id import time_passed_since
+from ..shared.event import ILog
 from ..shared.channel_perms import permissions_for
 from ..shared.custom_events import SlowTimerEvent
 
@@ -451,6 +452,7 @@ class ReportExtension:
     async def handle_report_message_action(
         self, interaction: hikari.ComponentInteraction
     ):
+        assert interaction.guild_id
         parts = interaction.custom_id.split("/")
         user_id, channel_id, message_id = map(int, parts[2:])
 
@@ -478,6 +480,20 @@ class ReportExtension:
             interaction, user_id, channel_id, message_id, only_include
         )
         await interaction.message.edit(components=components)
+
+        simple_name = action.split("_")[0]
+        log = ILog(
+            interaction.guild_id,
+            Message(
+                f"log_user_{simple_name}", {"mod": interaction.user.id, "user": user_id}
+            ),
+            interaction.id.created_at,
+        )
+        http = self.app.extensions.get("clend.http", None)
+        if http is None:
+            logger.warning("tried to log http extension is not loaded")
+        else:
+            http.queue.async_q.put_nowait(log)
 
     async def handle_report_message_action_delete(
         self,
