@@ -40,6 +40,8 @@ class DevExtension:
             await self.handle_update(event)
         elif event.content.startswith("clean!reload "):
             await self.handle_reload(event)
+        elif event.content == "clean!reload-i18n":
+            await self.handle_reload_i18n(event)
         elif event.content == "clean!emergency-ban":
             await self.handle_emergency_ban(event)
         elif event.content.startswith("clean!suspend "):
@@ -194,6 +196,25 @@ class DevExtension:
         except Exception as e:
             logger.error(f"Error loading {name}", exc_info=e)
             return await msg.edit("Failed. Load error.")
+
+        await msg.edit(
+            "Success. Reloaded modules: " + ", ".join(f"`{x}`" for x in reloaded)
+        )
+
+    async def handle_reload_i18n(self, event: hikari.GuildMessageCreateEvent):
+        msg = await event.message.respond("Reloading cleaner-i18n translations")
+
+        reloaded = []
+        name = "cleaner_i18n.locale"
+        for module in tuple(sys.modules):
+            if module == name or module.startswith(f"{name}."):
+                del sys.modules[module]
+                reloaded.append(module)
+
+        from cleaner_i18n import translate
+        from cleaner_i18n.locale import localesd
+
+        translate.localesd = localesd
 
         await msg.edit(
             "Success. Reloaded modules: " + ", ".join(f"`{x}`" for x in reloaded)
