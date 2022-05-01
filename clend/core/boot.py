@@ -77,7 +77,7 @@ class EntryExtension:
 
     def load_dev(self):
         before = set(sys.modules.keys())
-        self.app.load_extension("clend.entry.entry")
+        self.app.load_extension("clend.core.entry")
         after = set(sys.modules.keys())
 
         for module in before:
