@@ -39,7 +39,12 @@ def on_fast_timer(event: FastTimerEvent, cguild: CleanerGuild):
         if member is None or len(member.role_ids) > 1:
             continue
 
-        message = Message("verification_kick_reason", {"user": user_id})
+        user = event.app.cache.get_user(user_id)
+
+        message = Message(
+            "verification_kick_reason",
+            {"user": user_id, "name": str(user) if user else "?"},
+        )
         action = action_challenge(cguild, member, info=info, reason=message)
 
         if action.can_role or action.can_timeout:

@@ -121,9 +121,16 @@ class VerificationExtension:
         await self.app.bot.rest.add_role_to_member(guild.id, user_id, role.id)
 
         if config.logging_enabled and config.logging_option_verify:
+            user = self.app.bot.cache.get_user(user_id)
+            if user is None:
+                user = await self.app.bot.rest.fetch_user(user_id)
+
             log = ILog(
                 guild.id,
-                Message("components_log_verify_verification", {"user": user_id}),
+                Message(
+                    "components_log_verify_verification",
+                    {"user": user_id, "name": str(user)},
+                ),
                 datetime.utcnow(),
             )
             http = self.app.extensions.get("clend.http", None)

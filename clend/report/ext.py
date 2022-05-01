@@ -474,11 +474,20 @@ class ReportExtension:
         )
         await interaction.message.edit(components=components)
 
+        user = self.app.bot.cache.get_user(user_id)
+        if user is None:
+            user = await self.app.bot.rest.fetch_user(user_id)
+
         simple_name = action.split("_")[0]
         log = ILog(
             interaction.guild_id,
             Message(
-                f"log_user_{simple_name}", {"mod": interaction.user.id, "user": user_id}
+                f"log_user_{simple_name}",
+                {
+                    "mod": interaction.user.id,
+                    "user": user_id,
+                    "name": str(user),
+                },
             ),
             interaction.id.created_at,
             Message("report_message_action_reason"),

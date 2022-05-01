@@ -426,9 +426,16 @@ class ChallengeExtension:
         await self.app.database.srem(f"guild:{guild.id}:challenged", (user_id,))
 
         if config.logging_enabled and config.logging_option_verify:
+            user = self.app.bot.cache.get_user(int(user_id))
+            if user is None:
+                user = await self.app.bot.rest.fetch_user(int(user_id))
+
             log = ILog(
                 guild.id,
-                Message("components_log_verify_challenge", {"user": int(user_id)}),
+                Message(
+                    "components_log_verify_challenge",
+                    {"user": int(user_id), "name": str(user)},
+                ),
                 datetime.utcnow(),
             )
             http = self.app.extensions.get("clend.http", None)
