@@ -1,6 +1,7 @@
 import logging
 import os
 import typing
+from typing_extensions import reveal_type
 from urllib.parse import urlencode
 
 import hikari
@@ -76,7 +77,7 @@ class SlashExtension:
 
         except Exception as e:
             logger.exception("Error occured during component interaction", exc_info=e)
-            # mypy is being weird here, thinking that interaction is PartialInteraction
+            # mypy is being weird here, thinking that interaction is ModalResponseMixin
             await interaction.create_initial_response(  # type: ignore
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=translate(

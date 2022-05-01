@@ -150,8 +150,8 @@ class DevExtension:
         await msg.edit(f"```\n{message}```" if message else "Done. (no output)")
 
     async def handle_update(self, event: hikari.GuildMessageCreateEvent):
-        if event.message.content is None:
-            return  # impossible, but makes mypy happy
+        assert event.message.content
+
         name = event.message.content[13:]
         msg = await event.message.respond(f"Updating `{name}`")
         pip = await asyncio.create_subprocess_shell(
@@ -166,8 +166,7 @@ class DevExtension:
         await msg.edit(f"```\n{message}```" if message else "Done. (no output)")
 
     async def handle_reload(self, event: hikari.GuildMessageCreateEvent):
-        if event.message.content is None:
-            return  # impossible, but makes mypy happy
+        assert event.message.content
         name = event.message.content[13:]
         msg = await event.message.respond(f"Reloading `{name}`")
 

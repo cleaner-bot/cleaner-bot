@@ -102,8 +102,7 @@ class ReportExtension:
         else:
             return
 
-        if handler is None:
-            return  # impossible, but lets make mypy happy
+        assert handler is not None
 
         try:
             try:
@@ -164,8 +163,7 @@ class ReportExtension:
         if channel is None or message is None:
             return  # didnt go ok
 
-        if interaction.guild_id is None:
-            return  # impossible, but makes mypy happy
+        assert interaction.guild_id is not None
 
         config = self.get_config(interaction.guild_id)
         if config is None:  # dont even bother handling this
@@ -289,8 +287,7 @@ class ReportExtension:
             return None, None
 
         if isinstance(interaction, hikari.CommandInteraction):
-            if interaction.target_id is None:
-                return None, None  # impossible, but makes mypy happy
+            assert interaction.target_id is not None
             message_id = interaction.target_id
         else:
             parts = interaction.custom_id.split("/")
@@ -316,8 +313,8 @@ class ReportExtension:
 
         message: hikari.Message | None
         if isinstance(interaction, hikari.CommandInteraction):
-            if interaction.resolved is None:
-                return None, None  # impossible, but makes mypy happy
+            assert interaction.target_id is not None
+            assert interaction.resolved is not None
             message = interaction.resolved.messages.get(message_id, None)
         else:
             message = self.message_cache.get(message_id, None)
@@ -369,11 +366,7 @@ class ReportExtension:
             return None, None
 
         guild = interaction.get_guild()
-        if guild is None:
-            return (
-                None,
-                None,
-            )  # impossible, but makes mypy happy (guild_id is checked earlier)
+        assert guild is not None
 
         if message.author.id == guild.owner_id:
             await interaction.create_initial_response(
@@ -519,7 +512,7 @@ class ReportExtension:
         message_id: int,
     ) -> Message:
         name = "success"
-        assert interaction.guild_id is not None  # impossible, but makes mypy happy
+        assert interaction.guild_id is not None
         try:
             await self.app.bot.rest.ban_member(
                 interaction.guild_id, user_id, delete_message_days=1
@@ -536,7 +529,7 @@ class ReportExtension:
         message_id: int,
     ) -> Message:
         name = "success"
-        assert interaction.guild_id is not None  # impossible, but makes mypy happy
+        assert interaction.guild_id is not None
         try:
             await self.app.bot.rest.kick_member(interaction.guild_id, user_id)
         except hikari.NotFoundError:
@@ -554,7 +547,7 @@ class ReportExtension:
     ) -> Message:
         name = "success"
         until = utc_datetime() + timedelta(days=1)
-        assert interaction.guild_id is not None  # impossible, but makes mypy happy
+        assert interaction.guild_id is not None
         try:
             await self.app.bot.rest.edit_member(
                 interaction.guild_id, user_id, communication_disabled_until=until
@@ -574,7 +567,7 @@ class ReportExtension:
     ) -> Message:
         name = "success"
         until = utc_datetime() + timedelta(days=7)
-        assert interaction.guild_id is not None  # impossible, but makes mypy happy
+        assert interaction.guild_id is not None
         try:
             await self.app.bot.rest.edit_member(
                 interaction.guild_id, user_id, communication_disabled_until=until
@@ -598,10 +591,8 @@ class ReportExtension:
                 content=t("guildonly"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
-        elif interaction.target_id is None:
-            return  # impossible, but makes mypy happy
-        elif interaction.resolved is None:
-            return  # ^
+        assert interaction.target_id is not None
+        assert interaction.resolved is not None
 
         if (
             interaction.member.permissions
