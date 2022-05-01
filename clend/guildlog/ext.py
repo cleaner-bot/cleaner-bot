@@ -121,6 +121,7 @@ class GuildLogExtension:
         if now.year > self.now.year or now.month > self.now.month:
             # new month, reopen all handles
             await self.close_all_handles()
+            self.now = now
 
         else:
             for guild_id, handle in tuple(self.handles.items()):
