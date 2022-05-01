@@ -130,14 +130,18 @@ class DevExtension:
             len(bot.cache.get_members_view_for_guild(guild))
             for guild in bot.cache.get_guilds_view()
         )
-        member_count = sum(guild.member_count for guild in bot.cache.get_guilds_view().values())
+        member_count = sum(
+            guild.member_count
+            for guild in bot.cache.get_guilds_view().values()
+            if guild.member_count
+        )
         await event.message.respond(
             f"__Total__:\n"
-            f"Guilds: {guilds}\n"
-            f"Member count (approximate): {member_count}\n\n"
+            f"Guilds: {guilds:,}\n"
+            f"Member count (approximate): {member_count:,}\n\n"
             f"__Cache stats__\n"
-            f"Users: {users}\n"
-            f"Members: {members}\n"
+            f"Users: {users:,}\n"
+            f"Members: {members:,}\n"
         )
 
     async def handle_pull(self, event: hikari.GuildMessageCreateEvent):
