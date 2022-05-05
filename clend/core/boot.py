@@ -23,6 +23,7 @@ MODULES_TO_RELOAD = (
     "pkg_resources",
     "pydantic",
     "downdoom",
+    "aiofiles",
 )
 MODULES_TO_NOT_RELOAD = (
     "msgpack",
@@ -47,7 +48,7 @@ class BootExtension:
         ]
 
     def should_reload_module(self, module: str):
-        if module == "clend" or module == "clend.bot" or module == __name__:
+        if module == "clend" or module == "clend.app" or module == __name__:
             return False
         elif module.startswith("cleaner_"):
             return True
@@ -77,7 +78,7 @@ class BootExtension:
 
     def load_dev(self):
         before = set(sys.modules.keys())
-        self.app.load_extension("clend.core.entry")
+        self.app.load_extension(ENTRY_EXTENSION)
         after = set(sys.modules.keys())
 
         for module in before:
