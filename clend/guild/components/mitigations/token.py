@@ -12,15 +12,14 @@ MIN_DATA = 10
 
 
 class TokenMessageMitigation(typing.NamedTuple):
-    tokens: tuple[str, ...]
+    tokens: set[str]
 
 
 def match(mitigation: TokenMessageMitigation, message: hikari.Message):
     if not message.content:
         return
     all_tokens = set(normalize(message.content, remove_urls=False).split())
-    mitigated_tokens = set(mitigation.tokens)
-    return all_tokens & mitigated_tokens == mitigated_tokens
+    return all_tokens & mitigation.tokens == mitigation.tokens
 
 
 def detection(
@@ -61,4 +60,4 @@ def detection(
         all_tokens &= tokens
 
     if all_tokens:
-        return TokenMessageMitigation(tuple(all_tokens))
+        return TokenMessageMitigation(all_tokens)

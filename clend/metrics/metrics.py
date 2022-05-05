@@ -8,6 +8,12 @@ import msgpack  # type: ignore
 DEFAULT = Path("metrics.bin")
 
 
+def set_encoder(obj):
+    if isinstance(obj, set):
+        return tuple(obj)
+    return obj
+
+
 class Metrics:
     history: list[tuple[int, typing.Any]]
     _entries: list[bytes]
@@ -37,7 +43,7 @@ class Metrics:
     def log(self, info):
         payload = (datetime.utcnow().timestamp(), info)
         self.history.append(payload)
-        self._entries.append(msgpack.packb(payload))
+        self._entries.append(msgpack.packb(payload, default=set_encoder))
 
     def flush(self):
         if self._entries:
