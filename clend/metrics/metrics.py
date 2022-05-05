@@ -59,12 +59,7 @@ def metrics_reader(path: Path = None):
         path = DEFAULT
     if not path.exists():
         return
-    extra = path.read_bytes()
-    while extra:
-        try:
-            yield msgpack.unpackb(extra, use_list=False)
-        except msgpack.ExtraData as e:
-            extra = e.extra
-            yield e.unpacked
-        else:
-            break
+    all_bytes = path.read_bytes()
+    unpacker = msgpack.Unpacker(use_list=False)
+    unpacker.feed(all_bytes)
+    yield from unpacker
