@@ -39,6 +39,13 @@ def format_log(log: ILog, locale: str):
     return f"`{time_string}` {log.message.translate(locale)}\n{reason}"
 
 
+async def ignore_not_found_exception_wrapper(coro):
+    try:
+        await coro
+    except hikari.NotFoundError:
+        pass
+
+
 class HTTPService:
     main_queue: janus.Queue[IGuildEvent]
     log_queue: asyncio.Queue[ILog]
@@ -504,7 +511,7 @@ class HTTPService:
                     del channels[channel_id]
 
             for coro in futures:
-                asyncio.create_task(coro)
+                asyncio.create_task(ignore_not_found_exception_wrapper(coro))
 
     def get_config(self, guild_id: int) -> GuildConfig | None:
         conf = self.app.extensions.get("clend.conf", None)
