@@ -10,6 +10,7 @@ import hikari
 from .guild import CleanerGuild
 from ..app import TheCleanerApp
 from ..shared.event import IGuildSettingsAvailable, IAction
+from ..shared.timing import Timed
 
 
 WORKERS = 4
@@ -131,12 +132,17 @@ class GuildWorker:
         if callbacks is None:
             return
         data = None
-        for func in callbacks:
-            data = func(event, guild)
-            if data is not None:
-                break
-        else:
-            return
+        with Timed(
+            name=f"running callbacks for {event.__class__.__name__} ({guild.id})",
+            report_threshold=0.005,
+        ) as timed:
+            for func in callbacks:
+                data = func(event, guild)
+                timed.checkpoint(f"{func.__module__}.{func.__qualname__}")
+                if data is not None:
+                    break
+            else:
+                return
 
         http = self.ext.app.extensions.get("clend.http", None)
         if http is None:

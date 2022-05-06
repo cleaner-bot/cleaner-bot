@@ -19,6 +19,7 @@ from ..shared.sub import listen as pubsub_listen, Message as PubMessage
 from ..shared.risk import calculate_risk_score
 from ..shared.dangerous import DANGEROUS_PERMISSIONS
 from ..shared.id import time_passed_since
+from ..shared.timing import Timed
 
 
 logger = logging.getLogger(__name__)
@@ -163,6 +164,8 @@ class ChallengeExtension:
                 await self.migrate_embed(interaction.message, guild)
 
     async def create_flow(self, interaction: hikari.ComponentInteraction):
+        timed = Timed(name="create flow", report_threshold=1)
+
         database = self.app.database
         guild = interaction.get_guild()
         if guild is None:
@@ -184,6 +187,8 @@ class ChallengeExtension:
                 component=component,
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
+
+        timed.checkpoint("got config/entitlements")
 
         act = (
             t("action_take")
@@ -216,9 +221,13 @@ class ChallengeExtension:
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
+        timed.checkpoint("config/member checks")
+
         forced_challenge = await database.sismember(
             f"guild:{guild.id}:challenged", member.id
         )
+        timed.checkpoint("get forced_challenge")
+
         challenge = True
 
         if not forced_challenge:
@@ -261,6 +270,8 @@ class ChallengeExtension:
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
+        timed.checkpoint("role checks")
+
         me = guild.get_my_member()
         if me is None:
             component = self.app.bot.rest.build_action_row()
@@ -300,6 +311,8 @@ class ChallengeExtension:
                 content=t("no_perms", action=act),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
+
+        timed.checkpoint("myself checks")
 
         if challenge:
             flow = hashlib.sha256(interaction.id.to_bytes(8, "big")).hexdigest()
@@ -349,6 +362,9 @@ class ChallengeExtension:
                     logger.warning("tried to log http extension is not loaded")
                 else:
                     http.queue.async_q.put_nowait(log)
+
+        timed.checkpoint("done")
+        timed.close()
 
     async def verifyd(self):
         pubsub = self.app.database.pubsub()
