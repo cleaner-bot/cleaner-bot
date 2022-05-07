@@ -6,8 +6,7 @@ from hikari.internal.time import utc_datetime
 
 def calculate_risk_score(user: hikari.User) -> float:
     age = (utc_datetime() - user.created_at).total_seconds() / 86400
-    ground = 9
-    risk = ground / math.sqrt(age + (ground - 1) * ground) - 0.1
+    risk = 3 / math.log10(age) - (age ** 0.1) / 3
     if user.avatar_hash is None:
         risk += 0.17
     else:
