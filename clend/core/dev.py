@@ -46,6 +46,8 @@ class DevExtension:
             await self.handle_emergency_ban(event)
         elif event.content.startswith("clean!suspend "):
             await self.handle_suspend(event)
+        elif event.content.startswith("clean!risk "):
+            await self.handle_risk(event)
         elif event.content == "clean!test":
             await self.handle_test(event)
 
@@ -239,6 +241,21 @@ class DevExtension:
             "The message has been emergency banned. The ban will only exist "
             "until the next reload. Please update `cleaner-data`."
         )
+
+    async def handle_suspend(self, event: hikari.GuildMessageCreateEvent):
+        assert event.message.content
+        parts = event.message.content.split(" ")
+        user_id = int(parts[1])
+
+        user = self.app.bot.cache.get_user(user_id)
+        if user is None:
+            user = await self.app.bot.rest.fetch_user(user_id)
+        
+        from ..shared.risk import calculate_risk_score
+
+        risk = calculate_risk_score(user)
+
+        await event.message.respond(f"risk={int(risk * 100)} ({risk:.2f%})")
 
     async def handle_suspend(self, event: hikari.GuildMessageCreateEvent):
         assert event.message.content
