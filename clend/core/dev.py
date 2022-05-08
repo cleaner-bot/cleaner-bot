@@ -242,7 +242,7 @@ class DevExtension:
             "until the next reload. Please update `cleaner-data`."
         )
 
-    async def handle_suspend(self, event: hikari.GuildMessageCreateEvent):
+    async def handle_risk(self, event: hikari.GuildMessageCreateEvent):
         assert event.message.content
         parts = event.message.content.split(" ")
         user_id = int(parts[1])
@@ -250,7 +250,7 @@ class DevExtension:
         user = self.app.bot.cache.get_user(user_id)
         if user is None:
             user = await self.app.bot.rest.fetch_user(user_id)
-        
+
         from ..shared.risk import calculate_risk_score
 
         risk = calculate_risk_score(user)
