@@ -158,13 +158,13 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
 
     event = lua.table_from(
         {
-            "message_id": event.message_id,
-            "channel_id": event.channel_id,
-            "guild_id": event.guild_id,
-            "member_id": event.author_id,
-            "member_roles": member.role_ids,
+            "message_id": str(event.message_id),
+            "channel_id": str(event.channel_id),
+            "guild_id": str(event.guild_id),
+            "member_id": str(event.author_id),
+            "member_roles": lua.table_from(map(str, member.role_ids)),
             "member_is_bot": event.is_bot,
-            "member_permissions": permissions,
+            "member_permissions": str(permissions),
             "member_is_owner": event.author_id == guild.owner_id,
             "member_is_moderator": is_moderator(cguild, member),
             "content": event.content,
@@ -172,7 +172,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                 [
                     lua.table_from(
                         {
-                            "attachment_id": a.id,
+                            "attachment_id": str(a.id),
                             "filename": a.filename,
                             # "description": a.description,
                             "content_type": a.media_type,
@@ -229,18 +229,18 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                 ]
             ),
             "message_type": int(event.message.type),
-            "application_id": event.message.application_id,
+            "application_id": str(event.message.application_id) if event.message.application_id else None,
             "mention_everyone": event.message.mentions.everyone,
-            "mention_users": event.message.mentions.user_ids,
-            "mention_roles": event.message.mentions.role_ids,
-            "mention_channels": event.message.mentions.channels_ids,
+            "mention_users": lua.table_from(map(str, event.message.mentions.user_ids)),
+            "mention_roles": lua.table_from(map(str, event.message.mentions.role_ids)),
+            "mention_channels": lua.table_from(map(str, event.message.mentions.channels_ids)),
             "interaction": event.message.interaction
             and lua.table_from(
                 {
-                    "id": event.message.interaction.id,
+                    "id": str(event.message.interaction.id),
                     "type": int(event.message.interaction.type),
                     "name": event.message.interaction.name,
-                    "user_id": event.message.interaction.user.id,
+                    "user_id": str(event.message.interaction.user.id),
                 }
             ),
         }
