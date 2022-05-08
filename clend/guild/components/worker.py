@@ -48,7 +48,7 @@ local function safe_call(fn, ...)
     if cycle_limit == nil then
         error("no cycle limit, call set_cycle_limit")
     end
-    debug_sethook(coroutine.yield, cycle_limit)
+    debug_sethook(coroutine.yield, "", cycle_limit)
     local coro = coroutine.create(fn)
     local result = {coroutine.resume(coro, ...)}
     debug_sethook()
