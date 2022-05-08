@@ -42,6 +42,7 @@ LUA_BOOT = """
 local debug_sethook = debug.sethook
 local coroutine = coroutine
 local setmetatable = setmetatable
+local unpack = unpack or table.unpack
 local script, cycle_limit
 local function safe_call(fn, ...)
     if cycle_limit == nil then
@@ -49,15 +50,17 @@ local function safe_call(fn, ...)
     end
     debug_sethook(coroutine.yield, cycle_limit)
     local coro = coroutine.create(fn)
-    local ok, result = coroutine.resume(coro, ...)
+    local result = {coroutine.resume(coro, ...)}
     debug_sethook()
     if coroutine.status(coro) == "suspended" then
         error("reached cycle limit")
     end
-    if type(result) == "type" then
-        setmetatable(result, {})
+    for _, v in pairs(result) do
+        if type(v) == "type" then
+            setmetatable(v, {})
+        end
     end
-    return result
+    return unpack(result, 2)
 end
 return {
     set_cycle_limit = function(limit)
@@ -280,7 +283,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
     actions: list[IGuildEvent] = []
     info = {"rule": "worker", "guild": event.guild_id}
     for i in range(len(result)):
-        action = result[i]
+        action = result[i + 1]
         if action == "delete":
             actions.append(
                 action_delete(
