@@ -292,7 +292,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                     block=False,
                 )
             )
-        elif action.startswith("log:"):
+        elif isinstance(action, str) and action.startswith("log:"):
             message = action[4:500]
             actions.append(
                 ILog(
@@ -301,7 +301,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                     event.message_id.created_at,
                 )
             )
-        elif action.startswith("announcement:"):
+        elif isinstance(action, str) and action.startswith("announcement:"):
             message = action[13:500]
             channel = event.get_channel()
             if channel is not None:
