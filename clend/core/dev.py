@@ -255,7 +255,7 @@ class DevExtension:
 
         risk = calculate_risk_score(user)
 
-        await event.message.respond(f"risk={int(risk * 100)} ({risk:.2f%})")
+        await event.message.respond(f"risk={int(risk * 100)} ({risk:.2%})")
 
     async def handle_suspend(self, event: hikari.GuildMessageCreateEvent):
         assert event.message.content
