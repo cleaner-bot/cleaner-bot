@@ -280,9 +280,6 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
             )
         ]
 
-    print(result, spec)
-    print(list(result.items()))
-
     actions: list[IGuildEvent] = []
     info = {"rule": "worker", "guild": event.guild_id}
     for i in range(len(result)):
