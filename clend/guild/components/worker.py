@@ -114,6 +114,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
         or data is None
         or not data.config.workers_enabled
         or not data.entitlements.workers
+        or is_moderator(cguild, event.member)
     ):
         return
 
@@ -165,7 +166,6 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
             "member_is_bot": event.is_bot,
             "member_permissions": str(permissions),
             "member_is_owner": event.author_id == guild.owner_id,
-            "member_is_moderator": is_moderator(cguild, event.member),
             "content": event.content,
             "attachments": lua.table_from(
                 [
