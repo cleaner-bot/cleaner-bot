@@ -317,7 +317,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                 ILog(
                     event.guild_id,
                     Message(
-                        "components_worker_unknownaction", {"action": action[:500]}
+                        "components_worker_unknownaction", {"action": str(action)[:500]}
                     ),
                     event.message_id.created_at,
                 )
