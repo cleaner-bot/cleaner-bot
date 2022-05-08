@@ -7,6 +7,7 @@ from . import (
     log,
     slowmode,
     verification,
+    worker,
 )
 
 
@@ -17,6 +18,7 @@ components = [
     dehoist,
     impersonation,
     firewall,
+    worker,
     log,
     slowmode,
 ]

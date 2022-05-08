@@ -4,6 +4,7 @@ import typing
 import queue
 
 import hikari
+import lupa  # type: ignore
 
 from expirepy import ExpiringList, ExpiringCounter
 
@@ -21,6 +22,8 @@ class CleanerGuild:
     pending_message_count: dict[int, int]
     current_slowmode: dict[int, int]
     verification_joins: dict[int, float]
+    worker: tuple[lupa.LuaRuntime, typing.Any] | None
+    worker_spec: typing.Any
 
     def __init__(self, guild_id: int, app: TheCleanerApp) -> None:
         self.id = guild_id
@@ -29,6 +32,8 @@ class CleanerGuild:
         # config and entitlements arent available immediately
         self.settings_loaded = False
         self.event_queue = queue.Queue()
+        self.worker = None
+        self.worker_spec = None
 
         # cache and stuff
         self.messages = ExpiringList(expires=30)
