@@ -12,6 +12,7 @@ from . import (
 
 
 components = [
+    slowmode,
     verification,
     antiraid,
     antispam,
@@ -20,5 +21,4 @@ components = [
     firewall,
     worker,
     log,
-    slowmode,
 ]
