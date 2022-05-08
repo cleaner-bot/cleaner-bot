@@ -35,8 +35,7 @@ class Timed:
             result.append(f"{(c.timestamp - other_timestamp) * 1000:>3.3f} ms {c.name}")
         if self._end_time is not None:
             result.append(
-                f"{(self._start_time - self.checkpoints[-1].timestamp) * 1000:>3.3f} "
-                f"ms finish"
+                f"{(self._end_time - self._start_time) * 1000:>3.3f} ms finish"
             )
         return "\n".join(result)
 
