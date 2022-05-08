@@ -123,11 +123,11 @@ class ConfigExtension:
                     continue
                 obj = getattr(gd, space)
                 for name, value in data[space].items():
-                    logger.debug(
+                    logger.info(
                         f"changed {space}.{name} to {value!r} ({data['guild_id']})"
                     )
                     setattr(obj, name, value)
 
             if "worker" in data:
-                logger.debug(f"changed worker in {data['guild_id']}")
+                logger.info(f"changed worker in {data['guild_id']}")
                 gd.worker.source = data["worker"]
