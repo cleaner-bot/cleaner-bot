@@ -146,7 +146,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
 
         cguild.worker_spec = spec
 
-    lua, boot = worker[1]
+    lua, boot = worker
 
     guild = event.get_guild()
     if guild is None:
