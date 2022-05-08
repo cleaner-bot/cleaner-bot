@@ -89,7 +89,7 @@ def prepare_runtime(
         attribute_handlers=(_raise_error, _raise_error),
         max_memory=max_memory,
     )
-    boot = lua.eval(LUA_BOOT)
+    boot = lua.execute(LUA_BOOT)
     lua_globals = lua.globals()
     for key in tuple(lua_globals):
         if key not in LUA_WHITELIST:
