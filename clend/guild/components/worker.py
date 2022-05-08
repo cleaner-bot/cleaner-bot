@@ -54,7 +54,9 @@ local function safe_call(fn, ...)
     if coroutine.status(coro) == "suspended" then
         error("reached cycle limit")
     end
-    setmetatable(result, {})
+    if type(result) == "type" then
+        setmetatable(result, {})
+    end
     return result
 end
 return {
