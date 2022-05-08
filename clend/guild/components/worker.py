@@ -109,9 +109,8 @@ def prepare_runtime(
 
 def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuild):
     data = cguild.get_data()
-    member = event.member
     if (
-        member is None
+        event.member is None
         or data is None
         or not data.config.workers_enabled
         or not data.entitlements.workers
@@ -153,20 +152,20 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
         return
 
     permissions = 0
-    for role in member.get_roles():
+    for role in event.member.get_roles():
         permissions |= role.permissions
 
-    event = lua.table_from(
+    lua_event = lua.table_from(
         {
             "message_id": str(event.message_id),
             "channel_id": str(event.channel_id),
             "guild_id": str(event.guild_id),
             "member_id": str(event.author_id),
-            "member_roles": lua.table_from(map(str, member.role_ids)),
+            "member_roles": lua.table_from(map(str, event.member.role_ids)),
             "member_is_bot": event.is_bot,
             "member_permissions": str(permissions),
             "member_is_owner": event.author_id == guild.owner_id,
-            "member_is_moderator": is_moderator(cguild, member),
+            "member_is_moderator": is_moderator(cguild, event.member),
             "content": event.content,
             "attachments": lua.table_from(
                 [
@@ -196,9 +195,9 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                             "timestamp": e.timestamp,
                             "color": e.color,
                             "footer_text": e.footer and e.footer.text,
-                            "footer_icon": e.footer
-                            and e.footer.icon
-                            and e.footer.icon.url,
+                            "footer_icon": (
+                                e.footer and e.footer.icon and e.footer.icon.url
+                            ),
                             "image_url": e.image and e.image.url,
                             "image_height": e.image and e.image.height,
                             "image_width": e.image and e.image.width,
@@ -212,9 +211,9 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                             "provider_url": e.provider and e.provider.url,
                             "author_name": e.author and e.author.name,
                             "author_url": e.author and e.author.url,
-                            "author_icon_url": e.author
-                            and e.author.icon
-                            and e.author.icon.url,
+                            "author_icon_url": (
+                                e.author and e.author.icon and e.author.icon.url,
+                            ),
                             "fields": [
                                 {
                                     "name": f.name,
@@ -229,11 +228,30 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                 ]
             ),
             "message_type": int(event.message.type),
-            "application_id": str(event.message.application_id) if event.message.application_id else None,
+            "application_id": (
+                str(event.message.application_id)
+                if event.message.application_id
+                else None
+            ),
             "mention_everyone": event.message.mentions.everyone,
-            "mention_users": lua.table_from(map(str, event.message.mentions.user_ids)),
-            "mention_roles": lua.table_from(map(str, event.message.mentions.role_ids)),
-            "mention_channels": lua.table_from(map(str, event.message.mentions.channels_ids)),
+            "mention_users": lua.table_from(
+                map(str, event.message.mentions.user_ids)
+                if event.message.mentions.user_ids
+                else []
+            ),
+            "mention_roles": lua.table_from(
+                map(str, event.message.mentions.role_ids)
+                if event.message.mentions.role_ids
+                else []
+            ),
+            "mention_channels": lua.table_from(
+                map(
+                    str,
+                    event.message.mentions.channels_ids
+                    if event.message.mentions.channels_ids
+                    else [],
+                )
+            ),
             "interaction": event.message.interaction
             and lua.table_from(
                 {
@@ -247,7 +265,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
     )
 
     try:
-        result = boot.call(event)
+        result = boot.call(lua_event)
     except lupa.LuaError as e:
         if not data.config.logging_enabled:
             return
@@ -266,7 +284,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
         if action == "delete":
             actions.append(
                 action_delete(
-                    member,
+                    event.member,
                     event.message,
                     reason=Message("components_worker_reason"),
                     info=info,
@@ -276,7 +294,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
             actions.append(
                 action_challenge(
                     cguild,
-                    member,
+                    event.member,
                     reason=Message("components_worker_reason"),
                     info=info,
                     block=True,
@@ -286,7 +304,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
             actions.append(
                 action_challenge(
                     cguild,
-                    member,
+                    event.member,
                     reason=Message("components_worker_reason"),
                     info=info,
                     block=False,
