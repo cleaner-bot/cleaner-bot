@@ -8,7 +8,7 @@ import msgpack  # type: ignore
 from cleaner_conf.guild import GuildConfig, GuildEntitlements
 
 from ..app import TheCleanerApp
-from ..shared.data import GuildData
+from ..shared.data import GuildData, GuildWorker
 from ..shared.event import IGuildSettingsAvailable
 from ..shared.sub import listen as pubsub_listen, Message
 from ..shared.protect import protect, protected_call
@@ -63,9 +63,11 @@ class ConfigExtension:
                 f"guild:{guild_id}:entitlements",
                 tuple(GuildEntitlements.__fields__),
             )
+            guild_worker = await self.app.database.get(f"guild:{guild_id}:worker")
             self._guilds[guild_id] = GuildData(
                 GuildConfig.construct(**guild_config),
                 GuildEntitlements.construct(**guild_entitlements),
+                GuildWorker(guild_worker.decode() if guild_worker else ""),
             )
         except Exception as e:
             logger.error(
@@ -125,3 +127,7 @@ class ConfigExtension:
                         f"changed {space}.{name} to {value!r} ({data['guild_id']})"
                     )
                     setattr(obj, name, value)
+
+            if "worker" in data:
+                logger.debug(f"changed worker in {data['guild_id']}")
+                gd.worker.source = data["worker"]
