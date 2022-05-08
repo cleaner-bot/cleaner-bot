@@ -325,5 +325,5 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
 
 
 listeners = [
-    (hikari.MessageCreateEvent, on_message_create),
+    (hikari.GuildMessageCreateEvent, on_message_create),
 ]
