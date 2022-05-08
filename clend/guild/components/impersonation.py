@@ -13,8 +13,8 @@ from ..helper import action_challenge
 def on_new_member(
     event: hikari.MemberCreateEvent | hikari.MemberUpdateEvent, guild: CleanerGuild
 ):
-    config = guild.get_config()
-    if config is None or (
+    data = guild.get_data()
+    if data is None or (
         isinstance(event, hikari.MemberUpdateEvent)  # prevent duplicate actions
         and (
             event.old_member is None
@@ -23,12 +23,11 @@ def on_new_member(
         and (event.member.joined_at - utc_datetime()).total_seconds() < 5
     ):
         return
-    entitlements = guild.get_entitlements()
 
     reason: Message | None = None
     name: str | None = None
 
-    if config.impersonation_discord_enabled and (
+    if data.config.impersonation_discord_enabled and (
         is_name_blacklisted(event.user.username)
         or event.user.avatar_hash in avatar_blacklist
     ):
@@ -36,13 +35,12 @@ def on_new_member(
         name = "impersonation_discord"
 
     if (
-        entitlements is not None
-        and entitlements.plan >= entitlements.impersonation_advanced
-        and config.impersonation_advanced_enabled
+        data.entitlements.plan >= data.entitlements.impersonation_advanced
+        and data.config.impersonation_advanced_enabled
         and is_custom_blacklist(
             event.user.username,
-            config.impersonation_advanced_words,
-            config.impersonation_advanced_subwords,
+            data.config.impersonation_advanced_words,
+            data.config.impersonation_advanced_subwords,
         )
     ):
         reason = Message("components_impersonation_blacklist", {})

@@ -8,13 +8,13 @@ import hikari
 from hikari.internal.time import utc_datetime
 import janus
 
-from cleaner_conf.guild import GuildConfig, GuildEntitlements
 from cleaner_i18n.translate import Message, translate
 from expirepy import ExpiringSet, ExpiringDict
 
 from .likely_phishing import is_likely_phishing, report_phishing
 from ..app import TheCleanerApp
 from ..shared.channel_perms import permissions_for
+from ..shared.data import GuildData
 from ..shared.event import (
     IActionChallenge,
     IActionChannelRatelimit,
@@ -391,17 +391,16 @@ class HTTPService:
                             value=f"{sticker.name} ({sticker.id})",
                         )
 
-                config = self.get_config(guild_id)
-                entitlements = self.get_entitlements(guild_id)
+                data = self.get_data(guild_id)
                 channel_id = fallback_id = 963043115730608188
 
                 can_send_embed = True
                 if (
-                    config is not None
-                    and config.logging_enabled
-                    and int(config.logging_channel) > 0
+                    data is not None
+                    and data.config.logging_enabled
+                    and int(data.config.logging_channel) > 0
                 ):
-                    the_channel_id = int(config.logging_channel)
+                    the_channel_id = int(data.config.logging_channel)
                     guild = self.app.bot.cache.get_guild(guild_id)
                     if guild is not None:
                         me = guild.get_my_member()
@@ -431,7 +430,7 @@ class HTTPService:
                         embeds.append(embed)
 
                     if (
-                        (entitlements is None or entitlements.plan == 0)
+                        (data is None or data.entitlements.plan == 0)
                         and random.random() < 0.05
                         and not await self.app.database.exists(
                             (f"guild:{guild_id}:logging:voting-reminder",)
@@ -458,8 +457,8 @@ class HTTPService:
                 )
 
                 if (
-                    entitlements.plan >= entitlements.logging_downloads
-                    and config.logging_downloads_enabled
+                    data.entitlements.plan >= data.entitlements.logging_downloads
+                    and data.config.logging_downloads_enabled
                 ):
                     guildlog = self.app.extensions.get("clend.guildlog", None)
                     if guildlog is None:
@@ -513,20 +512,13 @@ class HTTPService:
             for coro in futures:
                 asyncio.create_task(ignore_not_found_exception_wrapper(coro))
 
-    def get_config(self, guild_id: int) -> GuildConfig | None:
-        conf = self.app.extensions.get("clend.conf", None)
-        if conf is None:
-            logger.warning("unable to find clend.conf extension")
-            return None
-        return conf.get_config(guild_id)
-
-    def get_entitlements(self, guild_id: int) -> GuildEntitlements | None:
+    def get_data(self, guild_id: int) -> GuildData | None:
         conf = self.app.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")
             return None
 
-        return conf.get_entitlements(guild_id)
+        return conf.get_data(guild_id)
 
     def put_in_metrics_queue(self, item):
         metrics = self.app.extensions.get("clend.metrics")

@@ -28,8 +28,8 @@ class ActiveMitigation:
 
 
 def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild):
-    config = guild.get_config()
-    if event.member is None or is_moderator(guild, event.member) or config is None:
+    data = guild.get_data()
+    if event.member is None or is_moderator(guild, event.member) or data is None:
         return
     messages: list[hikari.Message] = guild.messages.copy()
     guild.messages.append(event.message)
@@ -68,7 +68,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
     mitigation = None
     for mit in mitigations:
         config_name = "_".join(mit.name.split(".")[1:])
-        enabled = getattr(config, f"antispam_{config_name}")
+        enabled = getattr(data.config, f"antispam_{config_name}")
         if not enabled:
             continue
 

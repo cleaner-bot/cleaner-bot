@@ -5,10 +5,9 @@ import typing
 import hikari
 import msgpack  # type: ignore
 
-from cleaner_conf.guild import GuildEntitlements
-
 from ..app import TheCleanerApp
 from ..shared.id import time_passed_since
+from ..shared.data import GuildData
 
 
 logger = logging.getLogger(__name__)
@@ -130,13 +129,13 @@ class AnalyticsExtension:
 
             elif parts[1] == "remove":
                 database = self.app.database
-                entitlements = self.get_entitlements(int(parts[2]))
+                data = self.get_data(int(parts[2]))
                 await database.hset(
                     f"guild:{parts[2]}:entitlements",
                     {"suspended": msgpack.packb(False)},
                 )
-                if entitlements is not None and entitlements.suspended:
-                    entitlements.suspended = False
+                if data is not None and data.entitlements.suspended:
+                    data.entitlements.suspended = False
 
                 message = "removed the suspension"
 
@@ -182,16 +181,14 @@ class AnalyticsExtension:
 
     async def suspend(self, guild: hikari.GatewayGuild, reason: str):
         database = self.app.database
-        entitlements = self.get_entitlements(guild.id)
-        if entitlements is None:
-            return
-        elif entitlements.suspended:
+        data = self.get_data(guild.id)
+        if data is None or data.entitlements.suspended:
             return
 
         await database.hset(
             f"guild:{guild.id}:entitlements", {"suspended": msgpack.packb(True)}
         )
-        entitlements.suspended = True
+        data.entitlements.suspended = True
 
         channel = self.get_channel()
         if channel is None:
@@ -234,10 +231,10 @@ class AnalyticsExtension:
         channel = self.app.bot.cache.get_guild_channel(channel_id)
         return channel  # type: ignore
 
-    def get_entitlements(self, guild_id: int) -> GuildEntitlements | None:
+    def get_data(self, guild_id: int) -> GuildData | None:
         conf = self.app.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")
             return None
 
-        return conf.get_entitlements(guild_id)
+        return conf.get_data(guild_id)

@@ -114,7 +114,7 @@ class GuildWorker:
         guild = self.ext.guilds.get(guild_id, None)
         if guild is None:
             self.ext.guilds[guild_id] = guild = CleanerGuild(guild_id, self.ext.app)
-            if guild.get_config() is not None:
+            if guild.get_data() is not None:
                 guild.settings_loaded = True
 
         if isinstance(event, IGuildSettingsAvailable):

@@ -13,6 +13,7 @@ from cleaner_i18n.translate import translate, Message
 from ..app import TheCleanerApp
 from ..shared.button import add_link
 from ..shared.channel_perms import permissions_for
+from ..shared.data import GuildData
 from ..shared.event import ILog
 from ..shared.protect import protect, protected_call
 from ..shared.sub import listen as pubsub_listen, Message as PubMessage
@@ -71,11 +72,12 @@ class ChallengeExtension:
         await self.member_joined(event.member)
 
     async def member_joined(self, member: hikari.Member):
-        config = self.get_config(member.guild_id)
-        entitlements = self.get_entitlements(member.guild_id)
-        if config is None or entitlements is None:
+        data = self.get_data(member.guild_id)
+        if data is None:
             logger.warning(f"uncached guild settings: {member.guild_id}")
             return
+
+        config, entitlements = data.config, data.entitlements
 
         if (
             not config.challenge_interactive_enabled
@@ -174,9 +176,8 @@ class ChallengeExtension:
         t = lambda s, **k: translate(  # noqa E731
             interaction.locale, f"challenge_{s}", **k
         )
-        config = self.get_config(guild.id)
-        entitlements = self.get_entitlements(guild.id)
-        if config is None or entitlements is None:
+        data = self.get_data(guild.id)
+        if data is None:
             logger.warning(f"uncached guild settings: {guild.id}")
             component = self.app.bot.rest.build_action_row()
             add_link(component, t("discord"), "https://cleaner.leodev.xyz/discord")
@@ -187,6 +188,8 @@ class ChallengeExtension:
                 component=component,
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
+
+        config = data.config
 
         timed.checkpoint("got config/entitlements")
 
@@ -231,7 +234,7 @@ class ChallengeExtension:
         challenge = True
 
         if not forced_challenge:
-            min_risk = get_min_risk(config, entitlements)
+            min_risk = get_min_risk(config, data.entitlements)
             actual_risk = calculate_risk_score(member.user)
             challenge = min_risk is not None and actual_risk >= min_risk
 
@@ -396,11 +399,13 @@ class ChallengeExtension:
         if guild is None:
             logger.warning(f"uncached guild: {int(guild_id)}")
             return
-        config = self.get_config(guild.id)
 
-        if config is None:
+        data = self.get_data(guild.id)
+        if data is None:
             logger.warning(f"uncached guild settings: {guild.id}")
             return
+
+        config = data.config
 
         role = guild.get_role(int(config.challenge_interactive_role))
         if (
@@ -491,10 +496,11 @@ class ChallengeExtension:
             logger.warning(f"uncached guild: {guild_id}")
             return
 
-        config = self.get_config(guild_id)
-        if config is None:
-            logger.warning(f"uncached guild settings: {guild_id}")
-            return
+        # TODO: branding code here
+        # data = self.get_data(guild_id)
+        # if data is None:
+        #     logger.warning(f"uncached guild settings: {guild_id}")
+        #     return
 
         me = guild.get_my_member()
         if me is None:
@@ -512,18 +518,10 @@ class ChallengeExtension:
     async def migrate_embed(self, message: hikari.Message, guild: hikari.GatewayGuild):
         await message.edit(**self.get_message(guild))
 
-    def get_config(self, guild_id: int) -> GuildConfig | None:
+    def get_data(self, guild_id: int) -> GuildData | None:
         conf = self.app.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")
             return None
 
-        return conf.get_config(guild_id)
-
-    def get_entitlements(self, guild_id: int) -> GuildEntitlements | None:
-        conf = self.app.extensions.get("clend.conf", None)
-        if conf is None:
-            logger.warning("unable to find clend.conf extension")
-            return None
-
-        return conf.get_entitlements(guild_id)
+        return conf.get_data(guild_id)

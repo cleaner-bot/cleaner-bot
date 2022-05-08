@@ -8,17 +8,13 @@ import msgpack  # type: ignore
 from cleaner_conf.guild import GuildConfig, GuildEntitlements
 
 from ..app import TheCleanerApp
+from ..shared.data import GuildData
 from ..shared.event import IGuildSettingsAvailable
 from ..shared.sub import listen as pubsub_listen, Message
 from ..shared.protect import protect, protected_call
 
 
 logger = logging.getLogger(__name__)
-
-
-class GuildData(typing.NamedTuple):
-    config: GuildConfig
-    entitlements: GuildEntitlements
 
 
 class ConfigExtension:
@@ -67,7 +63,6 @@ class ConfigExtension:
                 f"guild:{guild_id}:entitlements",
                 tuple(GuildEntitlements.__fields__),
             )
-            # TODO: investigate usage of .construct() instead
             self._guilds[guild_id] = GuildData(
                 GuildConfig.construct(**guild_config),
                 GuildEntitlements.construct(**guild_entitlements),
@@ -92,17 +87,8 @@ class ConfigExtension:
         values = await database.hmget(key, keys)
         return {k: msgpack.unpackb(v) for k, v in zip(keys, values) if v is not None}
 
-    def get_config(self, guild_id: int) -> GuildConfig | None:
-        gd = self._guilds.get(guild_id, None)
-        if gd is not None:
-            return gd.config
-        return None
-
-    def get_entitlements(self, guild_id: int) -> GuildEntitlements | None:
-        gd = self._guilds.get(guild_id, None)
-        if gd is not None:
-            return gd.entitlements
-        return None
+    def get_data(self, guild_id: int) -> GuildData | None:
+        return self._guilds.get(guild_id, None)
 
     async def ensure_guild(self, guild_id: int):
         if guild_id not in self._guilds:

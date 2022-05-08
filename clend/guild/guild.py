@@ -5,10 +5,10 @@ import queue
 
 import hikari
 
-from cleaner_conf.guild import GuildConfig, GuildEntitlements
 from expirepy import ExpiringList, ExpiringCounter
 
 from ..app import TheCleanerApp
+from ..shared.data import GuildData
 
 
 logger = logging.getLogger(__name__)
@@ -48,16 +48,10 @@ class CleanerGuild:
             if now - mitigation.last_triggered > mitigation.ttl:  # expired
                 self.active_mitigations.remove(mitigation)
 
-    def get_config(self) -> GuildConfig | None:
+    def get_data(self) -> GuildData | None:
         conf = self.app.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")
             return None
-        return conf.get_config(self.id)
 
-    def get_entitlements(self) -> GuildEntitlements | None:
-        conf = self.app.extensions.get("clend.conf", None)
-        if conf is None:
-            logger.warning("unable to find clend.conf extension")
-            return None
-        return conf.get_entitlements(self.id)
+        return conf.get_data(self.id)

@@ -6,7 +6,6 @@ import hikari
 from hikari import urls
 from hikari.internal.time import utc_datetime
 
-from cleaner_conf.guild import GuildConfig, GuildEntitlements
 from cleaner_data.phishing_content import get_highest_phishing_match
 from cleaner_data.url import has_url
 from cleaner_i18n.translate import translate, Message
@@ -17,6 +16,7 @@ from ..shared.id import time_passed_since
 from ..shared.event import ILog
 from ..shared.channel_perms import permissions_for
 from ..shared.custom_events import SlowTimerEvent
+from ..shared.data import GuildData
 
 logger = logging.getLogger(__name__)
 REPORT_MAXAGE = 60 * 60 * 24 * 7  # 7 days
@@ -165,9 +165,8 @@ class ReportExtension:
 
         assert interaction.guild_id is not None
 
-        config = self.get_config(interaction.guild_id)
-        if config is None:  # dont even bother handling this
-            raise RuntimeError("config is None (something went very wrong)")
+        data = self.get_data(interaction.guild_id)
+        assert data is not None
 
         value = await database.incr(f"user:{interaction.user.id}:report:slowmode")
         if value == 1:  # first time
@@ -210,7 +209,7 @@ class ReportExtension:
         ).set_author(name=t("message_embed_reason"))
 
         await interaction.app.rest.create_message(
-            config.report_channel,
+            data.config.report_channel,
             embeds=[embed, reason],
             components=self.make_message_report_components(
                 interaction, message.author.id, message.channel_id, message.id
@@ -348,16 +347,18 @@ class ReportExtension:
             )
             return None, None
 
-        config = self.get_config(interaction.guild_id)
-        entitlements = self.get_entitlements(interaction.guild_id)
-        if config is None or entitlements is None:
+        data = self.get_data(interaction.guild_id)
+        if data is None:
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("message_nosettings"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return None, None
-        elif not config.report_channel or entitlements.report > entitlements.plan:
+        elif (
+            not data.config.report_channel
+            or data.entitlements.report > data.entitlements.plan
+        ):
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 content=t("message_disabled"),
@@ -388,7 +389,7 @@ class ReportExtension:
 
         if member is not None:
             for role_id in member.role_ids:
-                if str(role_id) in config.general_modroles:
+                if str(role_id) in data.config.general_modroles:
                     await interaction.create_initial_response(
                         hikari.ResponseType.MESSAGE_CREATE,
                         content=t("message_nostaff"),
@@ -406,7 +407,7 @@ class ReportExtension:
                     )
                     return None, None
 
-        channel = guild.get_channel(config.report_channel)
+        channel = guild.get_channel(data.config.report_channel)
         if channel is None or channel.guild_id != interaction.guild_id:
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
@@ -800,18 +801,10 @@ class ReportExtension:
     async def on_slow_timer(self, event: SlowTimerEvent):
         self.message_cache.evict()
 
-    def get_config(self, guild_id: int) -> GuildConfig | None:
+    def get_data(self, guild_id: int) -> GuildData | None:
         conf = self.app.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")
             return None
 
-        return conf.get_config(guild_id)
-
-    def get_entitlements(self, guild_id: int) -> GuildEntitlements | None:
-        conf = self.app.extensions.get("clend.conf", None)
-        if conf is None:
-            logger.warning("unable to find clend.conf extension")
-            return None
-
-        return conf.get_entitlements(guild_id)
+        return conf.get_data(guild_id)

@@ -27,7 +27,7 @@ def action_challenge(
     cguild: CleanerGuild, member: hikari.Member, block: bool = False, **kwargs
 ) -> IActionChallenge:
     guild = member.get_guild()
-    config = cguild.get_config()
+    data = cguild.get_data()
     if guild is None or member.id == guild.owner_id:
         return IActionChallenge(
             guild_id=member.guild_id,
@@ -63,12 +63,12 @@ def action_challenge(
             above_role = toprole_me.position > toprole_member.position
 
     role = None
-    if config is not None and config.challenge_interactive_enabled:
-        role_id = int(config.challenge_interactive_role)
+    if data is not None and data.config.challenge_interactive_enabled:
+        role_id = int(data.config.challenge_interactive_role)
         role = guild.get_role(role_id)
 
     can_timeout = (
-        (config is None or config.challenge_timeout_enabled)
+        (data is None or data.config.challenge_timeout_enabled)
         and his_perms & hikari.Permissions.ADMINISTRATOR == 0
         and above_role
         and my_perms & PERM_TIMEOUT > 0
@@ -79,8 +79,9 @@ def action_challenge(
         and toprole_me is not None
         and toprole_me.position > role.position
         and (
-            config is None
-            or (role.id in member.role_ids) != config.challenge_interactive_take_role
+            data is None
+            or (role.id in member.role_ids)
+            != data.config.challenge_interactive_take_role
         )
         and role.permissions & DANGEROUS_PERMISSIONS == 0
     )
@@ -92,7 +93,7 @@ def action_challenge(
         can_kick=above_role and my_perms & PERM_KICK > 0,
         can_timeout=can_timeout,
         can_role=can_role,
-        take_role=True if config is None else config.challenge_interactive_take_role,
+        take_role=True if data is None else data.config.challenge_interactive_take_role,
         role_id=role.id if role else 0,
         **kwargs
     )
@@ -271,9 +272,9 @@ def is_moderator(cguild: CleanerGuild, member: hikari.Member) -> bool:
     guild = member.get_guild()
     if member.is_bot or (guild is not None and member.id == guild.owner_id):
         return True
-    config = cguild.get_config()
-    if config is not None:
-        modroles = set(map(int, config.general_modroles))
+    data = cguild.get_data()
+    if data is not None:
+        modroles = set(map(int, data.config.general_modroles))
         for role in member.get_roles():
             if role.id in modroles:
                 return True
@@ -284,9 +285,10 @@ def is_moderator(cguild: CleanerGuild, member: hikari.Member) -> bool:
 
 def is_exception(config_or_guild: CleanerGuild | GuildConfig, channel_id: int):
     if isinstance(config_or_guild, CleanerGuild):
-        config = config_or_guild.get_config()
-        if config is None:
+        data = config_or_guild.get_data()
+        if data is None:
             return False
+        config = data.config
     else:
         config = config_or_guild
 

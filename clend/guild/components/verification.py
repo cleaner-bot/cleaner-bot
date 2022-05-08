@@ -19,9 +19,9 @@ def on_member_delete(event: hikari.MemberDeleteEvent, guild: CleanerGuild):
 
 
 def on_fast_timer(event: FastTimerEvent, cguild: CleanerGuild):
-    config = cguild.get_config()
+    data = cguild.get_data()
     guild = event.app.cache.get_guild(cguild.id)
-    if config is None or not config.verification_enabled or guild is None:
+    if data is None or not data.config.verification_enabled or guild is None:
         return
 
     now = time.monotonic()

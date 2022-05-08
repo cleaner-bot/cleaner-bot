@@ -7,10 +7,10 @@ from ..helper import action_nickname, is_moderator
 
 
 def on_member_update(event: hikari.MemberUpdateEvent, guild: CleanerGuild):
-    config = guild.get_config()
+    data = guild.get_data()
     if (
-        config is None
-        or not config.general_dehoisting_enabled
+        data is None
+        or not data.config.general_dehoisting_enabled
         or event.member.username == event.member.nickname
         or event.member.nickname is None
         or not event.member.display_name.startswith("!")

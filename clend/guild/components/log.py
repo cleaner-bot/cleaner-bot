@@ -10,8 +10,12 @@ from ...shared.event import ILog
 
 
 def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
-    config = guild.get_config()
-    if config is None or not config.logging_enabled or not config.logging_option_join:
+    data = guild.get_data()
+    if (
+        data is None
+        or not data.config.logging_enabled
+        or not data.config.logging_option_join
+    ):
         return
     age = event.member.joined_at - event.member.created_at
     hours = age.total_seconds() // 3600
@@ -35,8 +39,12 @@ def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
 
 
 def on_member_delete(event: hikari.MemberDeleteEvent, guild: CleanerGuild):
-    config = guild.get_config()
-    if config is None or not config.logging_enabled or not config.logging_option_leave:
+    data = guild.get_data()
+    if (
+        data is None
+        or not data.config.logging_enabled
+        or not data.config.logging_option_leave
+    ):
         return
 
     return (

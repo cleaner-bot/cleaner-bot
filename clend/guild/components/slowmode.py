@@ -9,12 +9,12 @@ slowmode = [round(x ** 1.3 / 15) for x in range(60)]
 
 
 def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild):
-    config = guild.get_config()
+    data = guild.get_data()
     if (
         event.member is None
         or is_moderator(guild, event.member)
-        or config is None
-        or not config.slowmode_enabled
+        or data is None
+        or not data.config.slowmode_enabled
     ):
         return
     channel = event.get_channel()
@@ -26,10 +26,10 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
 
 
 def on_fast_timer(event: FastTimerEvent, cguild: CleanerGuild):
-    config = cguild.get_config()
+    data = cguild.get_data()
     if (
-        config is None
-        or not config.slowmode_enabled
+        data is None
+        or not data.config.slowmode_enabled
         or not cguild.pending_message_count
     ):
         return
@@ -53,7 +53,7 @@ def on_fast_timer(event: FastTimerEvent, cguild: CleanerGuild):
         spike = counts[-1]
         avg = round(sum(counts) / len(counts))
 
-        default = 0 if is_exception(config, channel_id) else 1
+        default = 0 if is_exception(data.config, channel_id) else 1
         current = cguild.current_slowmode.get(channel_id, default)
 
         if default == 0:  # exception channel, decrease slowmode

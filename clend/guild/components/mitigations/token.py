@@ -28,9 +28,9 @@ def detection(
     if not message.content or len(messages) < MIN_DATA:
         return
 
-    config = guild.get_config()
+    data = guild.get_data()
     slowmode_exceptions = (
-        set() if config is None else set(map(int, config.slowmode_exceptions))
+        set() if data is None else set(map(int, data.config.slowmode_exceptions))
     )
 
     all_tokens = set(normalize(message.content, remove_urls=False).split())

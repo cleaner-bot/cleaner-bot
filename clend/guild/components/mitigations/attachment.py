@@ -22,9 +22,9 @@ def detection(
     if not message.attachments or len(messages) + 1 < THRESHOLD:
         return
 
-    config = guild.get_config()
+    data = guild.get_data()
     slowmode_exceptions = (
-        set() if config is None else set(map(int, config.slowmode_exceptions))
+        set() if data is None else set(map(int, data.config.slowmode_exceptions))
     )
 
     attachs = 0.0

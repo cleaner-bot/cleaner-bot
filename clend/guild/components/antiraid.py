@@ -8,10 +8,10 @@ from ...shared.custom_events import SlowTimerEvent
 
 
 def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
-    config = guild.get_config()
-    if config is None or not config.antiraid_enabled:
+    data = guild.get_data()
+    if data is None or not data.config.antiraid_enabled:
         return
-    limit, timeframe = map(int, config.antiraid_limit.split("/"))
+    limit, timeframe = map(int, data.config.antiraid_limit.split("/"))
 
     guild.member_joins.expires = timeframe
     guild.member_joins.increase()
@@ -19,7 +19,7 @@ def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
     if guild.member_joins.value() < limit:
         return
 
-    reason = Message("components_antiraid_limit", {"limit": config.antiraid_limit})
+    reason = Message("components_antiraid_limit", {"limit": data.config.antiraid_limit})
     info = {
         "name": "antiraid_limit",
         "id": event.user_id,

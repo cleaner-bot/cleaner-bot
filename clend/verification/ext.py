@@ -7,9 +7,9 @@ import hikari
 import msgpack  # type: ignore
 
 from cleaner_i18n.translate import Message
-from cleaner_conf.guild import GuildConfig, GuildEntitlements
 
 from ..app import TheCleanerApp
+from ..shared.data import GuildData
 from ..shared.event import ILog
 from ..shared.protect import protect, protected_call
 from ..shared.sub import listen as pubsub_listen, Message as PubMessage
@@ -76,11 +76,13 @@ class VerificationExtension:
         if guild is None:
             logger.warning(f"uncached guild: {int(guild_id)}")
             return
-        config = self.get_config(guild.id)
+        data = self.get_data(guild.id)
 
-        if config is None:
+        if data is None:
             logger.warning(f"uncached guild settings: {guild.id}")
             return
+
+        config = data.config
 
         if not config.verification_enabled:
             return
@@ -139,18 +141,10 @@ class VerificationExtension:
             else:
                 http.queue.async_q.put_nowait(log)
 
-    def get_config(self, guild_id: int) -> GuildConfig | None:
+    def get_data(self, guild_id: int) -> GuildData | None:
         conf = self.app.extensions.get("clend.conf", None)
         if conf is None:
             logger.warning("unable to find clend.conf extension")
             return None
 
-        return conf.get_config(guild_id)
-
-    def get_entitlements(self, guild_id: int) -> GuildEntitlements | None:
-        conf = self.app.extensions.get("clend.conf", None)
-        if conf is None:
-            logger.warning("unable to find clend.conf extension")
-            return None
-
-        return conf.get_entitlements(guild_id)
+        return conf.get_data(guild_id)
