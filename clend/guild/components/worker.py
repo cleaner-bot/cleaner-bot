@@ -222,7 +222,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                             "provider_url": e.provider and e.provider.url,
                             "author_name": e.author and e.author.name,
                             "author_url": e.author and e.author.url,
-                            "author_icon_url": (
+                            "author_icon": (
                                 e.author and e.author.icon and e.author.icon.url,
                             ),
                             "fields": [
