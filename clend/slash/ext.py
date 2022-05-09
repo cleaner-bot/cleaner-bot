@@ -88,17 +88,17 @@ class SlashExtension:
         component1 = interaction.app.rest.build_action_row()
         locale = interaction.locale
         t = lambda s: translate(locale, f"slash_about_{s}")  # noqa E731
-        add_link(component1, t("website"), "https://cleaner.leodev.xyz")
-        add_link(component1, t("documentation"), "https://cleaner.leodev.xyz/docs/")
-        add_link(component1, t("blog"), "https://cleaner.leodev.xyz/blog/")
+        add_link(component1, t("website"), "https://cleanerbot.xyz")
+        add_link(component1, t("documentation"), "https://cleanerbot.xyz/docs/")
+        add_link(component1, t("blog"), "https://cleanerbot.xyz/blog/")
         component2 = interaction.app.rest.build_action_row()
-        add_link(component2, t("privacy"), "https://cleaner.leodev.xyz/legal/privacy")
-        add_link(component2, t("terms"), "https://cleaner.leodev.xyz/legal/terms")
+        add_link(component2, t("privacy"), "https://cleanerbot.xyz/legal/privacy")
+        add_link(component2, t("terms"), "https://cleanerbot.xyz/legal/terms")
         add_link(
-            component2, t("impressum"), "https://cleaner.leodev.xyz/legal/impressum"
+            component2, t("impressum"), "https://cleanerbot.xyz/legal/impressum"
         )
         component3 = interaction.app.rest.build_action_row()
-        add_link(component3, t("discord"), "https://cleaner.leodev.xyz/discord")
+        add_link(component3, t("discord"), "https://cleanerbot.xyz/discord")
         await interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_CREATE,
             t("content"),
@@ -124,7 +124,7 @@ class SlashExtension:
         add_link(
             component,
             t("dashboard"),
-            f"https://cleaner.leodev.xyz/dash/{interaction.guild_id}",
+            f"https://cleanerbot.xyz/dash/{interaction.guild_id}",
         )
 
         note = None
@@ -166,7 +166,7 @@ class SlashExtension:
 
         query = {
             "client_id": client_id,
-            "redirect_uri": "https://cleaner.leodev.xyz/oauth-comeback",
+            "redirect_uri": "https://cleanerbot.xyz/oauth-comeback",
             "response_type": "code",
             "scope": " ".join(
                 ["identify", "guilds", "email", "bot", "applications.commands"]
@@ -222,7 +222,7 @@ class SlashExtension:
 
         component = interaction.app.rest.build_action_row()
         add_link(
-            component, "Login", f"https://cleaner.leodev.xyz/remote-auth?code={code}"
+            component, "Login", f"https://cleanerbot.xyz/remote-auth?code={code}"
         )
 
         await interaction.create_initial_response(

@@ -179,7 +179,7 @@ class ChallengeExtension:
         if data is None:
             logger.warning(f"uncached guild settings: {guild.id}")
             component = self.app.bot.rest.build_action_row()
-            add_link(component, t("discord"), "https://cleaner.leodev.xyz/discord")
+            add_link(component, t("discord"), "https://cleanerbot.xyz/discord")
 
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
@@ -261,7 +261,7 @@ class ChallengeExtension:
             add_link(
                 component,
                 t("role_dangerous_link"),
-                "https://cleaner.leodev.xyz/help/role-restrictions"
+                "https://cleanerbot.xyz/help/role-restrictions"
                 "#dangerous-permissions",
             )
 
@@ -277,7 +277,7 @@ class ChallengeExtension:
         me = guild.get_my_member()
         if me is None:
             component = self.app.bot.rest.build_action_row()
-            add_link(component, "Support", "https://cleaner.leodev.xyz/discord")
+            add_link(component, "Support", "https://cleanerbot.xyz/discord")
 
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
@@ -292,7 +292,7 @@ class ChallengeExtension:
             add_link(
                 component,
                 t("hierarchy_link"),
-                "https://cleaner.leodev.xyz/help/role-restrictions#hierarchy",
+                "https://cleanerbot.xyz/help/role-restrictions#hierarchy",
             )
 
             return await interaction.create_initial_response(
@@ -329,7 +329,7 @@ class ChallengeExtension:
             await self.app.database.expire(f"challenge:flow:{flow}", 300)
 
             component = self.app.bot.rest.build_action_row()
-            url = f"https://cleaner.leodev.xyz/challenge?flow={flow}"
+            url = f"https://cleanerbot.xyz/challenge?flow={flow}"
             add_link(component, t("link"), url)
 
             await interaction.create_initial_response(
@@ -474,7 +474,7 @@ class ChallengeExtension:
             .set_label(t("verify"))
             .add_to_container()
         )
-        add_link(component, t("privacy"), "https://cleaner.leodev.xyz/legal/privacy")
+        add_link(component, t("privacy"), "https://cleanerbot.xyz/legal/privacy")
 
         embed = hikari.Embed(
             title=t("title"), description=t("description"), color=0x0284C7
