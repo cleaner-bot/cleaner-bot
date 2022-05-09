@@ -99,11 +99,19 @@ def action_challenge(
     return action
 
 
-def action_nickname(member: hikari.Member, **kwargs) -> IActionNickname:
+def action_nickname(
+    member: hikari.Member, nickname: str | None, **kwargs
+) -> IActionNickname:
     guild = member.get_guild()
     if guild is None or member.id == guild.owner_id:
         return IActionNickname(
-            guild_id=member.guild_id, user=member.user, can_reset=False, **kwargs
+            guild_id=member.guild_id,
+            user=member.user,
+            nickname=nickname,
+            can_change=False,
+            can_kick=False,
+            can_ban=False,
+            **kwargs
         )
 
     me = guild.get_my_member()
@@ -119,16 +127,15 @@ def action_nickname(member: hikari.Member, **kwargs) -> IActionNickname:
         if toprole_me is not None and toprole_member is not None:
             above_role = toprole_me.position > toprole_member.position
 
-    action = IActionNickname(
+    return IActionNickname(
         guild_id=guild.id,
         user=member.user,
-        can_reset=above_role and my_perms & PERM_NICK > 0,
-        can_ban=above_role and my_perms & PERM_BAN > 0,
+        nickname=nickname,
+        can_change=above_role and my_perms & PERM_NICK > 0,
         can_kick=above_role and my_perms & PERM_KICK > 0,
+        can_ban=above_role and my_perms & PERM_BAN > 0,
         **kwargs
     )
-
-    return action
 
 
 def action_delete(

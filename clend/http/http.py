@@ -243,7 +243,7 @@ class HTTPService:
         guild = self.app.bot.cache.get_guild(ev.guild_id)
         locale = "en-US" if guild is None else guild.preferred_locale
 
-        if ev.can_reset:
+        if ev.can_change:
             current = self.member_edit.get(ev.guild_id, 0) + 1
             self.member_edit[ev.guild_id] = current
             if current >= 8:
@@ -264,7 +264,7 @@ class HTTPService:
                 coro = self.app.bot.rest.edit_member(
                     ev.guild_id,
                     ev.user.id,
-                    nickname=None,
+                    nickname=ev.nickname,
                     reason=ev.reason.translate(locale),
                 )
 

@@ -10,8 +10,6 @@ def on_member_update(event: hikari.MemberUpdateEvent, guild: CleanerGuild):
     if (
         data is None
         or not data.config.general_dehoisting_enabled
-        or event.member.username == event.member.nickname
-        or event.member.nickname is None
         or not event.member.display_name.startswith("!")
         or is_moderator(guild, event.member)
     ):
@@ -23,7 +21,20 @@ def on_member_update(event: hikari.MemberUpdateEvent, guild: CleanerGuild):
         "username": event.member.username,
         "nickname": event.member.nickname,
     }
-    return (action_nickname(event.member, reason=reason, info=info),)
+
+    nickname: str | None = event.member.display_name.lstrip("!")
+    # empty display_name, contains only "!"
+    if not nickname:
+        # if username doesn't start with "!", reset nickname
+        if event.member.username.startswith("!"):
+            nickname = event.member.username.lstrip("!")
+            # if username is also only "!", change to "dehoisted"
+            if not nickname:
+                nickname = "dehoisted"
+        else:
+            nickname = None
+
+    return (action_nickname(event.member, nickname, reason=reason, info=info),)
 
 
 listeners = [

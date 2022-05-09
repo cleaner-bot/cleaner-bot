@@ -53,7 +53,8 @@ class IActionDelete(typing.NamedTuple):
 class IActionNickname(typing.NamedTuple):
     guild_id: int
     user: hikari.User
-    can_reset: bool
+    nickname: str | None
+    can_change: bool
     can_kick: bool
     can_ban: bool
     reason: Message
