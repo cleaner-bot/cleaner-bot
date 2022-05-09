@@ -291,7 +291,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                 event.message_id.created_at,
             )
         ]
-    
+
     if result is None:
         return
 
@@ -299,52 +299,54 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
     info = {"rule": "worker", "guild": event.guild_id}
     for i in range(len(result)):
         action = result[i + 1]
-        if action == "delete":
+        if not isinstance(action, str):
+            continue
+        name = action.split(".")[0]
+        reason = action[len(name) + 1 :][:500]
+        if name == "delete":
             actions.append(
                 action_delete(
                     event.member,
                     event.message,
-                    reason=Message("components_worker_reason"),
+                    reason=Message("components_worker_reason", {"reason": reason}),
                     info=info,
                 )
             )
-        elif action == "block":
+        elif name == "block":
             actions.append(
                 action_challenge(
                     cguild,
                     event.member,
-                    reason=Message("components_worker_reason"),
+                    reason=Message("components_worker_reason", {"reason": reason}),
                     info=info,
                     block=True,
                 )
             )
-        elif action == "challenge":
+        elif name == "challenge":
             actions.append(
                 action_challenge(
                     cguild,
                     event.member,
-                    reason=Message("components_worker_reason"),
+                    reason=Message("components_worker_reason", {"reason": reason}),
                     info=info,
                     block=False,
                 )
             )
-        elif isinstance(action, str) and action.startswith("log:"):
-            message = action[4:500]
+        elif name == "log":
             actions.append(
                 ILog(
                     event.guild_id,
-                    Message("components_worker_log", {"message": message}),
+                    Message("components_worker_log", {"message": reason}),
                     event.message_id.created_at,
                 )
             )
-        elif isinstance(action, str) and action.startswith("announcement:"):
-            message = action[13:500]
+        elif name == "announcement":
             channel = event.get_channel()
             if channel is not None:
                 actions.append(
                     announcement(
                         channel,
-                        Message("components_worker_announcement", {"message": message}),
+                        Message("components_worker_announcement", {"message": reason}),
                         120,
                     )
                 )
@@ -353,7 +355,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                 ILog(
                     event.guild_id,
                     Message(
-                        "components_worker_unknownaction", {"action": str(action)[:500]}
+                        "components_worker_unknownaction", {"action": action[:500]}
                     ),
                     event.message_id.created_at,
                 )
