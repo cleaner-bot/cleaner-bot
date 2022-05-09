@@ -156,7 +156,7 @@ class DevExtension:
         message = (stdout.decode() if stdout else "") + (
             stderr.decode() if stderr else ""
         )
-        await msg.edit(f"```\n{message}```" if message else "Done. (no output)")
+        await msg.edit(f"```\n{message[:1900]}```" if message else "Done. (no output)")
 
     async def handle_update(self, event: hikari.GuildMessageCreateEvent):
         assert event.message.content
@@ -172,7 +172,7 @@ class DevExtension:
         message = (stdout.decode() if stdout else "") + (
             stderr.decode() if stderr else ""
         )
-        await msg.edit(f"```\n{message}```" if message else "Done. (no output)")
+        await msg.edit(f"```\n{message[:1900]}```" if message else "Done. (no output)")
 
     async def handle_reload(self, event: hikari.GuildMessageCreateEvent):
         assert event.message.content
