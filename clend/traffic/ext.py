@@ -5,6 +5,7 @@ from pathlib import Path
 import hikari
 
 from ..app import TheCleanerApp
+from ..shared.custom_events import SlowTimerEvent
 from .scoring import raw_score_message
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,7 @@ class TrafficExtension:
         self.app = app
         self.listeners = [
             (hikari.GuildMessageCreateEvent, self.on_message_create),
+            (SlowTimerEvent, self.on_slow_timer),
         ]
         self.data = {}
 
@@ -40,6 +42,9 @@ class TrafficExtension:
                 for key, value in self.data.items()
             )
         )
+
+    async def on_slow_timer(self, event: SlowTimerEvent):
+        self.on_unload()
 
     async def on_message_create(self, event: hikari.GuildMessageCreateEvent):
         if event.is_bot or event.is_webhook or event.member is None:
