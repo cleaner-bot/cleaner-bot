@@ -27,7 +27,7 @@ class TrafficExtension:
             return
         self.data = {
             line.split(" ")[0]: {
-                x.split("=")[0]: int(x.split("=")[1])
+                int(x.split("=")[0]): int(x.split("=")[1])
                 for x in line.split(" ")[1].split(",")
             }
             for line in path.read_text().splitlines()
