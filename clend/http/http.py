@@ -415,16 +415,18 @@ class HTTPService:
                                     if my_perms & hikari.Permissions.EMBED_LINKS == 0:
                                         can_send_embed = False
 
-                embeds = []
+                embeds: list[hikari.Embed] = []
                 if can_send_embed:
-                    if embed is not hikari.UNDEFINED:
-                        if channel_id == fallback_id:
-                            guild = self.app.bot.cache.get_guild(guild_id)
-                            if guild is None:
-                                embed.add_field("Guild", guild_id)
-                            else:
-                                embed.add_field("Guild", f"{guild.name} ({guild.id})")
+                    if channel_id == fallback_id:
+                        if embed is hikari.UNDEFINED:
+                            embed = hikari.Embed()
+                        guild = self.app.bot.cache.get_guild(guild_id)
+                        if guild is None:
+                            embed.add_field("Guild", guild_id)
+                        else:
+                            embed.add_field("Guild", f"{guild.name} ({guild.id})")
 
+                    if embed is not hikari.UNDEFINED:
                         embeds.append(embed)
 
                     if (
