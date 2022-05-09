@@ -53,6 +53,7 @@ local function safe_call(fn, ...)
     local result = {coroutine.resume(coro, ...)}
     debug_sethook()
     if coroutine.status(coro) == "suspended" then
+        coroutine.close(coro)
         error("reached cycle limit")
     end
     for _, v in pairs(result) do
