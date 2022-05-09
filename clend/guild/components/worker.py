@@ -41,6 +41,7 @@ LUA_WHITELIST = {
 LUA_BOOT = """
 local debug_sethook = debug.sethook
 local coroutine = coroutine
+local error = error
 local setmetatable = setmetatable
 local unpack = unpack or table.unpack
 local script, cycle_limit
@@ -48,11 +49,15 @@ local function safe_call(fn, ...)
     if cycle_limit == nil then
         error("no cycle limit, call set_cycle_limit")
     end
-    debug_sethook(coroutine.yield, "", cycle_limit)
     local coro = coroutine.create(fn)
+    local limit_exceeded = false
+    debug_sethook(coro, function()
+        limit_exceeded = true
+        debug_sethook(error, "cr", 1)
+        error("exit")
+    end, "", cycle_limit)
     local result = {coroutine.resume(coro, ...)}
-    debug_sethook()
-    if coroutine.status(coro) == "suspended" then
+    if limit_exceeded then
         coroutine.close(coro)
         error("reached cycle limit")
     end
