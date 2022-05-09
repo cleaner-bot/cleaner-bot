@@ -94,7 +94,7 @@ class MetricsExtension:
             "ping.hidden",
         )
         advertisement = ("advertisement.discord.invite",)
-        other = ("selfbot.embed", "emoji.mass")
+        other = ("selfbot.embed", "emoji.mass", "worker")
         all_rules = phishing_rules + ping + advertisement + other
 
         traffic = (
