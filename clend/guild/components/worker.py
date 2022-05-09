@@ -60,6 +60,9 @@ local function safe_call(fn, ...)
             setmetatable(v, {})
         end
     end
+    if not result[1] then
+        error(unpack(result, 2))
+    end
     return unpack(result, 2)
 end
 return {
