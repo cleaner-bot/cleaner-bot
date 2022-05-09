@@ -286,6 +286,9 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                 event.message_id.created_at,
             )
         ]
+    
+    if result is None:
+        return
 
     actions: list[IGuildEvent] = []
     info = {"rule": "worker", "guild": event.guild_id}
