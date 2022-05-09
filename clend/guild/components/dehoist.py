@@ -16,12 +16,6 @@ def on_member_update(event: hikari.MemberUpdateEvent, guild: CleanerGuild):
         return
 
     reason = Message("components_dehoist", {})
-    info = {
-        "name": "dehoist",
-        "username": event.member.username,
-        "nickname": event.member.nickname,
-    }
-
     nickname: str | None = event.member.display_name.lstrip("!")
     # empty display_name, contains only "!"
     if not nickname:
@@ -33,6 +27,13 @@ def on_member_update(event: hikari.MemberUpdateEvent, guild: CleanerGuild):
                 nickname = "dehoisted"
         else:
             nickname = None
+
+    info = {
+        "name": "dehoist",
+        "username": event.member.username,
+        "nickname": event.member.nickname,
+        "new_nickname": nickname,
+    }
 
     return (action_nickname(event.member, nickname, reason=reason, info=info),)
 
