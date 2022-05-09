@@ -8,7 +8,9 @@ from clend.guild.components.mitigations.token import detection
 
 def use_detection(data):
     guild = mock.Mock()
-    guild.get_config.return_value = SimpleNamespace(slowmode_exceptions=[])
+    guild_data = mock.Mock()
+    guild_data.config.slowmode_exceptions = []
+    guild.get_data.return_value = guild_data
     messages = [SimpleNamespace(content=x, channel_id=0) for x in data]
     return detection(messages[0], messages[1:], guild)
 
@@ -22,14 +24,14 @@ def rand_string(length=None):
 def test_token_simple():
     messages = ["hello world"] * 100
     mitigation = use_detection(messages)
-    assert set(mitigation.tokens) == {"uorld", "hello"}
+    assert set(mitigation.tokens) == {"hello", "world"}
 
 
 def test_token_one():
     random.seed(0)
     messages = ["hello world " + rand_string(32) for _ in range(100)]
     mitigation = use_detection(messages)
-    assert set(mitigation.tokens) == {"uorld", "hello"}
+    assert set(mitigation.tokens) == {"hello", "world"}
 
 
 def test_token_chatter():
@@ -39,4 +41,4 @@ def test_token_chatter():
         for _ in range(100)
     ]
     mitigation = use_detection(messages)
-    assert set(mitigation.tokens) == {"uorld", "hello"}
+    assert set(mitigation.tokens) == {"hello", "world"}
