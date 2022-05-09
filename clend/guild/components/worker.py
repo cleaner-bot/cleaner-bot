@@ -272,6 +272,9 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
 
     try:
         result = boot.call(lua_event)
+
+        if lupa.lua_type(result) not in (None, "table"):
+            raise lupa.LuaError("expected table or nil as return type")
     except lupa.LuaError as e:
         if not data.config.logging_enabled:
             return
@@ -282,9 +285,6 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                 event.message_id.created_at,
             )
         ]
-
-    if result is None:
-        return
 
     actions: list[IGuildEvent] = []
     info = {"rule": "worker", "guild": event.guild_id}
