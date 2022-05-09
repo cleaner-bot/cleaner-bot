@@ -279,7 +279,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
     except lupa.LuaError as e:
         if not data.config.logging_enabled:
             return
-        err = ":".join(e.args[0].split(":")[3])[2:]
+        err = ":".join(e.args[0].split(":")[2:])[1:]
         return [
             ILog(
                 event.guild_id,
