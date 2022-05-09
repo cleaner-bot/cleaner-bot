@@ -45,7 +45,7 @@ class TrafficExtension:
         if event.is_bot or event.is_webhook or event.member is None:
             return
         scores = raw_score_message(event.message)
-        logger.debug(f"scores: {scores}")
+        # logger.debug(f"scores: {scores}")
         for name, score in scores.items():
             values = self.data.get(name)
             if values is None:
