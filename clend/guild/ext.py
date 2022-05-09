@@ -133,7 +133,7 @@ class GuildWorker:
         data = None
         with Timed(
             name=f"running callbacks for {event.__class__.__name__} ({guild.id})",
-            report_threshold=0.005,
+            report_threshold=0.01,
         ) as timed:
             for func in callbacks:
                 data = func(event, guild)
