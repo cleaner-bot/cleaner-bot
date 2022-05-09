@@ -16,12 +16,12 @@ def on_member_update(event: hikari.MemberUpdateEvent, guild: CleanerGuild):
         return
 
     reason = Message("components_dehoist", {})
-    nickname: str | None = event.member.display_name.lstrip("!")
+    nickname: str | None = event.member.display_name.lstrip("!").lstrip()
     # empty display_name, contains only "!"
     if not nickname:
         # if username doesn't start with "!", reset nickname
         if event.member.username.startswith("!"):
-            nickname = event.member.username.lstrip("!")
+            nickname = event.member.username.lstrip("!").lstrip()
             # if username is also only "!", change to "dehoisted"
             if not nickname:
                 nickname = "dehoisted"
