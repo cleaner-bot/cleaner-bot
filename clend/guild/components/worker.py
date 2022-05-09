@@ -53,12 +53,11 @@ local function safe_call(fn, ...)
     local limit_exceeded = false
     debug_sethook(coro, function()
         limit_exceeded = true
-        debug_sethook(error, "cr", 1)
-        error("exit")
+        debug_sethook(function() error("reached cycle limit") end, "cr", 1)
+        error("reached cycle limit")
     end, "", cycle_limit)
     local result = {coroutine.resume(coro, ...)}
     if limit_exceeded then
-        coroutine.close(coro)
         error("reached cycle limit")
     end
     for _, v in pairs(result) do
