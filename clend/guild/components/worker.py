@@ -301,7 +301,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
         action = result[i + 1]
         if not isinstance(action, str):
             continue
-        name = action.split(".")[0]
+        name = action.split(":")[0]
         reason = action[len(name) + 1 :][:500]
         if name == "delete":
             actions.append(
