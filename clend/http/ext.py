@@ -5,10 +5,10 @@ import typing
 import hikari
 import janus
 
-from .http import HTTPService
 from ..app import TheCleanerApp
 from ..shared.event import IGuildEvent
 from ..shared.protect import protect
+from .http import HTTPService
 
 
 class HTTPExtension(threading.Thread):

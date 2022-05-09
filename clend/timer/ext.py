@@ -5,9 +5,8 @@ import typing
 import hikari
 
 from ..app import TheCleanerApp
-from ..shared.protect import protect
 from ..shared.custom_events import FastTimerEvent, SlowTimerEvent
-
+from ..shared.protect import protect
 
 logger = logging.getLogger(__name__)
 

@@ -1,12 +1,11 @@
 from datetime import datetime
 
 import hikari
-
 from cleaner_i18n.translate import Message
 
-from ..guild import CleanerGuild
-from ...shared.risk import calculate_risk_score
 from ...shared.event import ILog
+from ...shared.risk import calculate_risk_score
+from ..guild import CleanerGuild
 
 
 def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):

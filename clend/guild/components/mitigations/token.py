@@ -2,11 +2,9 @@ import statistics
 import typing
 
 import hikari
-
 from cleaner_data.normalize import normalize
 
 from ...guild import CleanerGuild
-
 
 MIN_DATA = 10
 

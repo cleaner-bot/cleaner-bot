@@ -2,7 +2,6 @@ import re
 
 import hikari
 
-
 discord_invite = re.compile(
     r"(?:https?://)?(?:discord\.gg/|discord(app)?\.com/invite/)([a-zA-Z0-9-]+)",
     re.IGNORECASE,

@@ -4,9 +4,8 @@ import typing
 from urllib.parse import urlencode
 
 import hikari
-from hikari.urls import BASE_URL
-
 from cleaner_i18n.translate import translate
+from hikari.urls import BASE_URL
 
 from ..app import TheCleanerApp
 from ..shared.button import add_link

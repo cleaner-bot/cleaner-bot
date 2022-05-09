@@ -1,16 +1,14 @@
 import logging
+import queue
 import time
 import typing
-import queue
 
 import hikari
 import lupa  # type: ignore
-
-from expirepy import ExpiringList, ExpiringCounter
+from expirepy import ExpiringCounter, ExpiringList
 
 from ..app import TheCleanerApp
 from ..shared.data import GuildData
-
 
 logger = logging.getLogger(__name__)
 

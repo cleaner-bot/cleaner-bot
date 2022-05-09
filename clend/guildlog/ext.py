@@ -1,18 +1,18 @@
 import asyncio
-from dataclasses import dataclass
-from datetime import datetime
 import logging
 import resource
 import typing
+from dataclasses import dataclass
+from datetime import datetime
 
 import aiofiles
 import aiofiles.os
 import hikari
 
 from ..app import TheCleanerApp
-from ..shared.protect import protect
-from ..shared.event import ILog
 from ..shared.custom_events import SlowTimerEvent
+from ..shared.event import ILog
+from ..shared.protect import protect
 
 logger = logging.getLogger(__name__)
 HANDLE_LIMIT = resource.getrlimit(resource.RLIMIT_NOFILE)[0]

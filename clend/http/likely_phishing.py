@@ -1,5 +1,4 @@
 import hikari
-
 from cleaner_data.url import has_url
 
 from ..app import TheCleanerApp

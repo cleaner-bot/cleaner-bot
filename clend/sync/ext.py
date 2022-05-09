@@ -1,15 +1,14 @@
 import asyncio
-import typing
 import logging
+import typing
 
 import hikari
 import msgpack  # type: ignore
 
 from ..app import TheCleanerApp
 from ..shared.channel_perms import permissions_for
-from ..shared.protect import protected_call
 from ..shared.dangerous import DANGEROUS_PERMISSIONS
-
+from ..shared.protect import protected_call
 
 logger = logging.getLogger(__name__)
 

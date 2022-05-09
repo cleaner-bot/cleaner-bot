@@ -1,9 +1,8 @@
 import hikari
 
-from ..guild import CleanerGuild
-from ..helper import is_moderator, is_exception, change_ratelimit
 from ...shared.custom_events import FastTimerEvent
-
+from ..guild import CleanerGuild
+from ..helper import change_ratelimit, is_exception, is_moderator
 
 slowmode = [round(x ** 1.3 / 15) for x in range(60)]
 

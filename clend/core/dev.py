@@ -8,7 +8,6 @@ from hikari.internal.time import utc_datetime
 
 from ..app import TheCleanerApp
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -231,8 +230,8 @@ class DevExtension:
             await event.message.respond("Message is empty.")
             return
 
-        from cleaner_data.normalize import normalize
         from cleaner_data.auto.phishing_content import data
+        from cleaner_data.normalize import normalize
 
         normalized = normalize(content, normalize_unicode=False)
         data.add(normalized)

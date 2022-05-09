@@ -8,7 +8,6 @@ import hikari
 
 from ..app import TheCleanerApp
 
-
 logger = logging.getLogger(__name__)
 EXTENSIONS = [
     "clend.core.dev",

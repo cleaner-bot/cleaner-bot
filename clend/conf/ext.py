@@ -1,18 +1,17 @@
 import asyncio
-import typing
 import logging
+import typing
 
 import hikari
 import msgpack  # type: ignore
-
 from cleaner_conf.guild import GuildConfig, GuildEntitlements
 
 from ..app import TheCleanerApp
 from ..shared.data import GuildData, GuildWorker
 from ..shared.event import IGuildSettingsAvailable
-from ..shared.sub import listen as pubsub_listen, Message
 from ..shared.protect import protect, protected_call
-
+from ..shared.sub import Message
+from ..shared.sub import listen as pubsub_listen
 
 logger = logging.getLogger(__name__)
 

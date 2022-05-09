@@ -1,6 +1,5 @@
 import hikari
 
-
 DANGEROUS_PERMISSIONS = (
     hikari.Permissions.KICK_MEMBERS
     | hikari.Permissions.BAN_MEMBERS

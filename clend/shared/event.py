@@ -1,8 +1,7 @@
-from datetime import datetime
 import typing
+from datetime import datetime
 
 import hikari
-
 from cleaner_i18n.translate import Message
 
 

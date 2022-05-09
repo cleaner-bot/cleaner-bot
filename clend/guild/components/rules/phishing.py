@@ -1,10 +1,9 @@
 import hikari
-from Levenshtein import ratio  # type: ignore
-
 from cleaner_data.auto.phishing_embed_thumbnail import data as banned_thumbnails
-from cleaner_data.domains import is_domain_whitelisted, is_domain_blacklisted
+from cleaner_data.domains import is_domain_blacklisted, is_domain_whitelisted
 from cleaner_data.phishing_content import get_highest_phishing_match
 from cleaner_data.url import get_urls, has_url
+from Levenshtein import ratio  # type: ignore
 
 
 def phishing_content(message: hikari.Message, guild):

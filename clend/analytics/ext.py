@@ -6,9 +6,8 @@ import hikari
 import msgpack  # type: ignore
 
 from ..app import TheCleanerApp
-from ..shared.id import time_passed_since
 from ..shared.data import GuildData
-
+from ..shared.id import time_passed_since
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 import asyncio
-from pathlib import Path
 import logging
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -10,7 +10,6 @@ load_dotenv(Path("~/.cleaner/env").expanduser())
 load_dotenv(Path("~/.cleaner/env_bot").expanduser())
 
 from clend.app import TheCleanerApp  # noqa: E402
-
 
 try:
     import uvloop  # type: ignore

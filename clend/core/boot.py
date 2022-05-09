@@ -3,14 +3,13 @@ This is the first stage entry loader.
 Any changes to this loader need a full bot reload.
 """
 
+import logging
 import sys
 import typing
-import logging
 
 import hikari
 
 from ..app import TheCleanerApp
-
 
 logger = logging.getLogger(__name__)
 ENTRY_EXTENSION = "clend.core.entry"

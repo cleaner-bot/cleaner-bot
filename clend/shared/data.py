@@ -2,7 +2,6 @@ import typing
 
 from cleaner_conf.guild import GuildConfig, GuildEntitlements
 
-
 __all__ = ["GuildData", "GuildConfig", "GuildEntitlements"]
 
 

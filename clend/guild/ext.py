@@ -1,17 +1,16 @@
 from __future__ import annotations
 
 import logging
+import queue
 import threading
 import typing
-import queue
 
 import hikari
 
-from .guild import CleanerGuild
 from ..app import TheCleanerApp
-from ..shared.event import IGuildSettingsAvailable, IAction
+from ..shared.event import IAction, IGuildSettingsAvailable
 from ..shared.timing import Timed
-
+from .guild import CleanerGuild
 
 WORKERS = 4
 ComponentListener = typing.Callable[

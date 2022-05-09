@@ -2,8 +2,8 @@ import typing
 
 import hikari
 
-from . import similar, exact, token, sticker, attachment
 from ...guild import CleanerGuild
+from . import attachment, exact, similar, sticker, token
 
 
 class MitigationSystem(typing.NamedTuple):

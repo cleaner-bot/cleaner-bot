@@ -10,7 +10,6 @@ from . import (
     worker,
 )
 
-
 components = [
     slowmode,
     verification,

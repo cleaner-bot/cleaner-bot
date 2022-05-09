@@ -1,9 +1,8 @@
 import asyncio
-import typing
 import os
+import typing
 
 import hikari
-
 from downdoom import Client
 
 from ..app import TheCleanerApp

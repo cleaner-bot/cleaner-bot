@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import inspect
+import logging
 import time
 import typing
-import logging
-import inspect
 
 logger = logging.getLogger(__name__)
 

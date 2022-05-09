@@ -1,10 +1,9 @@
 import hikari
-from hikari.internal.time import utc_datetime
-
+from cleaner_data.auto.avatars import data as avatar_blacklist
 from cleaner_data.name import is_name_blacklisted
 from cleaner_data.normalize import normalize
-from cleaner_data.auto.avatars import data as avatar_blacklist
 from cleaner_i18n.translate import Message
+from hikari.internal.time import utc_datetime
 
 from ..guild import CleanerGuild
 from ..helper import action_challenge

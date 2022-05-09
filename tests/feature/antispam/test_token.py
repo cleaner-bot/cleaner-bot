@@ -1,8 +1,7 @@
-from unittest import mock
-
 import random
 import string
 from types import SimpleNamespace
+from unittest import mock
 
 from clend.guild.components.mitigations.token import detection
 

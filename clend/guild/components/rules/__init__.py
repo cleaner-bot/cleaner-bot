@@ -2,8 +2,8 @@ import typing
 
 import hikari
 
-from . import advertisement, other, phishing, ping
 from ...guild import CleanerGuild
+from . import advertisement, other, phishing, ping
 
 
 class FirewallRule(typing.NamedTuple):

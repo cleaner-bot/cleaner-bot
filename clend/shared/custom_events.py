@@ -1,7 +1,6 @@
 import attr
-
-from hikari.traits import GatewayBotAware
 from hikari.events.base_events import Event
+from hikari.traits import GatewayBotAware
 
 
 @attr.define()

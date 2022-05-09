@@ -1,15 +1,15 @@
 import asyncio
 import copy
-import typing
 import logging
 import time
+import typing
 
 import hikari
 import msgpack  # type: ignore
 
-from .metrics import Metrics, metrics_reader
 from ..app import TheCleanerApp
 from ..shared.protect import protect
+from .metrics import Metrics, metrics_reader
 
 logger = logging.getLogger(__name__)
 

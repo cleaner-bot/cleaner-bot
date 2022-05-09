@@ -2,12 +2,10 @@ import re
 
 import emoji  # type: ignore
 import hikari
-
 from cleaner_data.url import get_urls
 
 from ...guild import CleanerGuild
 from ...helper import is_exception
-
 
 emoji_regex = re.compile(r"(<a?:[^\s:]+:\d+>)|(:[^\s:]+:)")
 

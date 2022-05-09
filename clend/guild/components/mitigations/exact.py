@@ -4,7 +4,6 @@ import hikari
 
 from ...guild import CleanerGuild
 
-
 THRESHOLD = 3
 
 

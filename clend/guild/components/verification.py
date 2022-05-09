@@ -1,12 +1,11 @@
 import time
 
 import hikari
-
 from cleaner_i18n.translate import Message
 
+from ...shared.custom_events import FastTimerEvent
 from ..guild import CleanerGuild
 from ..helper import action_challenge
-from ...shared.custom_events import FastTimerEvent
 
 
 def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):

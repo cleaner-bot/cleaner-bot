@@ -2,11 +2,10 @@ import importlib
 import logging
 import typing
 
-from coredis import StrictRedis
 import hikari
+from coredis import StrictRedis
 from hikari.api.config import CacheComponents
 from hikari.impl.config import CacheSettings
-
 
 DEVELOPERS = {
     633993042755452932,

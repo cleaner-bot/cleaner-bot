@@ -1,9 +1,8 @@
-from datetime import datetime
 import typing
+from datetime import datetime
 from pathlib import Path
 
 import msgpack  # type: ignore
-
 
 DEFAULT = Path("metrics.bin")
 

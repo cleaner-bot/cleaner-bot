@@ -1,5 +1,4 @@
 import hikari
-
 from cleaner_i18n.translate import Message
 
 from ..guild import CleanerGuild
