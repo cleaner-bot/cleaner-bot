@@ -66,6 +66,7 @@ def on_member_create(event: hikari.MemberCreateEvent, cguild: CleanerGuild):
             action = action_challenge(cguild, member, reason=reason, info=info)
             if action.can_role or action.can_timeout:
                 action = action._replace(can_role=False, can_timeout=False)
+            actions.append(action)
 
     return actions
 
