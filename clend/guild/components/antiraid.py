@@ -17,7 +17,8 @@ def on_member_create(event: hikari.MemberCreateEvent, cguild: CleanerGuild):
 
     cguild.member_joins.expires = cguild.member_kicks.expires = timeframe
     cguild.member_joins.add(event.user_id)
-    cguild.member_kicks.remove(event.user_id)
+    if event.user_id in cguild.member_kicks:
+        cguild.member_kicks.remove(event.user_id)
 
     joiners = cguild.member_joins.copy()
 
@@ -27,7 +28,7 @@ def on_member_create(event: hikari.MemberCreateEvent, cguild: CleanerGuild):
         matching = set(
             x
             for x in matching
-            if (x.created_at - event.user_id.created_at).total_seconds() < timespan
+            if abs((x.created_at - event.user_id.created_at).total_seconds()) < timespan
         )
 
     if len(matching) < limit:
