@@ -31,6 +31,7 @@ def on_member_create(event: hikari.MemberCreateEvent, cguild: CleanerGuild):
             if abs((x.created_at - event.user_id.created_at).total_seconds()) < timespan
         )
 
+    print(matching, joiners, limit)
     if len(matching) < limit:
         return
 
