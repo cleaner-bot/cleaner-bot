@@ -329,7 +329,7 @@ class ChallengeExtension:
             await self.app.database.expire(f"challenge:flow:{flow}", 300)
 
             component = self.app.bot.rest.build_action_row()
-            url = f"https://cleanerbot.xyz/challenge?flow={flow}"
+            url = f"https://challenge.cleanerbot.xyz/{flow}"
             add_link(component, t("link"), url)
 
             await interaction.create_initial_response(
