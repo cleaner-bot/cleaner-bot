@@ -94,9 +94,7 @@ class SlashExtension:
         component2 = interaction.app.rest.build_action_row()
         add_link(component2, t("privacy"), "https://cleanerbot.xyz/legal/privacy")
         add_link(component2, t("terms"), "https://cleanerbot.xyz/legal/terms")
-        add_link(
-            component2, t("impressum"), "https://cleanerbot.xyz/legal/impressum"
-        )
+        add_link(component2, t("impressum"), "https://cleanerbot.xyz/legal/impressum")
         component3 = interaction.app.rest.build_action_row()
         add_link(component3, t("discord"), "https://cleanerbot.xyz/discord")
         await interaction.create_initial_response(
@@ -221,9 +219,7 @@ class SlashExtension:
         await database.set(f"remote-auth:{code}", interaction.user.id, ex=300)
 
         component = interaction.app.rest.build_action_row()
-        add_link(
-            component, "Login", f"https://cleanerbot.xyz/remote-auth?code={code}"
-        )
+        add_link(component, "Login", f"https://cleanerbot.xyz/remote-auth?code={code}")
 
         await interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_UPDATE,
