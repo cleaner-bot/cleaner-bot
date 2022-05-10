@@ -49,6 +49,14 @@ class HTTPService:
     log_queue: asyncio.Queue[ILog]
     delete_queue: asyncio.Queue[IActionDelete]
 
+    guild_strikes: ExpiringDict[int, int]
+    member_strikes: ExpiringDict[str, int]
+    member_edit: ExpiringDict[int, int]
+    challenged_users: ExpiringSet[str]
+    banned_users: ExpiringSet[str]
+    deleted_messages: ExpiringSet[int]
+    bulk_delete_cooldown: ExpiringSet[int]
+
     def __init__(self, app: TheCleanerApp) -> None:
         self.app = app
         self.main_queue = janus.Queue()

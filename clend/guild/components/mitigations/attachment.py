@@ -16,7 +16,9 @@ def match(mitigation: AttachmentMitigation, message: hikari.Message) -> bool:
 
 
 def detection(
-    message: hikari.Message, messages: list[hikari.Message], guild: CleanerGuild
+    message: hikari.Message,
+    messages: typing.Sequence[hikari.Message],
+    guild: CleanerGuild,
 ):
     if not message.attachments or len(messages) + 1 < THRESHOLD:
         return

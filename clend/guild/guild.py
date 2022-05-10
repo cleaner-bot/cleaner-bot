@@ -5,7 +5,7 @@ import typing
 
 import hikari
 import lupa  # type: ignore
-from expirepy import ExpiringCounter, ExpiringList
+from expirepy import ExpiringList, ExpiringSet
 
 from ..app import TheCleanerApp
 from ..shared.data import GuildData
@@ -15,13 +15,17 @@ logger = logging.getLogger(__name__)
 
 class CleanerGuild:
     event_queue: queue.Queue[hikari.Event]
-    active_mitigations: list[typing.Any]
+    worker: tuple[lupa.LuaRuntime, typing.Any] | None
+    worker_spec: typing.Any
+
+    messages: ExpiringList[hikari.Message]
     message_count: dict[int, list[int]]
     pending_message_count: dict[int, int]
     current_slowmode: dict[int, int]
+    member_joins: ExpiringSet[hikari.Snowflake]
+    member_kicks: ExpiringSet[hikari.Snowflake]
+    active_mitigations: list[typing.Any]
     verification_joins: dict[int, float]
-    worker: tuple[lupa.LuaRuntime, typing.Any] | None
-    worker_spec: typing.Any
 
     def __init__(self, guild_id: int, app: TheCleanerApp) -> None:
         self.id = guild_id
@@ -38,7 +42,8 @@ class CleanerGuild:
         self.message_count = {}
         self.pending_message_count = {}
         self.current_slowmode = {}
-        self.member_joins = ExpiringCounter(expires=300)
+        self.member_joins = ExpiringSet(expires=300)
+        self.member_kicks = ExpiringSet(expires=300)
         self.active_mitigations = []
         self.verification_joins = {}  # no cache evict needed
 

@@ -10,7 +10,8 @@ class MitigationSystem(typing.NamedTuple):
     name: str
     match: typing.Callable[[typing.Any, hikari.Message], bool]
     detection: typing.Callable[
-        [hikari.Message, list[hikari.Message], CleanerGuild], None | typing.Any
+        [hikari.Message, typing.Sequence[hikari.Message], CleanerGuild],
+        None | typing.Any,
     ]
     ttl: int
     block: bool

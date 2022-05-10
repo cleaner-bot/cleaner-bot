@@ -30,6 +30,7 @@ PERMS_SEND = (
 
 class ReportExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
+    message_cache: ExpiringDict[int, hikari.Message]
 
     def __init__(self, app: TheCleanerApp):
         self.app = app
