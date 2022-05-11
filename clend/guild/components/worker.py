@@ -346,6 +346,13 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
             )
         elif name == "announcement":
             channel = event.get_channel()
+            ttl = 0
+            if ":" in reason:
+                ttl_ = reason.split(":")[0]
+                if ttl_.isdigit():
+                    ttl = int(ttl_)
+                    reason = reason[len(ttl_) + 1 :]
+
             if channel is not None:
                 actions.append(
                     announcement(
@@ -353,7 +360,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                         Message(
                             "components_worker_announcement", {"message": reason[:1800]}
                         ),
-                        120,
+                        ttl,
                     )
                 )
         else:
