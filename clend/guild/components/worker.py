@@ -306,7 +306,9 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                 action_delete(
                     event.member,
                     event.message,
-                    reason=Message("components_worker_reason", {"reason": reason[:500]}),
+                    reason=Message(
+                        "components_worker_reason", {"reason": reason[:500]}
+                    ),
                     info=info,
                 )
             )
@@ -315,7 +317,9 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                 action_challenge(
                     cguild,
                     event.member,
-                    reason=Message("components_worker_reason", {"reason": reason[:500]}),
+                    reason=Message(
+                        "components_worker_reason", {"reason": reason[:500]}
+                    ),
                     info=info,
                     block=True,
                 )
@@ -325,7 +329,9 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                 action_challenge(
                     cguild,
                     event.member,
-                    reason=Message("components_worker_reason", {"reason": reason[:500]}),
+                    reason=Message(
+                        "components_worker_reason", {"reason": reason[:500]}
+                    ),
                     info=info,
                     block=False,
                 )
@@ -344,7 +350,9 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                 actions.append(
                     announcement(
                         channel,
-                        Message("components_worker_announcement", {"message": reason[:1800]}),
+                        Message(
+                            "components_worker_announcement", {"message": reason[:1800]}
+                        ),
                         120,
                     )
                 )
