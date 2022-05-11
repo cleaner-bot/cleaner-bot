@@ -83,7 +83,7 @@ class ConfigExtension:
             return logger.warning("unable to find clend.guild extension")
         guild.send_event(IGuildSettingsAvailable(guild_id))
 
-    async def fetch_dict(self, key: str, keys: typing.Sequence[str]):
+    async def fetch_dict(self, key: str, keys: tuple[str, ...]):
         database = self.app.database
         values = await database.hmget(key, keys)
         return {k: msgpack.unpackb(v) for k, v in zip(keys, values) if v is not None}

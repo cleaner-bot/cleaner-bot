@@ -1,7 +1,7 @@
 import logging
 import typing
 
-from coredis.commands.pubsub import PubSub  # type: ignore
+from coredis.commands.pubsub import PubSub
 
 logger = logging.getLogger(__name__)
 
@@ -13,13 +13,13 @@ class Message(typing.NamedTuple):
 
 
 class Subscribe(typing.NamedTuple):
-    data: int
+    data: bytes
     channel: bytes
     is_pattern: bool
 
 
 class Unsubscribe(typing.NamedTuple):
-    data: int
+    data: bytes
     channel: bytes
     is_pattern: bool
 
@@ -35,10 +35,16 @@ async def listen(
         type = message["type"][1:] if is_pattern else message["type"]
 
         if type == "subscribe":
-            yield Subscribe(message["data"], message["channel"], is_pattern)
+            yield Subscribe(
+                message["data"], message["channel"], is_pattern  # type: ignore
+            )
         elif type == "unsubscribe":
-            yield Unsubscribe(message["data"], message["channel"], is_pattern)
+            yield Unsubscribe(
+                message["data"], message["channel"], is_pattern  # type: ignore
+            )
         elif type == "message":
-            yield Message(message["data"], message["channel"], is_pattern)
+            yield Message(
+                message["data"], message["channel"], is_pattern  # type: ignore
+            )
         else:
             logger.warning(f"received unknown type on pubsub: {type} ({is_pattern})")

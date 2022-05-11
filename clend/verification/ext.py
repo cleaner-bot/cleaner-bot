@@ -44,7 +44,7 @@ class VerificationExtension:
 
     async def on_member_delete(self, event: hikari.MemberDeleteEvent):
         await self.app.database.delete(
-            f"guild:{event.guild_id}:user:{event.user_id}:verification"
+            (f"guild:{event.guild_id}:user:{event.user_id}:verification",)
         )
 
     @staticmethod
