@@ -106,7 +106,7 @@ class MetricsExtension:
         )
 
         challenge_actions = ("ban", "kick", "role", "timeout", "failure")
-        categories = ("phishing", "antispam", "advertisement", "other")
+        categories = ("phishing", "antispam", "advertisement", "other", "dehoist", "antiraid")
 
         timespan = 60 * 60 * 24 * 30
         latest = self.metrics.history[-1][0]
@@ -159,6 +159,15 @@ class MetricsExtension:
                 if span is not None:
                     result["challenges"][data["action"]][span] += 1
                     guild["challenges"][data["action"]][span] += 1
+                
+                if data["info"]["name"] == "antiraid_limit":
+                    category = "antiraid"
+                    result["categories"][category]["total"] += 1
+                    guild["categories"][category]["total"] += 1
+                    if span is not None:
+                        result["categories"][category][span] += 1
+                        guild["categories"][category][span] += 1
+
             elif data["name"] == "delete":
                 rule = data["info"]["rule"]
                 category = None
@@ -185,6 +194,15 @@ class MetricsExtension:
                     logger.warning(f"unknown rule: {rule}")
 
                 if category is not None:
+                    result["categories"][category]["total"] += 1
+                    guild["categories"][category]["total"] += 1
+                    if span is not None:
+                        result["categories"][category][span] += 1
+                        guild["categories"][category][span] += 1
+
+            elif data["name"] == "nickname":
+                if data["action"] == "reset_success":
+                    category = data["info"]["name"]
                     result["categories"][category]["total"] += 1
                     guild["categories"][category]["total"] += 1
                     if span is not None:
