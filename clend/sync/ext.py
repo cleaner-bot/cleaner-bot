@@ -165,7 +165,7 @@ class SyncExtension:
 
         guild_count = len(self.app.bot.cache.get_guilds_view())
         res = await self.topgg.post(
-            f"/api/bot/{client_id}/stats", json={"server_count": guild_count}
+            f"/api/bots/{client_id}/stats", json={"server_count": guild_count}
         )
         res.raise_for_status()
 
