@@ -29,6 +29,8 @@ async def listen(
 ) -> typing.AsyncGenerator[Message | Subscribe | Unsubscribe, None]:
     while True:
         message = await pubsub.get_message(**kwargs)
+        if message is None:
+            break
         is_pattern = message["type"].startswith("p")
         type = message["type"][1:] if is_pattern else message["type"]
 
