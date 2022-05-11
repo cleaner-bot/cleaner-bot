@@ -102,7 +102,10 @@ class GuildLogExtension:
                 for line in msg.content.splitlines():
                     lines.append(f">> {line}")
 
-            lines.append(f"> Message author: {msg.author} ({msg.author.id})")
+            if msg.author:
+                lines.append(
+                    f"> Message author: {msg.author} ({msg.author.id})"
+                )
             lines.append(f"> Channel: {msg.channel_id}")
             if msg.attachments:
                 lines.append("> Attachments:")

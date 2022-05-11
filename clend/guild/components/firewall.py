@@ -6,9 +6,12 @@ from ..helper import action_challenge, action_delete, announcement, is_moderator
 from .rules import firewall_rules
 
 
-def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild):
+def check_message(
+    event: hikari.GuildMessageCreateEvent | hikari.GuildMessageUpdateEvent,
+    guild: CleanerGuild,
+):
     data = guild.get_data()
-    if event.member is None or is_moderator(guild, event.member) or data is None:
+    if not event.member or is_moderator(guild, event.member) or data is None:
         return
 
     matched_rule = matched_action = None
@@ -46,5 +49,6 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
 
 
 listeners = [
-    (hikari.GuildMessageCreateEvent, on_message_create),
+    (hikari.GuildMessageCreateEvent, check_message),
+    (hikari.GuildMessageUpdateEvent, check_message),
 ]

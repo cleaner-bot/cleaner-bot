@@ -8,7 +8,7 @@ from ..shared.event import IActionDelete
 def is_likely_phishing(ev: IActionDelete) -> bool:
     return (
         ev.message is not None
-        and ev.message.content is not None
+        and isinstance(ev.message.content, str)
         and has_url(ev.message.content)
         and (
             "phishing" in ev.info.get("rule", "")

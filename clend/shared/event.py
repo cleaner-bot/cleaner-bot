@@ -45,7 +45,7 @@ class IActionDelete(typing.NamedTuple):
     channel_id: int
     message_id: int
     can_delete: bool
-    message: hikari.Message | None
+    message: hikari.PartialMessage | None
     reason: Message
     info: typing.Any
 
@@ -81,4 +81,4 @@ class ILog(typing.NamedTuple):
     message: Message
     created_at: datetime
     reason: Message | None = None
-    referenced_message: hikari.Message | None = None
+    referenced_message: hikari.PartialMessage | None = None

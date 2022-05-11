@@ -8,7 +8,7 @@ from . import advertisement, other, phishing, ping
 
 class FirewallRule(typing.NamedTuple):
     name: str
-    func: typing.Callable[[hikari.Message, CleanerGuild], bool]
+    func: typing.Callable[[hikari.PartialMessage, CleanerGuild], bool]
 
 
 firewall_rules = [

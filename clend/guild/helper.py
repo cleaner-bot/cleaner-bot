@@ -139,7 +139,7 @@ def action_nickname(
 
 
 def action_delete(
-    member: hikari.Member, message: hikari.Message, **kwargs
+    member: hikari.Member, message: hikari.PartialMessage, **kwargs
 ) -> IActionDelete:
     guild = member.get_guild()
     if guild is None:

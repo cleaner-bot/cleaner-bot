@@ -10,7 +10,7 @@ from ...helper import is_exception
 emoji_regex = re.compile(r"(<a?:[^\s:]+:\d+>)|(:[^\s:]+:)")
 
 
-def emoji_mass(message: hikari.Message, guild: CleanerGuild) -> bool:
+def emoji_mass(message: hikari.PartialMessage, guild: CleanerGuild) -> bool:
     if not message.content or is_exception(guild, message.channel_id):
         return False
     content = emoji.demojize(message.content)
@@ -18,7 +18,7 @@ def emoji_mass(message: hikari.Message, guild: CleanerGuild) -> bool:
     return len(emojis) >= 7
 
 
-def selfbot_embed(message: hikari.Message, guild: CleanerGuild) -> bool:
+def selfbot_embed(message: hikari.PartialMessage, guild: CleanerGuild) -> bool:
     if not message.content or not message.embeds:
         return False
     for _ in get_urls(message.content):

@@ -8,7 +8,7 @@ discord_invite = re.compile(
 )
 
 
-def advertisement_discord(message: hikari.Message, guild) -> bool:
+def advertisement_discord(message: hikari.PartialMessage, guild) -> bool:
     if not message.content:
         return False
     return discord_invite.search(message.content) is not None

@@ -6,14 +6,14 @@ from cleaner_data.url import get_urls, has_url
 from Levenshtein import ratio  # type: ignore
 
 
-def phishing_content(message: hikari.Message, guild):
+def phishing_content(message: hikari.PartialMessage, guild):
     if not message.content or not has_url(message.content):
         return
     match = get_highest_phishing_match(message.content)
     return match > 0.9
 
 
-def phishing_domain_blacklisted(message: hikari.Message, guild):
+def phishing_domain_blacklisted(message: hikari.PartialMessage, guild):
     if not message.content or not has_url(message.content):
         return
     for url in get_urls(message.content):
@@ -33,7 +33,7 @@ suspicious_parts = (
 )
 
 
-def phishing_domain_heuristic(message: hikari.Message, guild):
+def phishing_domain_heuristic(message: hikari.PartialMessage, guild):
     if not message.content or not has_url(message.content):
         return False
     for url in get_urls(message.content):
@@ -50,7 +50,9 @@ def phishing_domain_heuristic(message: hikari.Message, guild):
     return False
 
 
-def phishing_embed(message: hikari.Message, guild):
+def phishing_embed(message: hikari.PartialMessage, guild):
+    if not message.embeds:
+        return
     for embed in message.embeds:
         url = embed.url
         if url is None:
