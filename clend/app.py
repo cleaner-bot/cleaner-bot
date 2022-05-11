@@ -3,7 +3,7 @@ import logging
 import typing
 
 import hikari
-from coredis import StrictRedis
+from coredis import Redis
 from hikari.api.config import CacheComponents
 from hikari.impl.config import CacheSettings
 
@@ -37,7 +37,7 @@ class TheCleanerApp:
         logging.getLogger("clend").setLevel(logging.DEBUG)
         # spammy with pretty much useless info
         logging.getLogger("clend.conf").setLevel(logging.INFO)
-        self.database = StrictRedis()
+        self.database = Redis()
 
         self.extensions = {}
         self.guild_has_members_cached = set()
