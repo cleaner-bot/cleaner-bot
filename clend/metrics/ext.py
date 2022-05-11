@@ -167,7 +167,7 @@ class MetricsExtension:
                     result["challenges"][data["action"]][span] += 1
                     guild["challenges"][data["action"]][span] += 1
 
-                if data["info"]["name"] == "antiraid_limit":
+                if data["info"].get("name") == "antiraid_limit":
                     category = "antiraid"
                     result["categories"][category]["total"] += 1
                     guild["categories"][category]["total"] += 1
