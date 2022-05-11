@@ -31,7 +31,9 @@ jobs:
         run: sudo apt-get install lua5.1 liblua5.1-0-dev
 
       - name: Install dependencies
-        run: pip install -r requirements.txt -r requirements-dev.txt
+        run: |
+          pip install cython
+          pip install -r requirements.txt -r requirements-dev.txt
       
       - name: Run tests
         run: make test
@@ -55,7 +57,9 @@ jobs:
         run: sudo apt-get install lua5.1 liblua5.1-0-dev
         
       - name: Install dependencies
-        run: pip install -r requirements.txt -r requirements-dev.txt
+        run: |
+          pip install cython
+          pip install -r requirements.txt -r requirements-dev.txt
       
       - name: Linting
         run: make lint
@@ -79,7 +83,9 @@ jobs:
         run: sudo apt-get install lua5.1 liblua5.1-0-dev
         
       - name: Install dependencies
-        run: pip install -r requirements.txt -r requirements-dev.txt
+        run: |
+          pip install cython
+          pip install -r requirements.txt -r requirements-dev.txt
       
       - name: Coverage
         run: make coverage
