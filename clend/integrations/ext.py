@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 class IntegrationExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
+    topgg: TopGGIntegration | None = None
     tasks: list[asyncio.Task]
 
     def __init__(self, app: TheCleanerApp) -> None:
@@ -55,4 +56,4 @@ class IntegrationExtension:
         logger.debug(f"stats: guilds={guild_count} users={user_count}")
 
         if self.topgg is not None:
-            await self.topgg.update(guild_count)
+            await self.topgg.update_topgg(guild_count)
