@@ -11,6 +11,7 @@ lupa@git+https://github.com/le0developer/lupa.git@feat/max-memory
 hikari@git+https://github.com/cleaner-bot/hikari.git
 downdoom@git+https://github.com/cleaner-bot/downdoom.git
 expirepy@git+https://github.com/cleaner-bot/expirepy.git
+secretclient@git+ssh://git@github.com/cleaner-bot/secret-client
 cleaner_conf@git+ssh://git@github.com/cleaner-bot/cleaner-config
 cleaner_data@git+ssh://git@github.com/cleaner-bot/cleaner-data
 cleaner_i18n@git+ssh://git@github.com/cleaner-bot/cleaner-i18n
