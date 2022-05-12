@@ -196,6 +196,9 @@ class DevExtension:
             self.app.load_extension(name)
         except Exception as e:
             logger.error(f"Error loading {name}", exc_info=e)
+            logger.info(
+                "reloaded modules" + ", ".join(f"`{x}`" for x in reloaded), exc_info=e
+            )
             return await msg.edit("Failed. Load error.")
 
         await msg.edit(
