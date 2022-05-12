@@ -7,6 +7,7 @@ from datetime import datetime
 import hikari
 import msgpack  # type: ignore
 from cleaner_conf.guild import GuildConfig, GuildEntitlements
+from cleaner_data.url import has_url
 from cleaner_i18n.translate import Message, translate
 
 from ..app import TheCleanerApp
@@ -476,9 +477,22 @@ class ChallengeExtension:
         )
         add_link(component, t("privacy"), "https://cleanerbot.xyz/legal/privacy")
 
-        embed = hikari.Embed(
-            title=t("title"), description=t("description"), color=0x0284C7
-        )
+        title = t("title")
+        description = t("description")
+
+        data = self.get_data(guild.id)
+        if (
+            data is not None
+            and data.entitlements.plan >= data.entitlements.branding_embed
+        ):
+            embed_title = data.config.branding_embed_title
+            embed_description = data.config.branding_embed_description
+            if embed_title and not has_url(embed_title):
+                title = embed_title
+            if embed_description and not has_url(embed_description):
+                description = embed_description
+
+        embed = hikari.Embed(title=title, description=description, color=0x0284C7)
 
         return dict(embed=embed, component=component)
 
@@ -494,12 +508,6 @@ class ChallengeExtension:
         if guild is None:
             logger.warning(f"uncached guild: {guild_id}")
             return
-
-        # TODO: branding code here
-        # data = self.get_data(guild_id)
-        # if data is None:
-        #     logger.warning(f"uncached guild settings: {guild_id}")
-        #     return
 
         me = guild.get_my_member()
         if me is None:
