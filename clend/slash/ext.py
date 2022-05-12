@@ -153,7 +153,7 @@ class SlashExtension:
             | hikari.Permissions.MANAGE_NICKNAMES
             | hikari.Permissions.MODERATE_MEMBERS
         )
-        client_id = os.getenv("CLIENT_ID")
+        client_id = os.getenv("discord/client-id")
         if client_id is None:
             me = self.app.bot.cache.get_me()
             if me is None:

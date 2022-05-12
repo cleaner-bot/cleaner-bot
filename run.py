@@ -4,10 +4,27 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
+from secretclient import request
 
-load_dotenv(Path("~/.cleaner/secrets").expanduser())
-load_dotenv(Path("~/.cleaner/env").expanduser())
-load_dotenv(Path("~/.cleaner/env_bot").expanduser())
+load_dotenv(Path("~/.cleaner/env/bot").expanduser())
+
+
+def _load_secrets():
+    fields = (
+        "sentry/dsn",
+        "discord/bot-token",
+        "discord/client-id",
+        "topgg/api-token",
+    )
+    identity = Path("~/.cleaner/identity").expanduser().read_text()
+    for key, value in request(
+        bytes.fromhex(identity), fields, os.getenv("SECRET_HOST")
+    ).items():
+        os.environ[key] = value
+
+
+_load_secrets()
+del _load_secrets
 
 from clend.app import TheCleanerApp  # noqa: E402
 
@@ -19,13 +36,13 @@ else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
-token = os.getenv("SECRET_BOT_TOKEN")
+token = os.getenv("discord/bot-token")
 if token is None:
     print("Token not found.")
     exit(1)
 
 
-sentry_dsn = os.getenv("SECRET_SENTRY_DSN")
+sentry_dsn = os.getenv("sentry/dsn")
 if sentry_dsn is not None:
     import sentry_sdk
 

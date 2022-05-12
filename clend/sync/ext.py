@@ -35,7 +35,7 @@ class SyncExtension:
         ]
         self.task = None
 
-        topgg_token = os.getenv("SECRET_TOPGG_TOKEN")
+        topgg_token = os.getenv("topgg/api-token")
         if topgg_token is not None:
             self.topgg = AsyncClient(
                 base_url="https://top.gg/",
@@ -154,7 +154,7 @@ class SyncExtension:
         if self.topgg is None:
             return
 
-        client_id = os.getenv("CLIENT_ID")
+        client_id = os.getenv("discord/client-id")
         if client_id is None:
             me = self.app.bot.cache.get_me()
             if me is None:
