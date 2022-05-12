@@ -177,6 +177,14 @@ class DevExtension:
     async def handle_reload(self, event: hikari.GuildMessageCreateEvent):
         assert event.message.content
         name = event.message.content[13:]
+        if name.startswith("cleaner."):
+            return await event.message.respond(
+                f"Did you mean clend instead of cleaner????\n"
+                f"If so, please enable IQ or go to sleep if it's late. "
+                f"If you did mean to reload {name} then you're out of luck, "
+                f"because I won't let you."
+            )
+
         msg = await event.message.respond(f"Reloading `{name}`")
 
         if name in self.app.extensions:
