@@ -1,11 +1,9 @@
 import asyncio
 import logging
-import os
 import typing
 
 import hikari
 import msgpack  # type: ignore
-from httpx import AsyncClient
 
 from ..app import TheCleanerApp
 from ..shared.channel_perms import permissions_for
@@ -17,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 class SyncExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
-    topgg: AsyncClient | None = None
 
     def __init__(self, app: TheCleanerApp):
         self.app = app
@@ -35,16 +32,6 @@ class SyncExtension:
         ]
         self.task = None
 
-        topgg_token = os.getenv("topgg/api-token")
-        if topgg_token is not None:
-            self.topgg = AsyncClient(
-                base_url="https://top.gg/",
-                headers={
-                    "authorization": topgg_token,
-                    "user-agent": "CleanerBot (cleanerbot.xyz 0.1.0)",
-                },
-            )
-
     def on_load(self):
         asyncio.create_task(protected_call(self.loader()))
 
@@ -52,7 +39,6 @@ class SyncExtension:
         for guild in tuple(self.app.bot.cache.get_guilds_view().values()):
             await self.new_guild(guild)
         logger.info("initial sync done")
-        await self.update_guild_count()
 
     async def on_new_guild(
         self, event: hikari.GuildJoinEvent | hikari.GuildAvailableEvent
@@ -60,7 +46,6 @@ class SyncExtension:
         guild = event.get_guild()
         if guild is not None:
             await self.new_guild(guild)
-        await self.update_guild_count()
 
     async def new_guild(self, guild: hikari.GatewayGuild):
         database = self.app.database
@@ -72,7 +57,6 @@ class SyncExtension:
     async def on_destroy_guild(self, event: hikari.GuildLeaveEvent):
         database = self.app.database
         await database.delete((f"guild:{event.guild_id}:sync",))
-        await self.update_guild_count()
 
     async def on_update_role(self, event: hikari.RoleEvent):
         # TODO: add role.get_guild() to hikari
@@ -149,24 +133,3 @@ class SyncExtension:
 
         database = self.app.database
         await database.hset(f"guild:{guild.id}:sync", {"channels": msgpack.packb(data)})
-
-    async def update_guild_count(self):
-        if self.topgg is None:
-            return
-
-        client_id = os.getenv("discord/client-id")
-        if client_id is None:
-            me = self.app.bot.cache.get_me()
-            if me is None:
-                # dont bother handling because this should NEVER happen
-                raise RuntimeError("no client_id for invite command")
-
-            client_id = str(me.id)
-
-        guild_count = len(self.app.bot.cache.get_guilds_view())
-        res = await self.topgg.post(
-            f"/api/bots/{client_id}/stats", json={"server_count": guild_count}
-        )
-        res.raise_for_status()
-
-        logger.info(f"published guild count to top.gg: {guild_count}")

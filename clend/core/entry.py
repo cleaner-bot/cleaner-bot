@@ -25,6 +25,7 @@ EXTENSIONS = [
     "clend.guildlog",
     "clend.downdoom",
     "clend.traffic",
+    "clend.integrations",
 ]
 
 
