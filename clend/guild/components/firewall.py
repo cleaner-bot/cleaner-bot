@@ -15,10 +15,12 @@ def check_message(
         return
 
     matched_rule = matched_action = None
+    channel_id = str(event.channel_id)
     for rule in firewall_rules:
         config_name = rule.name.replace(".", "_")
         action = getattr(data.config, f"rules_{config_name}")
-        if action == 0:
+        channels = getattr(data.config, f"rules_{config_name}_channels")
+        if action == 0 or channel_id in channels:
             continue
         elif matched_rule is not None and action < 2:
             continue

@@ -64,10 +64,12 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
             ]
 
     mitigation = None
+    channel_id = str(event.channel_id)
     for mit in mitigations:
         config_name = "_".join(mit.name.split(".")[1:])
         enabled = getattr(data.config, f"antispam_{config_name}")
-        if not enabled:
+        channels = getattr(data.config, f"antispam_{config_name}_channels")
+        if not enabled or channel_id in channels:
             continue
 
         mitigation = mit.detection(event.message, messages, guild)
