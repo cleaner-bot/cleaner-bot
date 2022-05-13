@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import random
 import typing
 from datetime import datetime, timedelta
@@ -335,6 +336,15 @@ class HTTPService:
 
     async def logd(self):
         guilds: dict[int, list[ILog]] = {}
+        client_id = os.getenv("discord/client-id")
+        if client_id is None:
+            me = self.app.bot.cache.get_me()
+            if me is None:
+                # dont bother handling because this should NEVER happen
+                raise RuntimeError("no client_id available")
+
+            client_id = str(me.id)
+
         while True:
             await asyncio.sleep(1)
             while not self.log_queue.empty():
@@ -446,9 +456,25 @@ class HTTPService:
                             (f"guild:{guild_id}:logging:voting-reminder",)
                         )
                     ):
+                        integrations = []
+                        integrations.append(
+                            (
+                                "Top.gg",
+                                f"https://top.gg/bot/{client_id}/vote?guild={guild_id}",
+                            )
+                        )
                         embed = hikari.Embed(
                             title=translate(locale, "log_vote_title"),
-                            description=translate(locale, "log_vote_description"),
+                            description=(
+                                translate(locale, "log_vote_description")
+                                + "\n\n"
+                                + " ".join(
+                                    "["
+                                    + translate(locale, "log_vote_integration", name)
+                                    + f"]({url})"
+                                    for name, url in integrations
+                                )
+                            ),
                             color=0x6366F1,
                         ).set_footer(text=translate(locale, "log_vote_footer"))
                         embeds.append(embed)
