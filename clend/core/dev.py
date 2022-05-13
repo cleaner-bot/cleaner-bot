@@ -204,7 +204,9 @@ class DevExtension:
             self.app.load_extension(name)
         except ModuleNotFoundError as e:
             if e.name == name:
-                return await msg.edit("Failed because I did not find the extension, idiot.")
+                return await msg.edit(
+                    "Failed because I did not find the extension, idiot."
+                )
             logger.info(
                 "reloaded modules" + ", ".join(f"`{x}`" for x in reloaded), exc_info=e
             )
