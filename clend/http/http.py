@@ -470,7 +470,9 @@ class HTTPService:
                                 + "\n\n"
                                 + " ".join(
                                     "["
-                                    + translate(locale, "log_vote_integration", name=name)
+                                    + translate(
+                                        locale, "log_vote_integration", name=name
+                                    )
                                     + f"]({url})"
                                     for name, url in integrations
                                 )
