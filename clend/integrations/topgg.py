@@ -93,6 +93,14 @@ class TopGGIntegration:
             except hikari.NotFoundError:
                 return
 
+        for role in member.get_roles():
+            if role.permissions & (
+                hikari.Permissions.ADMINISTRATOR | hikari.Permissions.MANAGE_GUILD
+            ):
+                break
+        else:
+            return
+
         log = ILog(
             guild.id,
             Message(
