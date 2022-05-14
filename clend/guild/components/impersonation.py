@@ -26,9 +26,13 @@ def on_new_member(
     reason: Message | None = None
     name: str | None = None
 
-    if data.config.impersonation_discord_enabled and (
-        is_name_blacklisted(event.user.username)
-        or event.user.avatar_hash in avatar_blacklist
+    if (
+        data.config.impersonation_discord_enabled
+        and (
+            is_name_blacklisted(event.user.username)
+            or event.user.avatar_hash in avatar_blacklist
+        )
+        and not event.user.avatar_hash.startswith("a_")
     ):
         reason = Message("components_impersonation_discord", {})
         name = "impersonation_discord"
