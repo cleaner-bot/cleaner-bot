@@ -32,7 +32,10 @@ def on_new_member(
             is_name_blacklisted(event.user.username)
             or event.user.avatar_hash in avatar_blacklist
         )
-        and not event.user.avatar_hash.startswith("a_")
+        and (
+            event.user.avatar_hash is None
+            or not event.user.avatar_hash.startswith("a_")
+        )
     ):
         reason = Message("components_impersonation_discord", {})
         name = "impersonation_discord"
