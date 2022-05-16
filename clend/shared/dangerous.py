@@ -18,3 +18,12 @@ DANGEROUS_PERMISSIONS = (
     | hikari.Permissions.MANAGE_THREADS
     | hikari.Permissions.MODERATE_MEMBERS
 )
+
+
+def dangerous_content(message: str) -> str:
+    return (
+        message.replace("://", "\\://")
+        .replace("discord.gg/", "discord\\.gg/")
+        .replace("discord.com/invite/", "discord\\.com/invite/")
+        .replace("discordapp.com/invite/", "discordapp\\.com/invite/")
+    )

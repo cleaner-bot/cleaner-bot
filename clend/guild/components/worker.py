@@ -5,6 +5,7 @@ import hikari
 import lupa  # type: ignore
 from cleaner_i18n.translate import Message
 
+from ...shared.dangerous import dangerous_content
 from ...shared.event import IGuildEvent, ILog
 from ..guild import CleanerGuild
 from ..helper import action_challenge, action_delete, announcement, is_moderator
@@ -300,7 +301,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
         if not isinstance(action, str):
             continue
         name = action.split(":")[0]
-        reason = action[len(name) + 1 :]
+        reason = dangerous_content(action[len(name) + 1 :])
         if name == "delete":
             actions.append(
                 action_delete(
@@ -312,6 +313,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                     info=info,
                 )
             )
+            continue
         elif name == "block":
             actions.append(
                 action_challenge(
@@ -324,6 +326,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                     block=True,
                 )
             )
+            continue
         elif name == "challenge":
             actions.append(
                 action_challenge(
@@ -336,6 +339,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                     block=False,
                 )
             )
+            continue
         elif name == "log":
             actions.append(
                 ILog(
@@ -344,35 +348,34 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
                     event.message_id.created_at,
                 )
             )
+            continue
         elif name == "announcement":
             channel = event.get_channel()
-            ttl = 0
-            if ":" in reason:
-                ttl_ = reason.split(":")[0]
-                if ttl_.isdigit():
-                    ttl = int(ttl_)
-                    reason = reason[len(ttl_) + 1 :]
+            raw_ttl = reason.split(":")[0]
+            if raw_ttl.isdigit():
+                ttl = int(raw_ttl)
+                reason = reason[len(raw_ttl) + 1 :]
 
-            if channel is not None:
-                actions.append(
-                    announcement(
-                        channel,
-                        Message(
-                            "components_worker_announcement", {"message": reason[:1800]}
-                        ),
-                        ttl,
+                if channel is not None:
+                    actions.append(
+                        announcement(
+                            channel,
+                            Message(
+                                "components_worker_announcement",
+                                {"message": reason[:1800]},
+                            ),
+                            ttl,
+                        )
                     )
-                )
-        else:
-            actions.append(
-                ILog(
-                    event.guild_id,
-                    Message(
-                        "components_worker_unknownaction", {"action": action[:500]}
-                    ),
-                    event.message_id.created_at,
-                )
+                continue
+
+        actions.append(
+            ILog(
+                event.guild_id,
+                Message("components_worker_unknownaction", {"action": action[:500]}),
+                event.message_id.created_at,
             )
+        )
 
     return actions
 

@@ -7,13 +7,12 @@ from datetime import datetime
 import hikari
 import msgpack  # type: ignore
 from cleaner_conf.guild import GuildConfig, GuildEntitlements
-from cleaner_data.url import has_url
 from cleaner_i18n.translate import Message, translate
 
 from ..app import TheCleanerApp
 from ..shared.button import add_link
 from ..shared.channel_perms import permissions_for
-from ..shared.dangerous import DANGEROUS_PERMISSIONS
+from ..shared.dangerous import DANGEROUS_PERMISSIONS, dangerous_content
 from ..shared.event import ILog
 from ..shared.id import time_passed_since
 from ..shared.protect import protect, protected_call
@@ -478,10 +477,10 @@ class ChallengeExtension:
         ):
             embed_title = data.config.branding_embed_title
             embed_description = data.config.branding_embed_description
-            if embed_title and not has_url(embed_title):
-                title = embed_title
-            if embed_description and not has_url(embed_description):
-                description = embed_description
+            if embed_title:
+                title = dangerous_content(embed_title)
+            if embed_description:
+                description = dangerous_content(embed_description)
 
         embed = hikari.Embed(title=title, description=description, color=0x0284C7)
 
