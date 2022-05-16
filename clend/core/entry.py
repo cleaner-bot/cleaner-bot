@@ -37,6 +37,11 @@ class EntryExtension:
         self.listeners = []
 
     def on_load(self):
+        try:
+            self.app.load_store()
+        except Exception as e:
+            logger.exception("An error occured while loading store", exc_info=e)
+
         for ext in EXTENSIONS:
             if ext in self.app.extensions:
                 logger.warning(f"loading already loaded extension: {ext}")

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import importlib
 import logging
 import typing
@@ -11,10 +13,14 @@ DEVELOPERS = {
     633993042755452932,
 }
 
+if typing.TYPE_CHECKING:
+    from .store import Store
+
 
 class TheCleanerApp:
     extensions: dict[str, typing.Any]
     guild_has_members_cached: set[int]
+    store: Store
 
     def __init__(self, token: str) -> None:
         intents = hikari.Intents.ALL_GUILDS_UNPRIVILEGED | hikari.Intents.GUILD_MEMBERS
@@ -44,6 +50,11 @@ class TheCleanerApp:
 
     def run(self, **kwargs):
         self.bot.run(**kwargs)
+
+    def load_store(self):
+        from .store import Store
+
+        self.store = Store(self)
 
     def load_extension(self, module: str):
         if module in self.extensions:

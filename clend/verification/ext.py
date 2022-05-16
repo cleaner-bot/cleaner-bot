@@ -9,7 +9,6 @@ from cleaner_i18n.translate import Message
 
 from ..app import TheCleanerApp
 from ..shared.dangerous import DANGEROUS_PERMISSIONS
-from ..shared.data import GuildData
 from ..shared.event import ILog
 from ..shared.protect import protect, protected_call
 from ..shared.sub import Message as PubMessage
@@ -76,7 +75,7 @@ class VerificationExtension:
         if guild is None:
             logger.warning(f"uncached guild: {int(guild_id)}")
             return
-        data = self.get_data(guild.id)
+        data = self.app.store.get_data(guild.id)
 
         if data is None:
             logger.warning(f"uncached guild settings: {guild.id}")
@@ -135,16 +134,4 @@ class VerificationExtension:
                 ),
                 datetime.utcnow(),
             )
-            http = self.app.extensions.get("clend.http", None)
-            if http is None:
-                logger.warning("tried to log http extension is not loaded")
-            else:
-                http.queue.async_q.put_nowait(log)
-
-    def get_data(self, guild_id: int) -> GuildData | None:
-        conf = self.app.extensions.get("clend.conf", None)
-        if conf is None:
-            logger.warning("unable to find clend.conf extension")
-            return None
-
-        return conf.get_data(guild_id)
+            self.app.store.put_http(log)

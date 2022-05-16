@@ -59,9 +59,4 @@ class CleanerGuild:
                 self.active_mitigations.remove(mitigation)
 
     def get_data(self) -> GuildData | None:
-        conf = self.app.extensions.get("clend.conf", None)
-        if conf is None:
-            logger.warning("unable to find clend.conf extension")
-            return None
-
-        return conf.get_data(self.id)
+        return self.app.store.get_data(self.id)

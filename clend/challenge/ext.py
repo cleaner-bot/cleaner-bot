@@ -14,7 +14,6 @@ from ..app import TheCleanerApp
 from ..shared.button import add_link
 from ..shared.channel_perms import permissions_for
 from ..shared.dangerous import DANGEROUS_PERMISSIONS
-from ..shared.data import GuildData
 from ..shared.event import ILog
 from ..shared.id import time_passed_since
 from ..shared.protect import protect, protected_call
@@ -72,7 +71,7 @@ class ChallengeExtension:
         await self.member_joined(event.member)
 
     async def member_joined(self, member: hikari.Member):
-        data = self.get_data(member.guild_id)
+        data = self.app.store.get_data(member.guild_id)
         if data is None:
             logger.warning(f"uncached guild settings: {member.guild_id}")
             return
@@ -176,7 +175,7 @@ class ChallengeExtension:
         t = lambda s, **k: translate(  # noqa E731
             interaction.locale, f"challenge_{s}", **k
         )
-        data = self.get_data(guild.id)
+        data = self.app.store.get_data(guild.id)
         if data is None:
             logger.warning(f"uncached guild settings: {guild.id}")
             component = self.app.bot.rest.build_action_row()
@@ -360,11 +359,7 @@ class ChallengeExtension:
                     ),
                     datetime.utcnow(),
                 )
-                http = self.app.extensions.get("clend.http", None)
-                if http is None:
-                    logger.warning("tried to log http extension is not loaded")
-                else:
-                    http.queue.async_q.put_nowait(log)
+                self.app.store.put_http(log)
 
         timed.checkpoint("done")
         timed.close()
@@ -400,7 +395,7 @@ class ChallengeExtension:
             logger.warning(f"uncached guild: {int(guild_id)}")
             return
 
-        data = self.get_data(guild.id)
+        data = self.app.store.get_data(guild.id)
         if data is None:
             logger.warning(f"uncached guild settings: {guild.id}")
             return
@@ -459,11 +454,7 @@ class ChallengeExtension:
                 ),
                 datetime.utcnow(),
             )
-            http = self.app.extensions.get("clend.http", None)
-            if http is None:
-                logger.warning("tried to log http extension is not loaded")
-            else:
-                http.queue.async_q.put_nowait(log)
+            self.app.store.put_http(log)
 
     def get_message(self, guild: hikari.GatewayGuild) -> dict:
         t = lambda s: translate(  # noqa E731
@@ -480,7 +471,7 @@ class ChallengeExtension:
         title = t("title")
         description = t("description")
 
-        data = self.get_data(guild.id)
+        data = self.app.store.get_data(guild.id)
         if (
             data is not None
             and data.entitlements.plan >= data.entitlements.branding_embed
@@ -524,11 +515,3 @@ class ChallengeExtension:
 
     async def migrate_embed(self, message: hikari.Message, guild: hikari.GatewayGuild):
         await message.edit(**self.get_message(guild))
-
-    def get_data(self, guild_id: int) -> GuildData | None:
-        conf = self.app.extensions.get("clend.conf", None)
-        if conf is None:
-            logger.warning("unable to find clend.conf extension")
-            return None
-
-        return conf.get_data(guild_id)

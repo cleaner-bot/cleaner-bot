@@ -15,7 +15,6 @@ from hikari.internal.time import utc_datetime
 
 from ..app import TheCleanerApp
 from ..shared.channel_perms import permissions_for
-from ..shared.data import GuildData
 from ..shared.event import (
     IActionAnnouncement,
     IActionChallenge,
@@ -409,7 +408,7 @@ class HTTPService:
                             value=f"{sticker.name} ({sticker.id})",
                         )
 
-                data = self.get_data(guild_id)
+                data = self.app.store.get_data(guild_id)
                 channel_id = fallback_id = 963043115730608188
 
                 can_send_embed = True
@@ -549,14 +548,6 @@ class HTTPService:
 
             for coro in futures:
                 asyncio.create_task(ignore_not_found_exception_wrapper(coro))
-
-    def get_data(self, guild_id: int) -> GuildData | None:
-        conf = self.app.extensions.get("clend.conf", None)
-        if conf is None:
-            logger.warning("unable to find clend.conf extension")
-            return None
-
-        return conf.get_data(guild_id)
 
     def put_in_metrics_queue(self, item):
         metrics = self.app.extensions.get("clend.metrics")

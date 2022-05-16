@@ -15,7 +15,6 @@ from hikari.internal.time import utc_datetime
 from ..app import TheCleanerApp
 from ..shared.channel_perms import permissions_for
 from ..shared.custom_events import SlowTimerEvent
-from ..shared.data import GuildData
 from ..shared.event import ILog
 from ..shared.id import time_passed_since
 
@@ -167,7 +166,7 @@ class ReportExtension:
 
         assert interaction.guild_id is not None
 
-        data = self.get_data(interaction.guild_id)
+        data = self.app.store.get_data(interaction.guild_id)
         assert data is not None
 
         value = await database.incr(f"user:{interaction.user.id}:report:slowmode")
@@ -349,7 +348,7 @@ class ReportExtension:
             )
             return None, None
 
-        data = self.get_data(interaction.guild_id)
+        data = self.app.store.get_data(interaction.guild_id)
         if data is None:
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
@@ -495,11 +494,7 @@ class ReportExtension:
             interaction.id.created_at,
             Message("report_message_action_reason"),
         )
-        http = self.app.extensions.get("clend.http", None)
-        if http is None:
-            logger.warning("tried to log http extension is not loaded")
-        else:
-            http.queue.async_q.put_nowait(log)
+        self.app.store.put_http(log)
 
     async def handle_report_message_action_delete(
         self,
@@ -802,11 +797,3 @@ class ReportExtension:
 
     async def on_slow_timer(self, event: SlowTimerEvent):
         self.message_cache.evict()
-
-    def get_data(self, guild_id: int) -> GuildData | None:
-        conf = self.app.extensions.get("clend.conf", None)
-        if conf is None:
-            logger.warning("unable to find clend.conf extension")
-            return None
-
-        return conf.get_data(guild_id)

@@ -14,7 +14,7 @@ from .guild import CleanerGuild
 
 WORKERS = 4
 ComponentListener = typing.Callable[
-    [hikari.Event, CleanerGuild], list[IAction | None] | None
+    [hikari.Event, CleanerGuild], list[IAction] | None
 ]
 logger = logging.getLogger(__name__)
 
@@ -143,10 +143,5 @@ class GuildWorker:
             else:
                 return
 
-        http = self.ext.app.extensions.get("clend.http", None)
-        if http is None:
-            logger.warning("action required but http extension is not loaded")
-        else:
-            for item in data:
-                if item is not None:
-                    http.queue.sync_q.put(item)
+        if data:
+            self.ext.app.store.put_http(*data, thread_safe=True)

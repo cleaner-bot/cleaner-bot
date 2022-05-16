@@ -6,7 +6,6 @@ import hikari
 import msgpack  # type: ignore
 
 from ..app import TheCleanerApp
-from ..shared.data import GuildData
 from ..shared.id import time_passed_since
 
 logger = logging.getLogger(__name__)
@@ -128,7 +127,7 @@ class AnalyticsExtension:
 
             elif parts[1] == "remove":
                 database = self.app.database
-                data = self.get_data(int(parts[2]))
+                data = self.app.store.get_data(int(parts[2]))
                 await database.hset(
                     f"guild:{parts[2]}:entitlements",
                     {"suspended": msgpack.packb(False)},
@@ -180,7 +179,7 @@ class AnalyticsExtension:
 
     async def suspend(self, guild: hikari.GatewayGuild, reason: str):
         database = self.app.database
-        data = self.get_data(guild.id)
+        data = self.app.store.get_data(guild.id)
         if data is None or data.entitlements.suspended:
             return
 
@@ -229,11 +228,3 @@ class AnalyticsExtension:
 
         channel = self.app.bot.cache.get_guild_channel(channel_id)
         return channel  # type: ignore
-
-    def get_data(self, guild_id: int) -> GuildData | None:
-        conf = self.app.extensions.get("clend.conf", None)
-        if conf is None:
-            logger.warning("unable to find clend.conf extension")
-            return None
-
-        return conf.get_data(guild_id)
