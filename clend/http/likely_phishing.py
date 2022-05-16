@@ -34,6 +34,15 @@ async def report_phishing(ev: IActionDelete, app: TheCleanerApp):
         icon=ev.user.make_avatar_url(ext="webp", size=64),
     )
 
+    if ev.message.embeds:
+        embed = ev.message.embeds[0]
+        if embed.title:
+            embed.add_field("Title", embed.title)
+        if embed.description:
+            embed.add_field("Description", embed.description)
+        if embed.thumbnail:
+            embed.add_field("Thumbnail", embed.thumbnail.url)
+
     embed.add_field("Channel", f"<#{ev.channel_id}>")
 
     guild = app.bot.cache.get_guild(ev.guild_id)
