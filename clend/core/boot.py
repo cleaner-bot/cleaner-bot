@@ -73,9 +73,9 @@ class BootExtension:
         return False
 
     async def on_started(self, event: hikari.StartedEvent):
-        self.load_dev()
+        self.load_entry()
 
-    def load_dev(self):
+    def load_entry(self):
         before = set(sys.modules.keys())
         self.app.load_extension(ENTRY_EXTENSION)
         after = set(sys.modules.keys())
@@ -129,17 +129,17 @@ class BootExtension:
                 del sys.modules[module]
                 mod_removed += 1
 
-        load_dev_error = False
+        load_entry_error = False
         try:
-            self.load_dev()
+            self.load_entry()
         except Exception as e:
-            load_dev_error = True
+            load_entry_error = True
             logger.error(f"Error while loading {ENTRY_EXTENSION}", exc_info=e)
 
         await msg.edit(
             f"Unloaded {ext_unloaded} extensions ({ext_errors} errors)\n"
             f"Removed {mod_removed} modules from sys.modules.\n"
-            f"Error while loading {ENTRY_EXTENSION}: {load_dev_error}"
+            f"Error while loading {ENTRY_EXTENSION}: {load_entry_error}"
         )
 
 
