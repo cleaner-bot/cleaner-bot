@@ -13,9 +13,7 @@ from ..shared.timing import Timed
 from .guild import CleanerGuild
 
 WORKERS = 4
-ComponentListener = typing.Callable[
-    [hikari.Event, CleanerGuild], list[IAction] | None
-]
+ComponentListener = typing.Callable[[hikari.Event, CleanerGuild], list[IAction] | None]
 logger = logging.getLogger(__name__)
 
 
