@@ -123,7 +123,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
         event.member is None
         or data is None
         or not data.config.workers_enabled
-        or not data.entitlements.workers
+        or data.entitlements.plan < data.entitlements.workers
         or is_moderator(cguild, event.member)
     ):
         return
