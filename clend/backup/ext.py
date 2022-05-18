@@ -7,6 +7,7 @@ import hikari
 import msgpack  # type: ignore
 
 from ..app import TheCleanerApp
+from ..shared.protect import protect, protected_call
 from ..shared.sub import Message, listen
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ class BackupExtension:
         self.listeners = []
 
     def on_load(self):
-        self.task = asyncio.ensure_future(self.backup_task())
+        self.task = asyncio.ensure_future(protect(self.backup_task))
 
     def on_unload(self):
         if self.task is not None:
@@ -36,10 +37,12 @@ class BackupExtension:
                 continue
 
             guild_id, snapshot_id = event.data.decode().split(":")
-            if event.channel.endswith("apply-snapshot"):
-                asyncio.create_task(self.apply_snapshot(guild_id, snapshot_id))
-            else:
-                asyncio.create_task(self.create_snapshot(guild_id, snapshot_id))
+            coro = (
+                self.apply_snapshot
+                if event.channel.endswith("apply-snapshot")
+                else self.create_snapshot
+            )
+            asyncio.create_task(protected_call(coro(guild_id, snapshot_id)))
 
     async def apply_snapshot(self, guild_id: str, snapshot_id: str):
         pass
