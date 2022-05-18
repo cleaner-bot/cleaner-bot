@@ -39,7 +39,7 @@ class BackupExtension:
             guild_id, snapshot_id = event.data.decode().split(":")
             coro = (
                 self.apply_snapshot
-                if event.channel.endswith("apply-snapshot")
+                if event.channel.endswith(b"apply-snapshot")
                 else self.create_snapshot
             )
             asyncio.create_task(protected_call(coro(guild_id, snapshot_id)))
