@@ -23,6 +23,13 @@ MODULES_TO_RELOAD = (
     "pydantic",
     "downdoom",
     "aiofiles",
+    "anyio",
+    "lupa",
+    "httpx",
+    "httpcore",
+    "h11",
+    "rfc3987",
+    "cython",
 )
 MODULES_TO_NOT_RELOAD = (
     "msgpack",
