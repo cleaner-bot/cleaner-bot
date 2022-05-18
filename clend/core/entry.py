@@ -26,6 +26,7 @@ EXTENSIONS = [
     "clend.downdoom",
     "clend.traffic",
     "clend.integrations",
+    "clend.backup",
 ]
 
 
