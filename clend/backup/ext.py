@@ -87,8 +87,10 @@ class BackupExtension:
                     "parent_id": channel.parent_id,
                     "name": channel.name,
                     "topic": getattr(channel, "topic", None),
-                    "rate_limit_per_user": getattr(
-                        channel, "rate_limit_per_user", None
+                    "rate_limit_per_user": (
+                        channel.rate_limit_per_user.total_seconds()
+                        if isinstance(channel, hikari.GuildTextChannel)
+                        else None
                     ),
                     "bitrate": getattr(channel, "bitrate", None),
                     "region": getattr(channel, "region", None),
