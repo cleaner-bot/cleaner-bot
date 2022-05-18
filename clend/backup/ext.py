@@ -116,5 +116,5 @@ class BackupExtension:
         await self.app.database.hset(
             f"guild:{guild_id}:backup:snapshots", {snapshot_id: msgpack.packb(data)}
         )
-        await self.app.database.publish(f"pubsub:backup:snapshot:{snapshot_id}", "")
+        await self.app.database.publish(f"pubsub:backup:snapshot:{snapshot_id}", "1")
         logger.info(f"created snapshot {snapshot_id} for {guild_id}")
