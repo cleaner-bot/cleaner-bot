@@ -37,11 +37,11 @@ async def report_phishing(ev: IActionDelete, app: TheCleanerApp):
     if ev.message.embeds:
         embed = ev.message.embeds[0]
         if embed.title:
-            embed.add_field("Title", embed.title)
+            embed.add_field("Embed Title", embed.title)
         if embed.description:
-            embed.add_field("Description", embed.description)
+            embed.add_field("Embed Description", embed.description)
         if embed.thumbnail:
-            embed.add_field("Thumbnail", embed.thumbnail.url)
+            embed.add_field("Embed Thumbnail", embed.thumbnail.url)
 
     embed.add_field("Channel", f"<#{ev.channel_id}>")
 
