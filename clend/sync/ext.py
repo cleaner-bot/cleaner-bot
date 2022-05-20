@@ -29,6 +29,7 @@ class SyncExtension:
             (hikari.GuildChannelUpdateEvent, self.on_update_channel),
             (hikari.GuildChannelDeleteEvent, self.on_update_channel),
             (hikari.MemberUpdateEvent, self.on_member_update),
+            (hikari.GuildUpdateEvent, self.on_guild_update),
         ]
         self.task = None
 
@@ -48,11 +49,16 @@ class SyncExtension:
             await self.new_guild(guild)
 
     async def new_guild(self, guild: hikari.GatewayGuild):
-        database = self.app.database
-        await database.hset(f"guild:{guild.id}:sync", {"added": 1})
-        await self.sync_myself(guild)
-        await self.sync_roles(guild)
-        await self.sync_channels(guild)
+        await self.sync(
+            guild.id,
+            {
+                "added": 1,
+                "guild": self.sync_guild(guild),
+                "myself": self.sync_myself(guild),
+                "roles": self.sync_roles(guild),
+                "channels": self.sync_channels(guild),
+            },
+        )
 
     async def on_destroy_guild(self, event: hikari.GuildLeaveEvent):
         database = self.app.database
@@ -62,14 +68,24 @@ class SyncExtension:
         # TODO: add role.get_guild() to hikari
         guild = self.app.bot.cache.get_guild(event.guild_id)
         if guild is not None:
-            await self.sync_roles(guild)
-            await self.sync_channels(guild)
-            await self.sync_myself(guild)
+            await self.sync(
+                guild.id,
+                {
+                    "myself": self.sync_myself(guild),
+                    "roles": self.sync_roles(guild),
+                    "channels": self.sync_channels(guild),
+                },
+            )
 
     async def on_update_channel(self, event: hikari.GuildChannelEvent):
         guild = event.get_guild()
         if guild is not None:
-            await self.sync_channels(guild)
+            await self.sync(
+                guild.id,
+                {
+                    "channels": self.sync_channels(guild),
+                },
+            )
 
     async def on_member_update(self, event: hikari.MemberUpdateEvent):
         me = self.app.bot.get_me()
@@ -77,23 +93,36 @@ class SyncExtension:
             return
         guild = event.get_guild()
         if guild is not None:
-            await self.sync_myself(guild)
-            await self.sync_roles(guild)
-            await self.sync_channels(guild)
+            await self.sync(
+                guild.id,
+                {
+                    "myself": self.sync_myself(guild),
+                    "roles": self.sync_roles(guild),
+                    "channels": self.sync_channels(guild),
+                },
+            )
 
-    async def sync_myself(self, guild: hikari.GatewayGuild):
+    async def on_guild_update(self, event: hikari.GuildUpdateEvent):
+        await self.sync(
+            event.guild_id,
+            {
+                "guild": self.sync_guild(event.guild),
+            },
+        )
+
+    def sync_guild(self, guild: hikari.GatewayGuild):
+        return {"owner_id": guild.owner_id}
+
+    def sync_myself(self, guild: hikari.GatewayGuild):
         perms = hikari.Permissions.NONE
         me = guild.get_my_member()
         if me is not None:
             for role in me.get_roles():
                 perms |= role.permissions
 
-        data = {"permissions": {k.name: True for k in perms}}
+        return {"permissions": {k.name: True for k in perms}}
 
-        database = self.app.database
-        await database.hset(f"guild:{guild.id}:sync", {"myself": msgpack.packb(data)})
-
-    async def sync_roles(self, guild: hikari.GatewayGuild):
+    def sync_roles(self, guild: hikari.GatewayGuild):
         me = guild.get_my_member()
         top_role_position = 0
         if me is not None:
@@ -101,27 +130,26 @@ class SyncExtension:
             if top_role is not None:
                 top_role_position = top_role.position
 
-        data = [
+        return [
             {
                 "name": role.name,
                 "id": str(role.id),
-                "can_control": not role.is_managed
-                and top_role_position > role.position > 0
-                and role.permissions & DANGEROUS_PERMISSIONS == 0,
+                "can_control": (
+                    not role.is_managed
+                    and top_role_position > role.position > 0
+                    and role.permissions & DANGEROUS_PERMISSIONS == 0
+                ),
                 "is_managed": role.is_managed or role.position == 0,
             }
             for role in guild.get_roles().values()
         ]
 
-        database = self.app.database
-        await database.hset(f"guild:{guild.id}:sync", {"roles": msgpack.packb(data)})
-
-    async def sync_channels(self, guild: hikari.GatewayGuild):
+    def sync_channels(self, guild: hikari.GatewayGuild):
         me = guild.get_my_member()
         if me is None:
             return
 
-        data = [
+        return [
             {
                 "name": channel.name,
                 "id": str(channel.id),
@@ -131,5 +159,9 @@ class SyncExtension:
             if isinstance(channel, hikari.TextableGuildChannel)
         ]
 
+    async def sync(self, guild_id: int, data: dict[str, typing.Any]):
         database = self.app.database
-        await database.hset(f"guild:{guild.id}:sync", {"channels": msgpack.packb(data)})
+        await database.hset(
+            f"guild:{guild_id}:sync",
+            {key: msgpack.packb(value) for key, value in data.items()},
+        )
