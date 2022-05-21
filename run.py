@@ -14,6 +14,7 @@ def _load_secrets():
         "sentry/dsn",
         "discord/bot-token",
         "discord/client-id",
+        "redis/password",
         "topgg/api-token",
     )
     identity = Path("~/.cleaner/identity").expanduser().read_text()

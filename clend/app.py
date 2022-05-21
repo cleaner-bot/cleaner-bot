@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib
 import logging
+import os
 import typing
 
 import hikari
@@ -43,7 +44,12 @@ class TheCleanerApp:
         logging.getLogger("clend").setLevel(logging.DEBUG)
         # spammy with pretty much useless info
         logging.getLogger("clend.conf").setLevel(logging.INFO)
-        self.database = Redis()
+
+        redis_host = os.getenv("redis/host", "localhost")
+        redis_passwd = os.getenv("redis/password")
+        if redis_passwd is None:
+            raise RuntimeError("missing redis/password secret")
+        self.database = Redis.from_url(f"redis://{redis_passwd}:{redis_host}:6379")
 
         self.extensions = {}
         self.guild_has_members_cached = set()
