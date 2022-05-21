@@ -60,7 +60,7 @@ local function safe_call(fn, ...)
         error("reached cycle limit")
     end
     for _, v in pairs(result) do
-        if type(v) == "type" then
+        if type(v) == "table" then
             setmetatable(v, {})
         end
     end
@@ -296,86 +296,56 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
 
     actions: list[IGuildEvent] = []
     info = {"rule": "worker", "guild": event.guild_id}
-    for i in range(len(result)):
-        action = result[i + 1]
-        if not isinstance(action, str):
-            continue
-        name = action.split(":")[0]
-        reason = dangerous_content(action[len(name) + 1 :])
-        if name == "delete":
-            actions.append(
-                action_delete(
-                    event.member,
-                    event.message,
-                    reason=Message(
-                        "components_worker_reason", {"reason": reason[:500]}
-                    ),
-                    info=info,
-                )
-            )
-            continue
-        elif name == "block":
-            actions.append(
-                action_challenge(
-                    cguild,
-                    event.member,
-                    reason=Message(
-                        "components_worker_reason", {"reason": reason[:500]}
-                    ),
-                    info=info,
-                    block=True,
-                )
-            )
-            continue
-        elif name == "challenge":
-            actions.append(
-                action_challenge(
-                    cguild,
-                    event.member,
-                    reason=Message(
-                        "components_worker_reason", {"reason": reason[:500]}
-                    ),
-                    info=info,
-                    block=False,
-                )
-            )
-            continue
-        elif name == "log":
-            actions.append(
-                ILog(
-                    event.guild_id,
-                    Message("components_worker_log", {"message": reason[:500]}),
-                    event.message_id.created_at,
-                )
-            )
-            continue
-        elif name == "announcement":
-            channel = event.get_channel()
-            raw_ttl = reason.split(":")[0]
-            if raw_ttl.isdigit():
-                ttl = int(raw_ttl)
-                reason = reason[len(raw_ttl) + 1 :]
 
-                if channel is not None:
-                    actions.append(
-                        announcement(
-                            channel,
-                            Message(
-                                "components_worker_announcement",
-                                {"message": reason[:1800]},
-                            ),
-                            ttl,
-                        )
-                    )
-                continue
+    reason = dangerous_content(result.reason or "No reason specified.")[:500]
 
+    if result.delete:
+        actions.append(
+            action_delete(
+                event.member,
+                event.message,
+                reason=Message("components_worker_reason", {"reason": reason}),
+                info=info,
+            )
+        )
+
+    if result.challenge or result.block:
+        actions.append(
+            action_challenge(
+                cguild,
+                event.member,
+                reason=Message("components_worker_reason", {"reason": reason}),
+                info=info,
+                block=result.block,
+            )
+        )
+
+    if result.log:
         actions.append(
             ILog(
                 event.guild_id,
-                Message("components_worker_unknownaction", {"action": action[:500]}),
+                Message(
+                    "components_worker_log",
+                    {"message": dangerous_content(str(result.log))[:500]},
+                ),
                 event.message_id.created_at,
             )
         )
+
+    if result.announcement:
+        channel = event.get_channel()
+
+        if channel is not None:
+            actions.append(
+                announcement(
+                    channel,
+                    Message(
+                        "components_worker_announcement",
+                        {"message": dangerous_content(str(result.announcement))[:1800]},
+                    ),
+                    int(result.announcement_ttl or 0),
+                )
+            )
 
     return actions
 
