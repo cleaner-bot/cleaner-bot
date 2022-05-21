@@ -16,7 +16,7 @@ class DowndoomExtension:
         self.app = app
         self.listeners = []
 
-        host = os.getenv("DOWNDOOM_HOST")
+        host = os.getenv("downdoom/host")
         if host is None:
             self.client = None
         else:
