@@ -44,6 +44,11 @@ local error = error
 local setmetatable = setmetatable
 local unpack = unpack or table.unpack
 local script, cycle_limit
+local load = load
+_G.load = function(chunk, chunkname, mode, env)
+    if mode ~= "t" then return nil, "mode must be 't'" end
+    return load(chunk, chunkname, "t", env)
+end
 local function safe_call(fn, ...)
     if cycle_limit == nil then
         error("no cycle limit, call set_cycle_limit")
