@@ -28,13 +28,15 @@ MODULES_TO_RELOAD = (
     "httpx",
     "httpcore",
     "h11",
-    "rfc3987",
-    "cython",
+    "rfc3986",
+    "Cython",
 )
 MODULES_TO_NOT_RELOAD = (
     "msgpack",
     "coredis",
+    "sniffio",
     "typing_extensions",
+    "clend.app",
 )
 
 
@@ -54,7 +56,7 @@ class BootExtension:
         ]
 
     def should_reload_module(self, module: str):
-        if module == "clend" or module == "clend.app" or module == __name__:
+        if module == "clend" or module == "clend.core" or module == __name__:
             return False
         elif module.startswith("cleaner_"):
             return True
