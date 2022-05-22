@@ -49,7 +49,7 @@ class TheCleanerApp:
         redis_passwd = os.getenv("redis/password")
         if redis_passwd is None:
             raise RuntimeError("missing redis/password secret")
-        self.database = Redis.from_url(f"redis://{redis_passwd}:{redis_host}:6379")
+        self.database = Redis.from_url(f"redis://{redis_passwd}@{redis_host}:6379")
 
         self.extensions = {}
         self.guild_has_members_cached = set()
