@@ -6,7 +6,7 @@ sentry_sdk>=1.5,<1.6
 janus>=1.0,<1.1
 msgpack>=1,<1.1
 aiofiles>=0.8,<0.9
-httpx>=0.16,<0.23
+httpx>=0.16,<0.24
 lupa@git+https://github.com/le0developer/lupa.git@feat/max-memory
 hikari@git+https://github.com/cleaner-bot/hikari.git
 downdoom@git+https://github.com/cleaner-bot/downdoom.git
