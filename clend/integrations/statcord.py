@@ -30,10 +30,10 @@ class StatcordIntegration:
         bot_id = str(me.id)
         event = self.prepare_event()
 
-        json = {"id": bot_id, "key": self.statcord_token, **event}
-
-        logger.debug(f"data: {json}")
-        res = await self.app.store.proxy.post("api.statcord.com/v3/stats", json=json)
+        res = await self.app.store.proxy.post(
+            "api.statcord.com/v3/stats",
+            json={"id": bot_id, "key": self.statcord_token, **event},
+        )
         res.raise_for_status()
 
         logger.debug(f"published stats to statcord: {event}")
@@ -50,7 +50,7 @@ class StatcordIntegration:
             "users": str(user_count),
             "active": [],
             "commands": "0",
-            "popular": "0",
+            "popular": [],
             "memactive": "0",
             "memload": "0",
             "cpuload": "0",
