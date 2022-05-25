@@ -48,6 +48,7 @@ class StatcordIntegration:
         return {
             "servers": str(guild_count),
             "users": str(user_count),
+            "active": [],
             "commands": "0",
             "popular": "0",
             "memactive": "0",
