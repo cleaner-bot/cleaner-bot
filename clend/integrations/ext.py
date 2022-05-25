@@ -40,8 +40,8 @@ class IntegrationExtension:
         if self.topgg is not None:
             self.tasks.append(asyncio.create_task(protect(self.topgg.vote_task)))
 
-        # if self.statcord is not None:
-        #     self.tasks.append(asyncio.create_task(protect(self.statcord.update_task)))
+        if self.statcord is not None:
+            self.tasks.append(asyncio.create_task(protect(self.statcord.update_task)))
 
         asyncio.create_task(protected_call(self.update_information()))
 

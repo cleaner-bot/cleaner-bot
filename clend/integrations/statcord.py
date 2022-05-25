@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from httpx import AsyncClient
+from httpx import HTTPStatusError
 
 from ..app import TheCleanerApp
 
@@ -9,15 +9,16 @@ logger = logging.getLogger(__name__)
 
 
 class StatcordIntegration:
-    client: AsyncClient
-
     def __init__(self, app: TheCleanerApp, statcord_token: str) -> None:
         self.app = app
         self.statcord_token = statcord_token
 
     async def update_task(self):
         while True:
-            await self.update_statcord()
+            try:
+                await self.update_statcord()
+            except HTTPStatusError as e:
+                logger.exception(e.response.text, exc_info=e)
             await asyncio.sleep(60)
 
     async def update_statcord(self):
