@@ -1,7 +1,4 @@
-import asyncio
 import logging
-
-from httpx import HTTPStatusError
 
 from ..app import TheCleanerApp
 
@@ -13,22 +10,14 @@ class StatcordIntegration:
         self.app = app
         self.statcord_token = statcord_token
 
-    async def update_task(self):
-        while True:
-            try:
-                await self.update_statcord()
-            except HTTPStatusError as e:
-                logger.exception(e.response.text, exc_info=e)
-            await asyncio.sleep(60)
-
-    async def update_statcord(self):
+    async def update_statcord(self, guild_count: int, user_count: int):
         me = self.app.bot.cache.get_me()
         if me is None:
             # dont bother handling because this should NEVER happen
             raise RuntimeError("no bot id available")
 
         bot_id = str(me.id)
-        event = self.prepare_event()
+        event = self.prepare_event(guild_count, user_count)
 
         res = await self.app.store.proxy.post(
             "api.statcord.com/v3/stats",
@@ -38,13 +27,7 @@ class StatcordIntegration:
 
         logger.debug(f"published stats to statcord: {event}")
 
-    def prepare_event(self) -> dict[str, str]:
-        guild_count = len(self.app.bot.cache.get_guilds_view())
-        user_count = sum(
-            guild.member_count  # type: ignore
-            for guild in self.app.bot.cache.get_guilds_view().values()
-        )
-
+    def prepare_event(self, guild_count: int, user_count: int) -> dict[str, str | list]:
         return {
             "servers": str(guild_count),
             "users": str(user_count),

@@ -40,9 +40,6 @@ class IntegrationExtension:
         if self.topgg is not None:
             self.tasks.append(asyncio.create_task(protect(self.topgg.vote_task)))
 
-        if self.statcord is not None:
-            self.tasks.append(asyncio.create_task(protect(self.statcord.update_task)))
-
         asyncio.create_task(protected_call(self.update_information()))
 
     def on_unload(self):
@@ -66,3 +63,6 @@ class IntegrationExtension:
 
         if self.topgg is not None:
             await self.topgg.update_topgg(guild_count)
+
+        if self.statcord is not None:
+            await self.statcord.update_statcord(guild_count, user_count)
