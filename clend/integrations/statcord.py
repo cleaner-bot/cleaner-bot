@@ -45,4 +45,13 @@ class StatcordIntegration:
             for guild in self.app.bot.cache.get_guilds_view().values()
         )
 
-        return {"servers": str(guild_count), "users": str(user_count)}
+        return {
+            "servers": str(guild_count),
+            "users": str(user_count),
+            "commands": "0",
+            "popular": "0",
+            "memactive": "0",
+            "memload": "0",
+            "cpuload": "0",
+            "bandwidth": "0",
+        }
