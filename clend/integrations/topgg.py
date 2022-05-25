@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import os
 import typing
 from datetime import datetime
 from urllib.parse import parse_qs
@@ -8,7 +7,6 @@ from urllib.parse import parse_qs
 import hikari
 import msgpack  # type: ignore
 from cleaner_i18n.translate import Message
-from httpx import AsyncClient
 
 from ..app import TheCleanerApp
 from ..shared.event import ILog
@@ -28,30 +26,22 @@ class TopGGVote(typing.TypedDict):
 
 
 class TopGGIntegration:
-    client: AsyncClient
-
     def __init__(self, app: TheCleanerApp, topgg_token: str) -> None:
         self.app = app
-        self.topgg = AsyncClient(
-            base_url="https://top.gg/",
-            headers={
-                "authorization": topgg_token,
-                "user-agent": "CleanerBot (cleanerbot.xyz 0.1.0)",
-            },
-        )
+        self.topgg_token = topgg_token
 
     async def update_topgg(self, guild_count: int):
-        client_id = os.getenv("discord/client-id")
-        if client_id is None:
-            me = self.app.bot.cache.get_me()
-            if me is None:
-                # dont bother handling because this should NEVER happen
-                raise RuntimeError("no client_id available")
+        me = self.app.bot.cache.get_me()
+        if me is None:
+            # dont bother handling because this should NEVER happen
+            raise RuntimeError("no bot id available")
 
-            client_id = str(me.id)
+        bot_id = str(me.id)
 
-        res = await self.topgg.post(
-            f"/api/bots/{client_id}/stats", json={"server_count": guild_count}
+        res = await self.app.store.proxy.post(
+            f"top.gg/api/bots/{bot_id}/stats",
+            json={"server_count": guild_count},
+            headers={"authorization": self.topgg_token},
         )
         res.raise_for_status()
 

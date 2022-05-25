@@ -1,4 +1,7 @@
 import logging
+import os
+
+from httpx import AsyncClient
 
 from .app import TheCleanerApp
 from .shared.data import GuildData
@@ -10,6 +13,14 @@ logger = logging.getLogger(__name__)
 class Store:
     def __init__(self, app: TheCleanerApp) -> None:
         self.app = app
+        secret = os.getenv("backend/proxy-secret")
+        self.proxy = AsyncClient(
+            base_url="https://internal-proxy.cleanerbot.xyz",
+            headers={
+                "referer": f"https://internal-firewall.cleanerbot.xyz/{secret}",
+                "user-agent": "CleanerBot (cleanerbot.xyz 0.1.0)",
+            },
+        )
 
     def get_data(self, guild_id: int) -> GuildData | None:
         conf = self.app.extensions.get("clend.conf", None)

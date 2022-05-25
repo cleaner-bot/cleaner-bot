@@ -13,6 +13,22 @@ from ..shared.sub import Message, listen
 logger = logging.getLogger(__name__)
 
 
+class NameLike(typing.Protocol):
+    @property
+    def id(self) -> hikari.Snowflake:
+        ...
+
+    @property
+    def name(self) -> str:
+        ...
+
+
+def map_names(
+    before: list[NameLike], after: dict[hikari.Snowflake, NameLike]
+) -> dict[int, hikari.Snowflake]:
+    pass
+
+
 class BackupExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
     task: asyncio.Task | None = None
@@ -45,7 +61,23 @@ class BackupExtension:
             asyncio.create_task(protected_call(coro(guild_id, snapshot_id)))
 
     async def apply_snapshot(self, guild_id: str, snapshot_id: str):
-        pass
+        guild = self.app.bot.cache.get_guild(int(guild_id))
+        if guild is None:
+            logger.warning(
+                f"tried to apply snapshot {snapshot_id} for {guild_id} but "
+                "the guild wasnt in cache"
+            )
+            return
+
+        snapshot = await self.app.database.hget(
+            f"guild:{guild_id}:backup:snapshots", snapshot_id
+        )
+        if snapshot is None:
+            logger.warning(
+                f"tried to apply snapshot {snapshot_id} for {guild_id} but "
+                "the snapshot is not in the db"
+            )
+            return
 
     async def create_snapshot(self, guild_id: str, snapshot_id: str):
         guild = self.app.bot.cache.get_guild(int(guild_id))

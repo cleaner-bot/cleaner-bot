@@ -7,6 +7,7 @@ import hikari
 
 from ..app import TheCleanerApp
 from ..shared.protect import protect, protected_call
+from .statcord import StatcordIntegration
 from .topgg import TopGGIntegration
 
 logger = logging.getLogger(__name__)
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 class IntegrationExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
     topgg: TopGGIntegration | None = None
+    statcord: StatcordIntegration | None = None
     tasks: list[asyncio.Task]
 
     def __init__(self, app: TheCleanerApp) -> None:
@@ -28,11 +30,18 @@ class IntegrationExtension:
         if topgg_token is not None:
             self.topgg = TopGGIntegration(app, topgg_token)
 
+        statcord_token = os.getenv("statcord/api-token")
+        if statcord_token is not None:
+            self.statcord = StatcordIntegration(app, statcord_token)
+
         self.tasks = []
 
     def on_load(self):
         if self.topgg is not None:
             self.tasks.append(asyncio.create_task(protect(self.topgg.vote_task)))
+
+        if self.statcord is not None:
+            self.tasks.append(asyncio.create_task(protect(self.statcord.update_task)))
 
         asyncio.create_task(protected_call(self.update_information()))
 
