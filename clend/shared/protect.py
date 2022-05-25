@@ -18,7 +18,7 @@ async def protect(coro, *args, **kwargs):
                 logger.warning(
                     "error occured within 100ms, sleeping 100ms before retrying"
                 )
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(1)
                 now = time.monotonic()
             last_failure = now
         else:
