@@ -13,9 +13,7 @@ from ..shared.sub import Message, listen
 logger = logging.getLogger(__name__)
 
 
-def name_diff(
-    snapshot: dict[int, str], after: dict[int, str]
-) -> dict[int, int]:
+def name_diff(snapshot: dict[int, str], after: dict[int, str]) -> dict[int, int]:
     result = {k: k for k in snapshot.keys() if k in after}
     deleted_channels = set(after.keys()) - set(snapshot.keys())
     name_map = {after[k]: k for k in deleted_channels}
@@ -70,28 +68,34 @@ class BackupExtension:
             )
             return
 
-        snapshot = await self.app.database.hget(
+        snapshot_raw = await self.app.database.hget(
             f"guild:{guild_id}:backup:snapshots", snapshot_id
         )
-        if snapshot is None:
+        if snapshot_raw is None:
             logger.warning(
                 f"tried to apply snapshot {snapshot_id} for {guild_id} but "
                 "the snapshot is not in the db"
             )
             return
 
+        snapshot = msgpack.unpackb(snapshot_raw)
+
         from pprint import pprint
 
         pprint(
             name_diff(
                 {channel["id"]: channel["name"] for channel in snapshot["channels"]},
-                {channel.id: channel.name for channel in guild.get_channels()},
+                {
+                    channel.id: channel.name
+                    for channel in guild.get_channels().values()
+                    if channel.name is not None
+                },
             )
         )
         pprint(
             name_diff(
                 {role["id"]: role["name"] for role in snapshot["roles"]},
-                {role.id: role.name for role in guild.get_roles()},
+                {role.id: role.name for role in guild.get_roles().values()},
             )
         )
 
