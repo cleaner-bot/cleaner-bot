@@ -9,6 +9,7 @@ import msgpack  # type: ignore
 from ..app import TheCleanerApp
 from ..shared.protect import protect, protected_call
 from ..shared.sub import Message, listen
+from .types import Snapshot, SnapshotChannel
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +79,7 @@ class BackupExtension:
             )
             return
 
-        snapshot = msgpack.unpackb(snapshot_raw)
+        snapshot: Snapshot = msgpack.unpackb(snapshot_raw)
 
         logger.info(f"applying snapshot {snapshot_id} in {guild_id}")
 
@@ -127,11 +128,11 @@ class BackupExtension:
             )
             return
 
-        data = {
+        data: Snapshot = {
             "guild": {
                 "name": guild.name,
                 "afk_channel_id": guild.afk_channel_id,
-                "afk_timeout": guild.afk_timeout.total_seconds(),
+                "afk_timeout": int(guild.afk_timeout.total_seconds()),
                 "system_channel_id": guild.system_channel_id,
                 "system_channel_flags": guild.system_channel_flags,
                 "public_updates_channel_id": guild.public_updates_channel_id,
@@ -159,7 +160,7 @@ class BackupExtension:
                     "name": channel.name,
                     "topic": getattr(channel, "topic", None),
                     "rate_limit_per_user": (
-                        channel.rate_limit_per_user.total_seconds()
+                        int(channel.rate_limit_per_user.total_seconds())
                         if isinstance(channel, hikari.GuildTextChannel)
                         else None
                     ),
@@ -169,6 +170,7 @@ class BackupExtension:
                     "video_quality_mode": getattr(channel, "video_quality_mode", None),
                 }
                 for channel in guild.get_channels().values()
+                if channel.name is not None
             ],
             "roles": [
                 {
