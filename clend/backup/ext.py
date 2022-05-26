@@ -13,20 +13,21 @@ from ..shared.sub import Message, listen
 logger = logging.getLogger(__name__)
 
 
-class NameLike(typing.Protocol):
-    @property
-    def id(self) -> hikari.Snowflake:
-        ...
+def name_diff(
+    snapshot: dict[int, str], after: dict[int, str]
+) -> dict[int, int]:
+    result = {k: k for k in snapshot.keys() if k in after}
+    deleted_channels = set(after.keys()) - set(snapshot.keys())
+    name_map = {after[k]: k for k in deleted_channels}
+    for k in deleted_channels:
+        name = snapshot[k]
+        if name in name_map:
+            result[k] = name_map[name]
+            del name_map[name]
+        else:
+            result[k] = 0
 
-    @property
-    def name(self) -> str:
-        ...
-
-
-def map_names(
-    before: list[NameLike], after: dict[hikari.Snowflake, NameLike]
-) -> dict[int, hikari.Snowflake]:
-    pass
+    return result
 
 
 class BackupExtension:
@@ -78,6 +79,21 @@ class BackupExtension:
                 "the snapshot is not in the db"
             )
             return
+
+        from pprint import pprint
+
+        pprint(
+            name_diff(
+                {channel["id"]: channel["name"] for channel in snapshot["channels"]},
+                {channel.id: channel.name for channel in guild.get_channels()},
+            )
+        )
+        pprint(
+            name_diff(
+                {role["id"]: role["name"] for role in snapshot["roles"]},
+                {role.id: role.name for role in guild.get_roles()},
+            )
+        )
 
     async def create_snapshot(self, guild_id: str, snapshot_id: str):
         guild = self.app.bot.cache.get_guild(int(guild_id))
