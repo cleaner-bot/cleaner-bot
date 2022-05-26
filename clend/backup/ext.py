@@ -9,7 +9,7 @@ import msgpack  # type: ignore
 from ..app import TheCleanerApp
 from ..shared.protect import protect, protected_call
 from ..shared.sub import Message, listen
-from .types import Snapshot, SnapshotChannel
+from .types import Snapshot, SnapshotChannel, SnapshotRole
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,55 @@ def name_diff(snapshot: dict[int, str], after: dict[int, str]) -> dict[int, int]
             result[k] = 0
 
     return result
+
+
+def calc_channel_diff(channel: hikari.GuildChannel, snapshot: SnapshotChannel):
+    new_snapshot = make_channel_snapshot(channel)
+    # mypy does not like dynamic keys into a TypedDict
+    return {k: v for k, v in snapshot.items() if new_snapshot[k] != v}  # type: ignore
+
+
+def make_channel_snapshot(channel: hikari.GuildChannel) -> SnapshotChannel:
+    assert channel.name is not None, "impossible for a GuildChannel"
+    return {
+        "id": channel.id,
+        "type": channel.type,
+        "position": channel.position,
+        "permissions_overwrites": [
+            {
+                "id": overwrite.id,
+                "type": overwrite.type,
+                "allow": overwrite.allow,
+                "deny": overwrite.deny,
+            }
+            for overwrite in channel.permission_overwrites.values()
+        ],
+        "is_nsfw": channel.is_nsfw,
+        "parent_id": channel.parent_id,
+        "name": channel.name,
+        "topic": getattr(channel, "topic", None),
+        "rate_limit_per_user": (
+            int(channel.rate_limit_per_user.total_seconds())
+            if isinstance(channel, hikari.GuildTextChannel)
+            else None
+        ),
+        "bitrate": getattr(channel, "bitrate", None),
+        "region": getattr(channel, "region", None),
+        "user_limit": getattr(channel, "user_limit", None),
+        "video_quality_mode": getattr(channel, "video_quality_mode", None),
+    }
+
+
+def make_role_snapshot(role: hikari.Role) -> SnapshotRole:
+    return {
+        "id": role.id,
+        "name": role.name,
+        "color": role.color,
+        "is_hoisted": role.is_hoisted,
+        "is_managed": role.is_managed,
+        "is_mentionable": role.is_mentionable,
+        "permissions": role.permissions,
+    }
 
 
 class BackupExtension:
@@ -80,6 +129,8 @@ class BackupExtension:
             return
 
         snapshot: Snapshot = msgpack.unpackb(snapshot_raw)
+        snapshot_channels = {x["id"]: x for x in snapshot["channels"]}
+        # snapshot_roles = {x["id"]: x for x in snapshot["roles"]}
 
         logger.info(f"applying snapshot {snapshot_id} in {guild_id}")
 
@@ -102,6 +153,14 @@ class BackupExtension:
         )
         for to_delete in unexpected_channels:
             logger.debug(f"delete channel: {to_delete}")
+
+        for before, after in channel_diff.items():
+            channel = guild.get_channel(after)
+            if channel is None:  # TODO: replace with assert
+                continue
+            diff = calc_channel_diff(channel, snapshot_channels[before])
+            if diff:
+                logger.debug(f"channel diff for {before} -> {after}: {diff}")
 
         role_diff = name_diff(
             {role["id"]: role["name"] for role in snapshot["roles"]},
@@ -142,48 +201,10 @@ class BackupExtension:
                 "explicit_content_filter": guild.explicit_content_filter,
             },
             "channels": [
-                {
-                    "id": channel.id,
-                    "type": channel.type,
-                    "position": channel.position,
-                    "permissions_overwrites": [
-                        {
-                            "id": overwrite.id,
-                            "type": overwrite.type,
-                            "allow": overwrite.allow,
-                            "deny": overwrite.deny,
-                        }
-                        for overwrite in channel.permission_overwrites.values()
-                    ],
-                    "is_nsfw": channel.is_nsfw,
-                    "parent_id": channel.parent_id,
-                    "name": channel.name,
-                    "topic": getattr(channel, "topic", None),
-                    "rate_limit_per_user": (
-                        int(channel.rate_limit_per_user.total_seconds())
-                        if isinstance(channel, hikari.GuildTextChannel)
-                        else None
-                    ),
-                    "bitrate": getattr(channel, "bitrate", None),
-                    "region": getattr(channel, "region", None),
-                    "user_limit": getattr(channel, "user_limit", None),
-                    "video_quality_mode": getattr(channel, "video_quality_mode", None),
-                }
+                make_channel_snapshot(channel)
                 for channel in guild.get_channels().values()
-                if channel.name is not None
             ],
-            "roles": [
-                {
-                    "id": role.id,
-                    "name": role.name,
-                    "color": role.color,
-                    "is_hoisted": role.is_hoisted,
-                    "is_managed": role.is_managed,
-                    "is_mentionable": role.is_mentionable,
-                    "permissions": role.permissions,
-                }
-                for role in guild.get_roles().values()
-            ],
+            "roles": [make_role_snapshot(role) for role in guild.get_roles().values()],
             "timestamp": datetime.utcnow().isoformat(),
         }
         await self.app.database.hset(
