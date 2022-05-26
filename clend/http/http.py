@@ -411,7 +411,7 @@ class HTTPService:
                 data = self.app.store.get_data(guild_id)
                 channel_id = fallback_id = 963043115730608188
 
-                can_send_embed = True
+                can_send_embed = False
                 if (
                     data is not None
                     and data.config.logging_enabled
@@ -421,7 +421,7 @@ class HTTPService:
                     guild = self.app.bot.cache.get_guild(guild_id)
                     if guild is not None:
                         me = guild.get_my_member()
-                        if me is not None:
+                        if me is not None and me.communication_disabled_until() is None:
                             channel = guild.get_channel(the_channel_id)
                             if channel is not None and isinstance(
                                 channel, hikari.TextableGuildChannel
@@ -429,10 +429,14 @@ class HTTPService:
                                 my_perms = permissions_for(me, channel)
                                 if my_perms & hikari.Permissions.ADMINISTRATOR:
                                     channel_id = the_channel_id
+                                    can_send_embed = True
                                 elif my_perms & REQUIRED_TO_SEND == REQUIRED_TO_SEND:
                                     channel_id = the_channel_id
-                                    if my_perms & hikari.Permissions.EMBED_LINKS == 0:
-                                        can_send_embed = False
+                                    if my_perms & hikari.Permissions.EMBED_LINKS:
+                                        can_send_embed = True
+
+                if channel_id == fallback_id:
+                    can_send_embed = True
 
                 embeds: list[hikari.Embed] = []
                 if can_send_embed:
