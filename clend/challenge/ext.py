@@ -510,6 +510,9 @@ class ChallengeExtension:
         ):
             return
 
+        if me.communication_disabled_until() is not None:
+            return
+
         await channel.send(**self.get_message(guild))
 
     async def migrate_embed(self, message: hikari.Message, guild: hikari.GatewayGuild):

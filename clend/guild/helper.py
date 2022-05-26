@@ -225,6 +225,9 @@ def announcement(
     can_send = perms & PERM_SEND == PERM_SEND
     if perms & hikari.Permissions.ADMINISTRATOR:
         can_send = True
+    
+    if me.communication_disabled_until() is not None:
+        can_send = False
 
     return IActionAnnouncement(
         guild_id=channel.guild_id,
