@@ -80,24 +80,43 @@ class BackupExtension:
 
         snapshot = msgpack.unpackb(snapshot_raw)
 
-        from pprint import pprint
+        logger.info(f"applying snapshot {snapshot_id} in {guild_id}")
 
-        pprint(
-            name_diff(
-                {channel["id"]: channel["name"] for channel in snapshot["channels"]},
-                {
-                    channel.id: channel.name
-                    for channel in guild.get_channels().values()
-                    if channel.name is not None
-                },
-            )
+        channel_diff = name_diff(
+            {channel["id"]: channel["name"] for channel in snapshot["channels"]},
+            {
+                channel.id: channel.name
+                for channel in guild.get_channels().values()
+                if channel.name is not None
+            },
         )
-        pprint(
-            name_diff(
-                {role["id"]: role["name"] for role in snapshot["roles"]},
-                {role.id: role.name for role in guild.get_roles().values()},
-            )
+        for before, after in channel_diff.items():
+            if after == 0:
+                logger.debug(f"create channel: {before}")
+            elif before != after:
+                logger.debug(f"new channel id: {before} -> {after}")
+
+        unexpected_channels = set(guild.get_channels().keys()) - set(
+            channel_diff.values()  # type: ignore
         )
+        for to_delete in unexpected_channels:
+            logger.debug(f"delete channel: {to_delete}")
+
+        role_diff = name_diff(
+            {role["id"]: role["name"] for role in snapshot["roles"]},
+            {role.id: role.name for role in guild.get_roles().values()},
+        )
+        for before, after in role_diff.items():
+            if after == 0:
+                logger.debug(f"create role: {before}")
+            elif before != after:
+                logger.debug(f"new role id: {before} -> {after}")
+
+        unexpected_roles = set(guild.get_roles().keys()) - set(
+            role_diff.values()  # type: ignore
+        )
+        for to_delete in unexpected_roles:
+            logger.debug(f"delete role: {to_delete}")
 
     async def create_snapshot(self, guild_id: str, snapshot_id: str):
         guild = self.app.bot.cache.get_guild(int(guild_id))
