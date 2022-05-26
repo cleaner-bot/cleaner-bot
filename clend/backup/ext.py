@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 def name_diff(snapshot: dict[int, str], after: dict[int, str]) -> dict[int, int]:
     result = {k: k for k in snapshot.keys() if k in after}
     deleted_channels = set(snapshot.keys()) - set(after.keys())
-    name_map = {after[k]: k for k in deleted_channels}
+    name_map = {after[k]: k for k in after if k not in result}
     for k in deleted_channels:
         name = snapshot[k]
         if name in name_map:
