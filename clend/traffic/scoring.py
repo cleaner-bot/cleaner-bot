@@ -12,6 +12,18 @@ def role_mentions(message: hikari.Message) -> int:
     return len(message.mentions.role_ids) if message.mentions.role_ids else 0
 
 
+def embeds(message: hikari.Message) -> int:
+    return len(message.embeds)
+
+
+def attachments(message: hikari.Message) -> int:
+    return len(message.attachments)
+
+
+def replied(message: hikari.Message) -> int:
+    return 0 if message.referenced_message is None else 1
+
+
 def message_length(message: hikari.Message) -> int:
     return len(message.content) if message.content else 0
 
@@ -45,6 +57,9 @@ def author_age_weeks(message: hikari.Message) -> int:
 scoring = [
     user_mentions,
     role_mentions,
+    embeds,
+    attachments,
+    replied,
     message_length,
     normalized_message_length,
     message_links,
