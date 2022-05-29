@@ -309,10 +309,20 @@ class HTTPService:
         message = await self.app.bot.rest.create_message(ev.channel_id, announcement)
         if ev.delete_after > 0:
             await asyncio.sleep(ev.delete_after)
-            try:
-                await message.delete()
-            except (hikari.NotFoundError, hikari.ForbiddenError):
-                pass
+            me = self.app.bot.cache.get_me()
+            assert me, "me is None"
+            self.delete_queue.put_nowait(
+                IActionDelete(
+                    ev.guild_id,
+                    me,
+                    ev.channel_id,
+                    message.id,
+                    True,
+                    None,
+                    ev.announcement,
+                    None,
+                )
+            )
 
     async def handle_action_channelratelimit(self, ev: IActionChannelRatelimit):
         if not ev.can_modify:
