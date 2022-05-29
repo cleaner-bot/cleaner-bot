@@ -316,7 +316,11 @@ class ChallengeExtension:
         timed.checkpoint("myself checks")
 
         if challenge:
-            flow = hashlib.sha256(interaction.id.to_bytes(8, "big")).hexdigest()
+            flow = hashlib.sha256(
+                interaction.id.to_bytes(8, "big")
+                + interaction.user.id.to_bytes(8, "big")
+                + bytes.fromhex("aa5e794bb8a5c9a329df1555d89a0be2")
+            ).hexdigest()
             logger.debug(
                 f"created flow for {interaction.user.id}@{interaction.guild_id}: {flow}"
             )
