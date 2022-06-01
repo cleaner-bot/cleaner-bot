@@ -18,7 +18,7 @@ class IntegrationExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
     topgg: TopGGIntegration | None = None
     statcord: StatcordIntegration | None = None
-    dlist: DlistGGIntegration | None = None
+    dlistgg: DlistGGIntegration | None = None
     tasks: list[asyncio.Task]
 
     def __init__(self, app: TheCleanerApp) -> None:
@@ -70,8 +70,8 @@ class IntegrationExtension:
         if self.topgg is not None:
             await self.topgg.update_topgg(guild_count)
 
-        if self.dlist is not None:
-            await self.dlist.update_dlistgg(guild_count)
+        if self.dlistgg is not None:
+            await self.dlistgg.update_dlistgg(guild_count)
 
         if self.statcord is not None:
             await self.statcord.update_statcord(guild_count, user_count)
