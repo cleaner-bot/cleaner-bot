@@ -17,6 +17,7 @@ def _load_secrets():
         "backend/proxy-secret",
         "redis/password",
         "topgg/api-token",
+        "dlistgg/api-token",
         "statcord/api-token",
     )
     identity = Path("~/.cleaner/identity").expanduser().read_text()
