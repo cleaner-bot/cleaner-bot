@@ -23,6 +23,12 @@ class DlistGGIntegration:
             params={"count": guild_count},
             headers={"authorization": f"Bearer {self.dlistgg_token}"},
         )
+        if res.status_code == 429:
+            logger.debug(
+                "failed to publish guild count to dlist.gg because harry "
+                "put harsh ratelimits"
+            )
+            return  # fuck you Harry
         res.raise_for_status()
 
         logger.info(f"published guild count to dlist.gg: {guild_count}")
