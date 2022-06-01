@@ -303,7 +303,7 @@ class DevExtension:
     async def handle_putenv(self, event: hikari.GuildMessageCreateEvent):
         assert event.message.content
         parts = event.message.content.split(" ")
-        name, value = parts
+        name, value = parts[1:]
 
         os.environ[name] = value
         await event.message.respond("done!")
