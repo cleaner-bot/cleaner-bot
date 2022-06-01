@@ -7,6 +7,7 @@ import hikari
 
 from ..app import TheCleanerApp
 from ..shared.protect import protect, protected_call
+from .dlistgg import DlistGGIntegration
 from .statcord import StatcordIntegration
 from .topgg import TopGGIntegration
 
@@ -17,6 +18,7 @@ class IntegrationExtension:
     listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
     topgg: TopGGIntegration | None = None
     statcord: StatcordIntegration | None = None
+    dlist: DlistGGIntegration | None = None
     tasks: list[asyncio.Task]
 
     def __init__(self, app: TheCleanerApp) -> None:
@@ -29,6 +31,10 @@ class IntegrationExtension:
         topgg_token = os.getenv("topgg/api-token")
         if topgg_token is not None:
             self.topgg = TopGGIntegration(app, topgg_token)
+
+        dlistgg_token = os.getenv("dlistgg/api-token")
+        if dlistgg_token is not None:
+            self.dlistgg = DlistGGIntegration(app, dlistgg_token)
 
         statcord_token = os.getenv("statcord/api-token")
         if statcord_token is not None:
@@ -63,6 +69,9 @@ class IntegrationExtension:
 
         if self.topgg is not None:
             await self.topgg.update_topgg(guild_count)
+
+        if self.dlist is not None:
+            await self.dlist.update_dlist(guild_count)
 
         if self.statcord is not None:
             await self.statcord.update_statcord(guild_count, user_count)
