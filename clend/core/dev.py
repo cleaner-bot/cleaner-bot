@@ -307,6 +307,7 @@ class DevExtension:
 
         os.environ[name] = value
         await event.message.respond("done!")
+        print(name, value)
 
 
 extension = DevExtension
