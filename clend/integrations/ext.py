@@ -33,10 +33,8 @@ class IntegrationExtension:
             self.topgg = TopGGIntegration(app, topgg_token)
 
         dlistgg_token = os.getenv("dlistgg/api-token")
-        print(dlistgg_token)
         if dlistgg_token is not None:
             self.dlistgg = DlistGGIntegration(app, dlistgg_token)
-            print(self.dlistgg)
 
         statcord_token = os.getenv("statcord/api-token")
         if statcord_token is not None:
@@ -73,7 +71,7 @@ class IntegrationExtension:
             await self.topgg.update_topgg(guild_count)
 
         if self.dlist is not None:
-            await self.dlist.update_dlist(guild_count)
+            await self.dlist.update_dlistgg(guild_count)
 
         if self.statcord is not None:
             await self.statcord.update_statcord(guild_count, user_count)
