@@ -25,4 +25,4 @@ class DlistGGIntegration:
         )
         res.raise_for_status()
 
-        logger.info(f"published guild count to top.gg: {guild_count}")
+        logger.info(f"published guild count to dlist.gg: {guild_count}")
