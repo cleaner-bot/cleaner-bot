@@ -33,8 +33,10 @@ class IntegrationExtension:
             self.topgg = TopGGIntegration(app, topgg_token)
 
         dlistgg_token = os.getenv("dlistgg/api-token")
+        print(dlistgg_token)
         if dlistgg_token is not None:
             self.dlistgg = DlistGGIntegration(app, dlistgg_token)
+            print(self.dlistgg)
 
         statcord_token = os.getenv("statcord/api-token")
         if statcord_token is not None:
