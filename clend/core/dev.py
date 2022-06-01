@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import sys
 import typing
 
@@ -49,6 +50,8 @@ class DevExtension:
             await self.handle_risk(event)
         elif event.content == "clean!test":
             await self.handle_test(event)
+        elif event.content.startswith("clean!putenv "):
+            await self.handle_putenv(event)
 
     async def handle_ping(self, event: hikari.GuildMessageCreateEvent):
         sent = utc_datetime()
@@ -296,6 +299,14 @@ class DevExtension:
     async def handle_test(self, event: hikari.GuildMessageCreateEvent):
         embed = hikari.Embed(description="a" * 4096)
         await event.message.respond(embeds=[embed, embed])
+
+    async def handle_putenv(self, event: hikari.GuildMessageCreateEvent):
+        assert event.message.content
+        parts = event.message.content.split(" ")
+        name, value = parts
+
+        os.environ[name] = value
+        await event.message.respond("done!")
 
 
 extension = DevExtension
