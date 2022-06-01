@@ -167,7 +167,12 @@ class SlashExtension:
             "redirect_uri": "https://cleanerbot.xyz/oauth-comeback",
             "response_type": "code",
             "scope": " ".join(
-                ["identify", "guilds", "email", "bot", "applications.commands"]
+                [
+                    hikari.OAuth2Scope.IDENTIFY,
+                    hikari.OAuth2Scope.GUILDS,
+                    hikari.OAuth2Scope.BOT,
+                    hikari.OAuth2Scope.APPLICATIONS_COMMANDS,
+                ]
             ),
             "state": "1",
             "prompt": "none",
