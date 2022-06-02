@@ -51,7 +51,7 @@ sentry_dsn = os.getenv("sentry/dsn")
 if sentry_dsn is not None:
     import sentry_sdk
 
-    sentry_sdk.init(dsn=sentry_dsn)  # type: ignore
+    sentry_sdk.init(dsn=sentry_dsn)
 
 app = TheCleanerApp(token=token)
 app.load_extension("clend.core.boot")
