@@ -8,7 +8,7 @@ def calculate_risk_score(user: hikari.User) -> float:
     age = (utc_datetime() - user.created_at).total_seconds() / 86400
     if not age:
         age = 0.000001
-    risk = 3 / math.log10(age) - (age ** 0.1) / 3
+    risk: float = 3 / math.log10(age) - (age ** 0.1) / 3
     if risk < 0:
         risk = 1000
     if user.avatar_hash is None:

@@ -3,7 +3,7 @@ import typing
 
 import hikari
 import lupa  # type: ignore
-from cleaner_i18n.translate import Message
+from cleaner_i18n import Message
 
 from ...shared.dangerous import dangerous_content
 from ...shared.event import IGuildEvent, ILog
@@ -92,7 +92,7 @@ return {
 """
 
 
-def _raise_error(*_):
+def _raise_error(*_: typing.Any) -> None:
     raise AttributeError("access denied")
 
 
@@ -122,7 +122,9 @@ def prepare_runtime(
     return lua, boot
 
 
-def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuild):
+def on_message_create(
+    event: hikari.GuildMessageCreateEvent, cguild: CleanerGuild
+) -> list[IGuildEvent] | None:
     data = cguild.get_data()
     if (
         event.member is None
@@ -131,7 +133,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
         or data.entitlements.plan < data.entitlements.workers
         or is_moderator(cguild, event.member)
     ):
-        return
+        return None
 
     worker = cguild.worker
     spec = (
@@ -150,7 +152,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
             # temporarily disable workers because they don't work
             data.config.workers_enabled = False
             if not data.config.logging_enabled:
-                return
+                return None
             return [
                 ILog(
                     event.guild_id,
@@ -165,7 +167,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
 
     guild = event.get_guild()
     if guild is None:
-        return
+        return None
 
     permissions = 0
     for role in event.member.get_roles():
@@ -286,7 +288,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
             raise lupa.LuaError("expected table or nil as return type")
     except lupa.LuaError as e:
         if not data.config.logging_enabled:
-            return
+            return None
         err = ":".join(e.args[0].split(":")[2:])[1:]
         return [
             ILog(
@@ -297,7 +299,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, cguild: CleanerGuil
         ]
 
     if result is None:
-        return
+        return None
 
     actions: list[IGuildEvent] = []
     info = {"rule": "worker", "guild": event.guild_id}

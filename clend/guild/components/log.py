@@ -1,21 +1,23 @@
 from datetime import datetime
 
 import hikari
-from cleaner_i18n.translate import Message
+from cleaner_i18n import Message
 
 from ...shared.event import ILog
 from ...shared.risk import calculate_risk_score
 from ..guild import CleanerGuild
 
 
-def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
+def on_member_create(
+    event: hikari.MemberCreateEvent, guild: CleanerGuild
+) -> None | tuple[ILog]:
     data = guild.get_data()
     if (
         data is None
         or not data.config.logging_enabled
         or not data.config.logging_option_join
     ):
-        return
+        return None
     age = event.member.joined_at - event.member.created_at
     hours = age.total_seconds() // 3600
     risk = calculate_risk_score(event.user)
@@ -37,14 +39,16 @@ def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
     )
 
 
-def on_member_delete(event: hikari.MemberDeleteEvent, guild: CleanerGuild):
+def on_member_delete(
+    event: hikari.MemberDeleteEvent, guild: CleanerGuild
+) -> None | tuple[ILog]:
     data = guild.get_data()
     if (
         data is None
         or not data.config.logging_enabled
         or not data.config.logging_option_leave
     ):
-        return
+        return None
 
     return (
         ILog(

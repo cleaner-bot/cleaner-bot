@@ -25,10 +25,10 @@ class Unsubscribe(typing.NamedTuple):
 
 
 async def listen(
-    pubsub: PubSub, /, **kwargs
+    pubsub: PubSub[bytes], /, timeout: int | float = 0
 ) -> typing.AsyncGenerator[Message | Subscribe | Unsubscribe, None]:
     while True:
-        message = await pubsub.get_message(**kwargs)
+        message = await pubsub.get_message(timeout=timeout)
         if message is None:
             break
         is_pattern = message["type"].startswith("p")

@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 
 
 class IntegrationExtension:
-    listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
+    listeners: list[tuple[typing.Type[hikari.Event], typing.Any]]
     topgg: TopGGIntegration | None = None
     statcord: StatcordIntegration | None = None
     dlistgg: DlistGGIntegration | None = None
-    tasks: list[asyncio.Task]
+    tasks: list[asyncio.Task[None]]
 
     def __init__(self, app: TheCleanerApp) -> None:
         self.app = app
@@ -42,27 +42,28 @@ class IntegrationExtension:
 
         self.tasks = []
 
-    def on_load(self):
+    def on_load(self) -> None:
         if self.topgg is not None:
             self.tasks.append(asyncio.create_task(protect(self.topgg.vote_task)))
 
         asyncio.create_task(protected_call(self.update_information()))
 
-    def on_unload(self):
+    def on_unload(self) -> None:
         for task in self.tasks:
             if not task.done():
                 task.cancel()
 
     async def on_guild_count_change(
         self, event: hikari.GuildJoinEvent | hikari.GuildLeaveEvent
-    ):
+    ) -> None:
         await self.update_information()
 
-    async def update_information(self):
+    async def update_information(self) -> None:
         guild_count = len(self.app.bot.cache.get_guilds_view())
         user_count = sum(
             guild.member_count
             for guild in self.app.bot.cache.get_guilds_view().values()
+            if guild.member_count
         )
 
         logger.debug(f"stats: guilds={guild_count} users={user_count}")

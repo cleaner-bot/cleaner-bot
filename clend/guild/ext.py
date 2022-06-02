@@ -21,7 +21,7 @@ class GuildExtension:
     guilds: dict[int, CleanerGuild]
     callbacks: dict[typing.Type[hikari.Event], list[ComponentListener]]
     workers: list[GuildWorker] | None = None
-    listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
+    listeners: list[tuple[typing.Type[hikari.Event], typing.Any]]
 
     def __init__(self, app: TheCleanerApp) -> None:
         self.app = app
@@ -38,18 +38,18 @@ class GuildExtension:
                     self.listeners.append((type, self.dispatch))
                 self.callbacks[type].append(func)
 
-    def on_load(self):
+    def on_load(self) -> None:
         self.workers = [GuildWorker(self, idx, WORKERS) for idx in range(WORKERS)]
         for worker in self.workers:
             worker.thread = threading.Thread(target=worker.run)
             worker.thread.start()
 
-    def on_unload(self):
+    def on_unload(self) -> None:
         if self.workers:
             for worker in self.workers:
                 worker.queue.put(None)
 
-    def send_event(self, event: hikari.Event):
+    def send_event(self, event: hikari.Event) -> bool:
         if self.workers is None:
             return False
 
@@ -73,12 +73,12 @@ class GuildExtension:
 
         return True
 
-    async def dispatch(self, event: hikari.Event):
+    async def dispatch(self, event: hikari.Event) -> None:
         self.send_event(event)
 
 
 class GuildWorker:
-    queue: queue.Queue[hikari.Event]
+    queue: queue.Queue[hikari.Event | None]
     thread: threading.Thread | None = None
 
     def __init__(
@@ -92,7 +92,7 @@ class GuildWorker:
 
     def run(self) -> None:
         while True:
-            event: hikari.Event = self.queue.get()
+            event: hikari.Event | None = self.queue.get()
             if event is None:
                 break
 
@@ -107,7 +107,7 @@ class GuildWorker:
             else:  # guild event
                 self.send_event(event, guild_id)
 
-    def send_event(self, event: hikari.Event, guild_id: int):
+    def send_event(self, event: hikari.Event, guild_id: int) -> None:
         guild = self.ext.guilds.get(guild_id, None)
         if guild is None:
             self.ext.guilds[guild_id] = guild = CleanerGuild(guild_id, self.ext.app)
@@ -124,7 +124,7 @@ class GuildWorker:
         else:
             self.event(event, guild)
 
-    def event(self, event: hikari.Event, guild: CleanerGuild):
+    def event(self, event: hikari.Event, guild: CleanerGuild) -> None:
         callbacks = self.ext.callbacks.get(type(event), None)
         if callbacks is None:
             return

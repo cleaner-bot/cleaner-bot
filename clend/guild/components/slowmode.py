@@ -1,13 +1,16 @@
 import hikari
 
 from ...shared.custom_events import FastTimerEvent
+from ...shared.event import IActionChannelRatelimit
 from ..guild import CleanerGuild
 from ..helper import change_ratelimit, is_exception, is_moderator
 
 slowmode = [round(x ** 1.3 / 15) for x in range(60)]
 
 
-def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild):
+def on_message_create(
+    event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
+) -> None:
     data = guild.get_data()
     if (
         event.member is None
@@ -15,27 +18,29 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
         or data is None
         or not data.config.slowmode_enabled
     ):
-        return
+        return None
     channel = event.get_channel()
     if channel is None:
-        return
+        return None
 
     counter = guild.pending_message_count.get(event.channel_id, 0)
     guild.pending_message_count[event.channel_id] = counter + 1
 
 
-def on_fast_timer(event: FastTimerEvent, cguild: CleanerGuild):
+def on_fast_timer(
+    event: FastTimerEvent, cguild: CleanerGuild
+) -> list[IActionChannelRatelimit] | None:
     data = cguild.get_data()
     if (
         data is None
         or not data.config.slowmode_enabled
         or not cguild.pending_message_count
     ):
-        return
+        return None
 
     guild = event.app.cache.get_guild(cguild.id)
     if guild is None:
-        return
+        return None
 
     for channel_id, count in cguild.pending_message_count.items():
         counts = cguild.message_count.get(channel_id, None)

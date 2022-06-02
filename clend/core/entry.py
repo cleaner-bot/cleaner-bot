@@ -31,13 +31,13 @@ EXTENSIONS = [
 
 
 class EntryExtension:
-    listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
+    listeners: list[tuple[typing.Type[hikari.Event], typing.Any]]
 
     def __init__(self, app: TheCleanerApp) -> None:
         self.app = app
         self.listeners = []
 
-    def on_load(self):
+    def on_load(self) -> None:
         try:
             self.app.load_store()
         except Exception as e:
@@ -54,7 +54,7 @@ class EntryExtension:
                         f"An error occured while loading extension: {ext}", exc_info=e
                     )
 
-    def on_unload(self):
+    def on_unload(self) -> None:
         for ext in EXTENSIONS:
             if ext in self.app.extensions:
                 try:

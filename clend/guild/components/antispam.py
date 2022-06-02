@@ -5,7 +5,7 @@ import typing
 from dataclasses import dataclass
 
 import hikari
-from cleaner_i18n.translate import Message
+from cleaner_i18n import Message
 
 from ...shared.custom_events import SlowTimerEvent
 from ...shared.event import IGuildEvent, ILog
@@ -25,10 +25,12 @@ class ActiveMitigation:
     ttl: int
 
 
-def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild):
+def on_message_create(
+    event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
+) -> list[IGuildEvent] | None:
     data = guild.get_data()
     if event.member is None or is_moderator(guild, event.member) or data is None:
-        return
+        return None
     messages: typing.Sequence[hikari.Message] = guild.messages.copy()
     guild.messages.append(event.message)
 
@@ -76,7 +78,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
         if mitigation is not None:
             break
     else:
-        return
+        return None
 
     id = (
         base64.b64encode(
@@ -129,7 +131,7 @@ def on_message_create(event: hikari.GuildMessageCreateEvent, guild: CleanerGuild
     return actions
 
 
-def on_slow_timer(event: SlowTimerEvent, guild: CleanerGuild):
+def on_slow_timer(event: SlowTimerEvent, guild: CleanerGuild) -> None:
     now = time.monotonic()
     active_mitigations: list[ActiveMitigation] = guild.active_mitigations
 

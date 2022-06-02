@@ -28,9 +28,9 @@ class Store:
             logger.warning("unable to find clend.conf extension", stacklevel=2)
             return None
 
-        return conf.get_data(guild_id)
+        return conf.get_data(guild_id)  # type: ignore
 
-    def put_http(self, *items: IGuildEvent, thread_safe: bool = False):
+    def put_http(self, *items: IGuildEvent, thread_safe: bool = False) -> None:
         http = self.app.extensions.get("clend.http", None)
         if http is None:
             logger.warning("unable to find clend.http extension", stacklevel=2)
@@ -39,3 +39,7 @@ class Store:
         fn = http.queue.sync_q.put if thread_safe else http.queue.async_q.put_nowait
         for item in items:
             fn(item)
+
+    def get_bot_id(self) -> int | None:
+        me = self.app.bot.cache.get_me()
+        return None if me is None else me.id

@@ -10,14 +10,16 @@ import msgpack  # type: ignore
 from ..app import TheCleanerApp
 from ..shared.protect import protect
 from .metrics import Metrics, metrics_reader
+from .types import ResultDict
 
 logger = logging.getLogger(__name__)
 
 
 class MetricsExtension:
     queue: asyncio.Queue[typing.Any]
-    listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
+    listeners: list[tuple[typing.Type[hikari.Event], typing.Any]]
     metrics: Metrics
+    task: asyncio.Task[None] | None = None
 
     def __init__(self, app: TheCleanerApp) -> None:
         super().__init__()
@@ -26,24 +28,23 @@ class MetricsExtension:
             (hikari.GuildLeaveEvent, self.on_destroy_guild),
         ]
         self.queue = asyncio.Queue()
-        self.task = None
         self.metrics = Metrics()
 
-    def on_load(self):
+    def on_load(self) -> None:
         self.task = asyncio.create_task(protect(self.maind))
 
-    def on_unload(self):
+    def on_unload(self) -> None:
         if self.task is not None:
             self.task.cancel()
 
         self.metrics.flush()
         self.metrics.close()
 
-    async def on_destroy_guild(self, event: hikari.GuildLeaveEvent):
+    async def on_destroy_guild(self, event: hikari.GuildLeaveEvent) -> None:
         database = self.app.database
         await database.delete((f"guild:{event.guild_id}:radar",))
 
-    async def maind(self):
+    async def maind(self) -> None:
         loop = asyncio.get_running_loop()
 
         if not self.metrics.history:
@@ -74,12 +75,12 @@ class MetricsExtension:
             logger.debug(event)
             self.metrics.log(event)
 
-    def load_metrics(self):
+    def load_metrics(self) -> None:
         logger.debug("loading metrics.bin")
-        self.metrics.history = list(metrics_reader())
+        self.metrics.history = list(metrics_reader())  # type: ignore
         logger.debug("loaded metrics.bin")
 
-    def gather_radar_data(self):
+    def gather_radar_data(self) -> tuple[bytes, dict[int, bytes]]:
         phishing_rules = (
             "phishing.content",
             "phishing.domain.blacklisted",
@@ -120,7 +121,7 @@ class MetricsExtension:
         cutoff_now = latest - timespan
         cutoff_previous = latest - timespan * 2
 
-        result = {
+        result: ResultDict = {
             "rules": {r: {"total": 0, "previous": 0, "now": 0} for r in all_rules},
             "traffic": {t: {"total": 0, "previous": 0, "now": 0} for t in traffic},
             "categories": {
@@ -134,6 +135,7 @@ class MetricsExtension:
                 "user_count": sum(
                     guild.member_count
                     for guild in self.app.bot.cache.get_guilds_view().values()
+                    if guild.member_count
                 ),
             },
         }
@@ -152,7 +154,7 @@ class MetricsExtension:
         for timestamp, data in self.metrics.history:
             if data["guild"] not in guilds:
                 guilds[data["guild"]] = copy.deepcopy(guild_template)
-            span = (
+            span: typing.Literal["now", "previous"] | None = (
                 None
                 if cutoff_previous > timestamp
                 else "previous"
@@ -177,7 +179,7 @@ class MetricsExtension:
 
             elif data["name"] == "delete":
                 rule = data["info"]["rule"]
-                category = None
+                delete_category = None
                 if rule in all_rules:
                     result["rules"][rule]["total"] += 1
                     guild["rules"][rule]["total"] += 1
@@ -185,27 +187,27 @@ class MetricsExtension:
                         result["rules"][rule][span] += 1
                         guild["rules"][rule][span] += 1
                     if rule in phishing_rules:
-                        category = "phishing"
+                        delete_category = "phishing"
                     elif rule in advertisement:
-                        category = "advertisement"
+                        delete_category = "advertisement"
                     else:
-                        category = "other"
+                        delete_category = "other"
                 elif rule in traffic:
                     result["traffic"][rule]["total"] += 1
                     guild["traffic"][rule]["total"] += 1
                     if span is not None:
                         result["traffic"][rule][span] += 1
                         guild["traffic"][rule][span] += 1
-                    category = "antispam"
+                    delete_category = "antispam"
                 else:
                     logger.warning(f"unknown rule: {rule}")
 
-                if category is not None:
-                    result["categories"][category]["total"] += 1
-                    guild["categories"][category]["total"] += 1
+                if delete_category is not None:
+                    result["categories"][delete_category]["total"] += 1
+                    guild["categories"][delete_category]["total"] += 1
                     if span is not None:
-                        result["categories"][category][span] += 1
-                        guild["categories"][category][span] += 1
+                        result["categories"][delete_category][span] += 1
+                        guild["categories"][delete_category][span] += 1
 
             elif data["name"] == "nickname":
                 if data["action"] == "reset_success":

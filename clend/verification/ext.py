@@ -5,7 +5,7 @@ from datetime import datetime
 
 import hikari
 import msgpack  # type: ignore
-from cleaner_i18n.translate import Message
+from cleaner_i18n import Message
 
 from ..app import TheCleanerApp
 from ..shared.dangerous import DANGEROUS_PERMISSIONS
@@ -18,30 +18,30 @@ logger = logging.getLogger(__name__)
 
 
 class VerificationExtension:
-    listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
+    listeners: list[tuple[typing.Type[hikari.Event], typing.Any]]
     kicks: dict[int, dict[int, float]]
+    task: asyncio.Task[None] | None = None
 
-    def __init__(self, app: TheCleanerApp):
+    def __init__(self, app: TheCleanerApp) -> None:
         self.app = app
         self.listeners = [
             (hikari.MemberCreateEvent, self.on_member_create),
             (hikari.MemberDeleteEvent, self.on_member_delete),
         ]
-        self.task = None
 
-    def on_load(self):
+    def on_load(self) -> None:
         self.task = asyncio.create_task(protect(self.verifyd))
 
-    def on_unload(self):
+    def on_unload(self) -> None:
         if self.task is not None:
             self.task.cancel()
 
-    async def on_member_create(self, event: hikari.MemberCreateEvent):
+    async def on_member_create(self, event: hikari.MemberCreateEvent) -> None:
         await self.app.database.set(
             f"guild:{event.guild_id}:user:{event.user_id}:verification", "1", ex=600
         )
 
-    async def on_member_delete(self, event: hikari.MemberDeleteEvent):
+    async def on_member_delete(self, event: hikari.MemberDeleteEvent) -> None:
         await self.app.database.delete(
             (f"guild:{event.guild_id}:user:{event.user_id}:verification",)
         )
@@ -58,7 +58,7 @@ class VerificationExtension:
                 return True
         return False
 
-    async def verifyd(self):
+    async def verifyd(self) -> None:
         pubsub = self.app.database.pubsub()
         await pubsub.subscribe("pubsub:verification-verify")
         async for event in pubsub_listen(pubsub):
@@ -70,7 +70,7 @@ class VerificationExtension:
                 protected_call(self.verify_user(data["guild"], data["user"]))
             )
 
-    async def verify_user(self, guild_id: int, user_id: int):
+    async def verify_user(self, guild_id: int, user_id: int) -> None:
         guild = self.app.bot.cache.get_guild(int(guild_id))
         if guild is None:
             logger.warning(f"uncached guild: {int(guild_id)}")

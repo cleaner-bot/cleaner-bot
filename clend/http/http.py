@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 import random
 import typing
 from datetime import datetime, timedelta
 
 import hikari
 import janus
-from cleaner_i18n.translate import Message, translate
+from cleaner_i18n import Message, translate
 from expirepy import ExpiringDict, ExpiringSet
 from hikari.internal.time import utc_datetime
 
@@ -24,6 +23,7 @@ from ..shared.event import (
     IGuildEvent,
     ILog,
 )
+from ..shared.protect import protected_call
 from .likely_phishing import is_likely_phishing, report_phishing
 
 logger = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ REQUIRED_TO_SEND = hikari.Permissions.VIEW_CHANNEL | hikari.Permissions.SEND_MES
 VOTING_REMINDER_COOLDOWN = 60 * 60 * 24 * 3
 
 
-def format_log(log: ILog, locale: str):
+def format_log(log: ILog, locale: str) -> str:
     time_string = log.created_at.strftime("%H:%M:%S")
     reason = ""
     if log.reason:
@@ -39,7 +39,9 @@ def format_log(log: ILog, locale: str):
     return f"`{time_string}` {log.message.translate(locale)}\n{reason}"
 
 
-async def ignore_not_found_exception_wrapper(coro):
+async def ignore_not_found_exception_wrapper(
+    coro: typing.Coroutine[None, None, typing.Any]
+) -> None:
     try:
         await coro
     except hikari.NotFoundError:
@@ -73,23 +75,25 @@ class HTTPService:
         self.deleted_messages = ExpiringSet(expires=60)
         self.bulk_delete_cooldown = ExpiringSet(expires=3)
 
-    async def ind(self):
+    async def ind(self) -> None:
         while True:
             ev: IGuildEvent = await self.main_queue.async_q.get()
             if isinstance(ev, IActionChallenge):
-                asyncio.create_task(self.run(self.handle_action_challenge(ev)))
+                asyncio.create_task(protected_call(self.handle_action_challenge(ev)))
 
             elif isinstance(ev, IActionDelete):
-                asyncio.create_task(self.run(self.handle_action_delete(ev)))
+                asyncio.create_task(protected_call(self.handle_action_delete(ev)))
 
             elif isinstance(ev, IActionNickname):
-                asyncio.create_task(self.run(self.handle_action_nickname(ev)))
+                asyncio.create_task(protected_call(self.handle_action_nickname(ev)))
 
             elif isinstance(ev, IActionAnnouncement):
-                asyncio.create_task(self.run(self.handle_action_announcement(ev)))
+                asyncio.create_task(protected_call(self.handle_action_announcement(ev)))
 
             elif isinstance(ev, IActionChannelRatelimit):
-                asyncio.create_task(self.run(self.handle_action_channelratelimit(ev)))
+                asyncio.create_task(
+                    protected_call(self.handle_action_channelratelimit(ev))
+                )
 
             elif isinstance(ev, ILog):
                 self.log_queue.put_nowait(ev)
@@ -97,13 +101,7 @@ class HTTPService:
             else:
                 logger.warning(f"unexpected event received: {ev}")
 
-    async def run(self, coro):
-        try:
-            await coro
-        except Exception as e:
-            logger.exception("Error occured during http run", exc_info=e)
-
-    async def handle_action_challenge(self, ev: IActionChallenge):
+    async def handle_action_challenge(self, ev: IActionChallenge) -> None:
         if f"{ev.guild_id}-{ev.user.id}" in self.challenged_users:
             return
 
@@ -212,7 +210,7 @@ class HTTPService:
         if coro is not None:
             await coro
 
-    async def handle_action_delete(self, ev: IActionDelete):
+    async def handle_action_delete(self, ev: IActionDelete) -> None:
         if ev.message_id in self.deleted_messages:
             return
         elif f"{ev.guild_id}-{ev.user.id}" in self.banned_users:
@@ -246,7 +244,7 @@ class HTTPService:
                 return
             await report_phishing(ev, self.app)
 
-    async def handle_action_nickname(self, ev: IActionNickname):
+    async def handle_action_nickname(self, ev: IActionNickname) -> None:
         coro: typing.Coroutine[typing.Any, typing.Any, typing.Any] | None = None
         message = "log_nickname_reset_failure"
 
@@ -293,7 +291,7 @@ class HTTPService:
         if coro is not None:
             await coro
 
-    async def handle_action_announcement(self, ev: IActionAnnouncement):
+    async def handle_action_announcement(self, ev: IActionAnnouncement) -> None:
         guild_strikes = self.guild_strikes.get(ev.guild_id, 0)
         if guild_strikes >= 30:
             return
@@ -324,7 +322,7 @@ class HTTPService:
                 )
             )
 
-    async def handle_action_channelratelimit(self, ev: IActionChannelRatelimit):
+    async def handle_action_channelratelimit(self, ev: IActionChannelRatelimit) -> None:
         if not ev.can_modify:
             return  # silently ignore
 
@@ -343,16 +341,11 @@ class HTTPService:
             reason=translated.translate(locale),
         )
 
-    async def logd(self):
+    async def logd(self) -> None:
         guilds: dict[int, list[ILog]] = {}
-        client_id = os.getenv("discord/client-id")
-        if client_id is None:
-            me = self.app.bot.cache.get_me()
-            if me is None:
-                # dont bother handling because this should NEVER happen
-                raise RuntimeError("no client_id available")
-
-            client_id = str(me.id)
+        bot_id = self.app.store.get_bot_id()
+        if bot_id is None:
+            raise RuntimeError("no bot id available")
 
         while True:
             await asyncio.sleep(1)
@@ -386,22 +379,13 @@ class HTTPService:
                 guilds[guild_id] = logs[log_index + 1 :]
                 message = "".join(result)
 
-                embed = hikari.UNDEFINED
+                embed: hikari.UndefinedOr[hikari.Embed] = hikari.UNDEFINED
                 if referenced_message is not None:
                     embed = (
                         hikari.Embed(
                             description=referenced_message.content, color=0xF43F5E
                         )
                         .set_author(name=translate(locale, "log_embed_deleted"))
-                        .set_footer(
-                            text=(
-                                f"{referenced_message.author} "
-                                f"({referenced_message.author.id})"
-                            ),
-                            icon=referenced_message.author.make_avatar_url(
-                                ext="webp", size=64
-                            ),
-                        )
                         .add_field(
                             name=translate(locale, "log_embed_channel"),
                             value=(
@@ -410,6 +394,16 @@ class HTTPService:
                             ),
                         )
                     )
+                    if referenced_message.author:
+                        embed.set_footer(
+                            text=(
+                                f"{referenced_message.author} "
+                                f"({referenced_message.author.id})"
+                            ),
+                            icon=referenced_message.author.make_avatar_url(
+                                ext="webp", size=64
+                            ),
+                        )
                     if referenced_message.stickers:
                         sticker = referenced_message.stickers[0]
                         embed.set_image(sticker.image_url)
@@ -455,7 +449,7 @@ class HTTPService:
                             embed = hikari.Embed()
                         guild = self.app.bot.cache.get_guild(guild_id)
                         if guild is None:
-                            embed.add_field("Guild", guild_id)
+                            embed.add_field("Guild", str(guild_id))
                         else:
                             embed.add_field("Guild", f"{guild.name} ({guild.id})")
 
@@ -473,7 +467,7 @@ class HTTPService:
                         integrations.append(
                             (
                                 "Top.gg",
-                                f"https://top.gg/bot/{client_id}/vote?guild={guild_id}",
+                                f"https://top.gg/bot/{bot_id}/vote?guild={guild_id}",
                             )
                         )
                         embed = hikari.Embed(
@@ -508,7 +502,8 @@ class HTTPService:
                 )
 
                 if (
-                    data.entitlements.plan >= data.entitlements.logging_downloads
+                    data is not None
+                    and data.entitlements.plan >= data.entitlements.logging_downloads
                     and data.config.logging_downloads_enabled
                 ):
                     guildlog = self.app.extensions.get("clend.guildlog", None)
@@ -525,7 +520,7 @@ class HTTPService:
 
             await asyncio.gather(*sends)
 
-    async def deleted(self):
+    async def deleted(self) -> None:
         channels: dict[int, list[IActionDelete]] = {}
         while True:
             await asyncio.sleep(1)
@@ -563,7 +558,7 @@ class HTTPService:
             for coro in futures:
                 asyncio.create_task(ignore_not_found_exception_wrapper(coro))
 
-    def put_in_metrics_queue(self, item):
+    def put_in_metrics_queue(self, item: typing.Any) -> None:
         metrics = self.app.extensions.get("clend.metrics")
         if metrics is None:
             logger.warning("unable to get metrics queue")

@@ -19,9 +19,9 @@ def detection(
     message: hikari.Message,
     messages: typing.Sequence[hikari.Message],
     guild: CleanerGuild,
-):
+) -> None | AttachmentMitigation:
     if not message.attachments or len(messages) + 1 < THRESHOLD:
-        return
+        return None
 
     data = guild.get_data()
     slowmode_exceptions = (
@@ -39,3 +39,4 @@ def detection(
 
     if attachs >= THRESHOLD:
         return AttachmentMitigation(attachs_sizes)
+    return None

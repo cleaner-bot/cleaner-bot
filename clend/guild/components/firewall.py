@@ -1,6 +1,7 @@
 import hikari
-from cleaner_i18n.translate import Message
+from cleaner_i18n import Message
 
+from ...shared.event import IGuildEvent
 from ..guild import CleanerGuild
 from ..helper import action_challenge, action_delete, announcement, is_moderator
 from .rules import firewall_rules
@@ -9,10 +10,10 @@ from .rules import firewall_rules
 def check_message(
     event: hikari.GuildMessageCreateEvent | hikari.GuildMessageUpdateEvent,
     guild: CleanerGuild,
-):
+) -> tuple[IGuildEvent | None, ...] | None:
     data = guild.get_data()
     if not event.member or is_moderator(guild, event.member) or data is None:
-        return
+        return None
 
     matched_rule = matched_action = None
     channel_id = str(event.channel_id)
@@ -32,7 +33,7 @@ def check_message(
                 break
 
     if matched_rule is None:
-        return
+        return None
 
     reason = Message("components_firewall", {"rule": matched_rule.name})
     translated = Message(

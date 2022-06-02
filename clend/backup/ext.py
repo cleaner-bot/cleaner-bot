@@ -29,7 +29,9 @@ def name_diff(snapshot: dict[int, str], after: dict[int, str]) -> dict[int, int]
     return result
 
 
-def calc_channel_diff(channel: hikari.GuildChannel, snapshot: SnapshotChannel):
+def calc_channel_diff(
+    channel: hikari.GuildChannel, snapshot: SnapshotChannel
+) -> dict[str, typing.Any]:
     new_snapshot = make_channel_snapshot(channel)
     # mypy does not like dynamic keys into a TypedDict
     return {k: v for k, v in snapshot.items() if new_snapshot[k] != v}  # type: ignore
@@ -79,21 +81,21 @@ def make_role_snapshot(role: hikari.Role) -> SnapshotRole:
 
 
 class BackupExtension:
-    listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
-    task: asyncio.Task | None = None
+    listeners: list[tuple[typing.Type[hikari.Event], typing.Any]]
+    task: asyncio.Task[None] | None = None
 
-    def __init__(self, app: TheCleanerApp):
+    def __init__(self, app: TheCleanerApp) -> None:
         self.app = app
         self.listeners = []
 
-    def on_load(self):
+    def on_load(self) -> None:
         self.task = asyncio.ensure_future(protect(self.backup_task))
 
-    def on_unload(self):
+    def on_unload(self) -> None:
         if self.task is not None:
             self.task.cancel()
 
-    async def backup_task(self):
+    async def backup_task(self) -> None:
         pubsub = self.app.database.pubsub()
         await pubsub.subscribe("pubsub:backup:snapshot")
         await pubsub.subscribe("pubsub:backup:apply-snapshot")
@@ -109,7 +111,7 @@ class BackupExtension:
             )
             asyncio.create_task(protected_call(coro(guild_id, snapshot_id)))
 
-    async def apply_snapshot(self, guild_id: str, snapshot_id: str):
+    async def apply_snapshot(self, guild_id: str, snapshot_id: str) -> None:
         guild = self.app.bot.cache.get_guild(int(guild_id))
         if guild is None:
             logger.warning(
@@ -178,7 +180,7 @@ class BackupExtension:
         for to_delete in unexpected_roles:
             logger.debug(f"delete role: {to_delete}")
 
-    async def create_snapshot(self, guild_id: str, snapshot_id: str):
+    async def create_snapshot(self, guild_id: str, snapshot_id: str) -> None:
         guild = self.app.bot.cache.get_guild(int(guild_id))
         if guild is None:
             logger.warning(

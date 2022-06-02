@@ -19,16 +19,17 @@ MAX_MATCH_RATIO = 0.8
 def match(mitigation: SimilarMessageMitigation, message: hikari.Message) -> bool:
     if not message.content:
         return False
-    return ratio(mitigation.message, message.content) >= mitigation.match_ratio
+    r: float = ratio(mitigation.message, message.content)
+    return r >= mitigation.match_ratio
 
 
 def detection(
     message: hikari.Message,
     messages: typing.Sequence[hikari.Message],
     guild: CleanerGuild,
-):
+) -> None | SimilarMessageMitigation:
     if not message.content or len(messages) < THRESHOLD_USER:
-        return
+        return None
 
     data = guild.get_data()
     slowmode_exceptions = (
@@ -56,3 +57,4 @@ def detection(
 
     if guild_score >= THRESHOLD_GUILD or user_score >= THRESHOLD_USER:
         return SimilarMessageMitigation(message.content, current_match_ratio)
+    return None

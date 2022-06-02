@@ -1,33 +1,36 @@
 import time
 
 import hikari
-from cleaner_i18n.translate import Message
+from cleaner_i18n import Message
 
 from ...shared.custom_events import FastTimerEvent
+from ...shared.event import IActionChallenge
 from ..guild import CleanerGuild
 from ..helper import action_challenge
 
 
-def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild):
+def on_member_create(event: hikari.MemberCreateEvent, guild: CleanerGuild) -> None:
     guild.verification_joins[event.user_id] = time.monotonic()
 
 
-def on_member_delete(event: hikari.MemberDeleteEvent, guild: CleanerGuild):
+def on_member_delete(event: hikari.MemberDeleteEvent, guild: CleanerGuild) -> None:
     if event.user_id in guild.verification_joins:
         del guild.verification_joins[event.user_id]
 
 
-def on_fast_timer(event: FastTimerEvent, cguild: CleanerGuild):
+def on_fast_timer(
+    event: FastTimerEvent, cguild: CleanerGuild
+) -> list[IActionChallenge] | None:
     data = cguild.get_data()
     if (
         data is None
         or not data.config.verification_enabled
         or not cguild.verification_joins
     ):
-        return
+        return None
     guild = event.app.cache.get_guild(cguild.id)
     if guild is None:
-        return
+        return None
 
     now = time.monotonic()
     actions = []

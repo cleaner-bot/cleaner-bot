@@ -18,7 +18,7 @@ def is_likely_phishing(ev: IActionDelete) -> bool:
     )
 
 
-async def report_phishing(ev: IActionDelete, app: TheCleanerApp):
+async def report_phishing(ev: IActionDelete, app: TheCleanerApp) -> None:
     if ev.message is None:
         return
 

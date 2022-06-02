@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import os
 from pathlib import Path
@@ -9,7 +8,7 @@ from secretclient import request
 load_dotenv(Path("~/.cleaner/env/bot").expanduser())
 
 
-def _load_secrets():
+def _load_secrets() -> None:
     fields = (
         "sentry/dsn",
         "discord/bot-token",
@@ -21,9 +20,10 @@ def _load_secrets():
         "statcord/api-token",
     )
     identity = Path("~/.cleaner/identity").expanduser().read_text()
-    for key, value in request(
-        bytes.fromhex(identity), fields, os.getenv("secret/host")
-    ).items():
+    host = os.getenv("secret/host")
+    if host is None:
+        raise RuntimeError("secret/host env variable is unset")
+    for key, value in request(bytes.fromhex(identity), fields, host).items():
         os.environ[key] = value
 
 
@@ -33,11 +33,12 @@ del _load_secrets
 from clend.app import TheCleanerApp  # noqa: E402
 
 try:
-    import uvloop  # type: ignore
+    import uvloop
+
+    uvloop.install()
+
 except ImportError:
     pass
-else:
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
 token = os.getenv("discord/bot-token")
@@ -52,8 +53,8 @@ if sentry_dsn is not None:
 
     sentry_sdk.init(dsn=sentry_dsn)  # type: ignore
 
-bot = TheCleanerApp(token=token)
-bot.load_extension("clend.core.boot")
+app = TheCleanerApp(token=token)
+app.load_extension("clend.core.boot")
 
 # hikari logger is already inited, so we can add ours
 fh = logging.FileHandler("debug.log")
@@ -64,4 +65,4 @@ fh.setFormatter(
 logging.getLogger().addHandler(fh)
 
 
-bot.run(asyncio_debug=True)
+app.bot.run(asyncio_debug=True)

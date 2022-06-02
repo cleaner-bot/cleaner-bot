@@ -6,7 +6,7 @@ from urllib.parse import parse_qs
 
 import hikari
 import msgpack  # type: ignore
-from cleaner_i18n.translate import Message
+from cleaner_i18n import Message
 
 from ..app import TheCleanerApp
 from ..shared.event import ILog
@@ -30,7 +30,7 @@ class TopGGIntegration:
         self.app = app
         self.topgg_token = topgg_token
 
-    async def update_topgg(self, guild_count: int):
+    async def update_topgg(self, guild_count: int) -> None:
         me = self.app.bot.cache.get_me()
         if me is None:
             # dont bother handling because this should NEVER happen
@@ -47,7 +47,7 @@ class TopGGIntegration:
 
         logger.info(f"published guild count to top.gg: {guild_count}")
 
-    async def vote_task(self):
+    async def vote_task(self) -> None:
         pubsub = self.app.database.pubsub()
         await pubsub.subscribe("pubsub:integrations:topgg-vote")
         async for event in listen(pubsub):
@@ -58,7 +58,7 @@ class TopGGIntegration:
             logger.debug(f"vote: {data}")
             asyncio.ensure_future(protected_call(self.thank_vote(data)))
 
-    async def thank_vote(self, vote: TopGGVote):
+    async def thank_vote(self, vote: TopGGVote) -> None:
         if not vote["query"].startswith("?"):
             return
         query = parse_qs(vote["query"][1:])

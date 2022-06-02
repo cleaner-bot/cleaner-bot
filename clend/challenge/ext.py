@@ -7,7 +7,8 @@ from datetime import datetime
 import hikari
 import msgpack  # type: ignore
 from cleaner_conf.guild import GuildConfig, GuildEntitlements
-from cleaner_i18n.translate import Message, translate
+from cleaner_i18n import Message
+from cleaner_i18n import translate as t
 
 from ..app import TheCleanerApp
 from ..shared.button import add_link
@@ -26,17 +27,19 @@ REQUIRED_TO_SEND = hikari.Permissions.VIEW_CHANNEL | hikari.Permissions.SEND_MES
 
 
 def get_min_risk(config: GuildConfig, entitlements: GuildEntitlements) -> float | None:
-    level = config.challenge_interactive_level
+    level: int = config.challenge_interactive_level
     if level < 2 and entitlements.challenge_interactive_join_risk < entitlements.plan:
         level = 2
 
     if level == 0:
-        return config.challenge_interactive_joinrisk_custom
+        # no idea why this is Any instead of int
+        return config.challenge_interactive_joinrisk_custom  # type: ignore
     return [None, 1, 0.7, 0.3, 0][level - 1]
 
 
 class ChallengeExtension:
-    listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
+    listeners: list[tuple[typing.Type[hikari.Event], typing.Any]]
+    task: asyncio.Task[None] | None = None
 
     def __init__(self, app: TheCleanerApp):
         self.app = app
@@ -45,21 +48,20 @@ class ChallengeExtension:
             (hikari.MemberUpdateEvent, self.on_member_update),
             (hikari.InteractionCreateEvent, self.on_interaction_create),
         ]
-        self.task = None
 
-    def on_load(self):
+    def on_load(self) -> None:
         self.task = asyncio.create_task(protect(self.verifyd))
 
-    def on_unload(self):
+    def on_unload(self) -> None:
         if self.task is not None:
             self.task.cancel()
 
-    async def on_member_create(self, event: hikari.MemberCreateEvent):
+    async def on_member_create(self, event: hikari.MemberCreateEvent) -> None:
         if event.user.is_bot or event.member.is_pending is True:
             return
         await self.member_joined(event.member)
 
-    async def on_member_update(self, event: hikari.MemberUpdateEvent):
+    async def on_member_update(self, event: hikari.MemberUpdateEvent) -> None:
         old_member = event.old_member
         if (
             event.user.is_bot
@@ -69,7 +71,7 @@ class ChallengeExtension:
             return
         await self.member_joined(event.member)
 
-    async def member_joined(self, member: hikari.Member):
+    async def member_joined(self, member: hikari.Member) -> None:
         data = self.app.store.get_data(member.guild_id)
         if data is None:
             logger.warning(f"uncached guild settings: {member.guild_id}")
@@ -100,7 +102,7 @@ class ChallengeExtension:
             role is None
             or role.is_managed
             or role.position == 0
-            or role in member.role_ids
+            or role.id in member.role_ids
         ):
             return
 
@@ -122,7 +124,7 @@ class ChallengeExtension:
 
         await member.add_role(role)
 
-    async def on_interaction_create(self, event: hikari.InteractionCreateEvent):
+    async def on_interaction_create(self, event: hikari.InteractionCreateEvent) -> None:
         interaction = event.interaction
         if not isinstance(interaction, hikari.ComponentInteraction):
             return
@@ -150,7 +152,7 @@ class ChallengeExtension:
             logger.exception("Error occured during component interaction", exc_info=e)
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=translate(interaction.locale, "challenge_internal_error"),
+                content=t(interaction.locale, "challenge_internal_error"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
@@ -163,26 +165,28 @@ class ChallengeExtension:
             if guild is not None:
                 await self.migrate_embed(interaction.message, guild)
 
-    async def create_flow(self, interaction: hikari.ComponentInteraction):
+    async def create_flow(self, interaction: hikari.ComponentInteraction) -> None:
         timed = Timed(name="create flow", report_threshold=1)
 
         database = self.app.database
+        locale = interaction.locale
         guild = interaction.get_guild()
         if guild is None:
             return
 
-        t = lambda s, **k: translate(  # noqa E731
-            interaction.locale, f"challenge_{s}", **k
-        )
         data = self.app.store.get_data(guild.id)
         if data is None:
             logger.warning(f"uncached guild settings: {guild.id}")
             component = self.app.bot.rest.build_action_row()
-            add_link(component, t("discord"), "https://cleanerbot.xyz/discord")
+            add_link(
+                component,
+                t(locale, "challenge_discord"),
+                "https://cleanerbot.xyz/discord",
+            )
 
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("no_settings"),
+                content=t(locale, "challenge_no_settings"),
                 component=component,
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
@@ -192,22 +196,22 @@ class ChallengeExtension:
         timed.checkpoint("got config/entitlements")
 
         act = (
-            t("action_take")
+            t(locale, "challenge_action_take")
             if config.challenge_interactive_take_role
-            else t("action_give")
+            else t(locale, "challenge_action_give")
         )
 
         challenge_interactive_role = int(config.challenge_interactive_role)
         if not config.challenge_interactive_enabled:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("disabled"),
+                content=t(locale, "challenge_disabled"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
         elif not challenge_interactive_role:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("no_role", action=act),
+                content=t(locale, "challenge_no_role", action=act),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
@@ -218,7 +222,7 @@ class ChallengeExtension:
         ):
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("already_verified"),
+                content=t(locale, "challenge_already_verified"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
@@ -240,33 +244,33 @@ class ChallengeExtension:
         if role is None:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("role_gone", action=act),
+                content=t(locale, "challenge_role_gone", action=act),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
         elif role.is_managed:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("role_managed", action=act, role=role.id),
+                content=t(locale, "challenge_role_managed", action=act, role=role.id),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
         elif role.position == 0:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("role_everyone", action=act),
+                content=t(locale, "challenge_role_everyone", action=act),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
         elif role.permissions & DANGEROUS_PERMISSIONS:
             component = self.app.bot.rest.build_action_row()
             add_link(
                 component,
-                t("role_dangerous_link"),
+                t(locale, "challenge_role_dangerous_link"),
                 "https://cleanerbot.xyz/help/role-restrictions"
                 "#dangerous-permissions",
             )
 
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("role_dangerous", action=act, role=role.id),
+                content=t(locale, "challenge_role_dangerous", action=act, role=role.id),
                 component=component,
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
@@ -280,7 +284,7 @@ class ChallengeExtension:
 
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("no_myself"),
+                content=t(locale, "challenge_no_myself"),
                 component=component,
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
@@ -290,13 +294,13 @@ class ChallengeExtension:
             component = self.app.bot.rest.build_action_row()
             add_link(
                 component,
-                t("hierarchy_link"),
+                t(locale, "challenge_hierarchy_link"),
                 "https://cleanerbot.xyz/help/role-restrictions#hierarchy",
             )
 
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("hierarchy", action=act, role=role.id),
+                content=t(locale, "challenge_hierarchy", action=act, role=role.id),
                 component=component,
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
@@ -309,7 +313,7 @@ class ChallengeExtension:
         else:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("no_perms", action=act),
+                content=t(locale, "challenge_no_perms", action=act),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
@@ -333,18 +337,18 @@ class ChallengeExtension:
 
             component = self.app.bot.rest.build_action_row()
             url = f"https://challenge.cleanerbot.xyz/{flow}"
-            add_link(component, t("link"), url)
+            add_link(component, t(locale, "challenge_link"), url)
 
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("content"),
+                content=t(locale, "challenge_content"),
                 component=component,
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
         else:
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("verified"),
+                content=t(locale, "challenge_verified"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
@@ -367,7 +371,7 @@ class ChallengeExtension:
         timed.checkpoint("done")
         timed.close()
 
-    async def verifyd(self):
+    async def verifyd(self) -> None:
         pubsub = self.app.database.pubsub()
         await pubsub.subscribe("pubsub:challenge-verify")
         await pubsub.subscribe("pubsub:challenge-send")
@@ -384,7 +388,7 @@ class ChallengeExtension:
                     protected_call(self.send_embed(data["channel"], data["guild"]))
                 )
 
-    async def verify_flow(self, flow: str):
+    async def verify_flow(self, flow: str) -> None:
         logger.debug(f"flow has been solved: {flow}")
 
         user_id, guild_id = await self.app.database.hmget(
@@ -459,20 +463,22 @@ class ChallengeExtension:
             )
             self.app.store.put_http(log)
 
-    def get_message(self, guild: hikari.GatewayGuild) -> dict:
-        t = lambda s: translate(  # noqa E731
-            guild.preferred_locale, f"challenge_embed_{s}"
-        )
+    def get_message(self, guild: hikari.GatewayGuild) -> dict[str, typing.Any]:
+        locale = guild.preferred_locale
         component = self.app.bot.rest.build_action_row()
         (
             component.add_button(hikari.ButtonStyle.PRIMARY, "challenge")
-            .set_label(t("verify"))
+            .set_label(t(locale, "challenge_embed_verify"))
             .add_to_container()
         )
-        add_link(component, t("privacy"), "https://cleanerbot.xyz/legal/privacy")
+        add_link(
+            component,
+            t(locale, "challenge_embed_privacy"),
+            "https://cleanerbot.xyz/legal/privacy",
+        )
 
-        title = t("title")
-        description = t("description")
+        title = t(locale, "challenge_embed_title")
+        description = t(locale, "challenge_embed_description")
 
         data = self.app.store.get_data(guild.id)
         if (
@@ -490,7 +496,7 @@ class ChallengeExtension:
 
         return dict(embed=embed, component=component)
 
-    async def send_embed(self, channel_id: int, guild_id: int):
+    async def send_embed(self, channel_id: int, guild_id: int) -> None:
         channel = self.app.bot.cache.get_guild_channel(channel_id)
         if channel is None or not isinstance(channel, hikari.TextableGuildChannel):
             return
@@ -519,5 +525,7 @@ class ChallengeExtension:
 
         await channel.send(**self.get_message(guild))
 
-    async def migrate_embed(self, message: hikari.Message, guild: hikari.GatewayGuild):
+    async def migrate_embed(
+        self, message: hikari.Message, guild: hikari.GatewayGuild
+    ) -> None:
         await message.edit(**self.get_message(guild))

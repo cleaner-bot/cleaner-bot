@@ -19,9 +19,9 @@ def detection(
     message: hikari.Message,
     messages: typing.Sequence[hikari.Message],
     guild: CleanerGuild,
-):
+) -> None | StickerMitigation:
     if not message.stickers or len(messages) + 1 < THRESHOLD:
-        return
+        return None
 
     data = guild.get_data()
     slowmode_exceptions = (
@@ -39,3 +39,4 @@ def detection(
 
     if stickers >= THRESHOLD:
         return StickerMitigation(stickers_ids)
+    return None

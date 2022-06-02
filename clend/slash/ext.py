@@ -4,7 +4,7 @@ import typing
 from urllib.parse import urlencode
 
 import hikari
-from cleaner_i18n.translate import translate
+from cleaner_i18n import translate as t
 from hikari.urls import BASE_URL
 
 from ..app import TheCleanerApp
@@ -15,15 +15,15 @@ logger = logging.getLogger(__name__)
 
 
 class SlashExtension:
-    listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
+    listeners: list[tuple[typing.Type[hikari.Event], typing.Any]]
 
-    def __init__(self, app: TheCleanerApp):
+    def __init__(self, app: TheCleanerApp) -> None:
         self.app = app
         self.listeners = [
             (hikari.InteractionCreateEvent, self.on_interaction_create),
         ]
 
-    async def on_interaction_create(self, event: hikari.InteractionCreateEvent):
+    async def on_interaction_create(self, event: hikari.InteractionCreateEvent) -> None:
         interaction = event.interaction
         passed = time_passed_since(interaction.id).total_seconds()
 
@@ -78,42 +78,60 @@ class SlashExtension:
             # mypy is being weird here, thinking that interaction is ModalResponseMixin
             await interaction.create_initial_response(  # type: ignore
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=translate(
-                    interaction.locale, "slash_internal_error"  # type: ignore
-                ),
+                content=t(interaction.locale, "slash_internal_error"),  # type: ignore
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
-    async def handle_about(self, interaction: hikari.CommandInteraction):
+    async def handle_about(self, interaction: hikari.CommandInteraction) -> None:
         component1 = interaction.app.rest.build_action_row()
         locale = interaction.locale
-        t = lambda s: translate(locale, f"slash_about_{s}")  # noqa E731
-        add_link(component1, t("website"), "https://cleanerbot.xyz")
-        add_link(component1, t("documentation"), "https://cleanerbot.xyz/docs/")
-        add_link(component1, t("blog"), "https://cleanerbot.xyz/blog/")
+        add_link(component1, t(locale, "slash_about_website"), "https://cleanerbot.xyz")
+        add_link(
+            component1,
+            t(locale, "slash_about_documentation"),
+            "https://cleanerbot.xyz/docs/",
+        )
+        add_link(
+            component1, t(locale, "slash_about_blog"), "https://cleanerbot.xyz/blog/"
+        )
         component2 = interaction.app.rest.build_action_row()
-        add_link(component2, t("privacy"), "https://cleanerbot.xyz/legal/privacy")
-        add_link(component2, t("terms"), "https://cleanerbot.xyz/legal/terms")
-        add_link(component2, t("impressum"), "https://cleanerbot.xyz/legal/impressum")
+        add_link(
+            component2,
+            t(locale, "slash_about_privacy"),
+            "https://cleanerbot.xyz/legal/privacy",
+        )
+        add_link(
+            component2,
+            t(locale, "slash_about_terms"),
+            "https://cleanerbot.xyz/legal/terms",
+        )
+        add_link(
+            component2,
+            t(locale, "slash_about_impressum"),
+            "https://cleanerbot.xyz/legal/impressum",
+        )
         component3 = interaction.app.rest.build_action_row()
-        add_link(component3, t("discord"), "https://cleanerbot.xyz/discord")
+        add_link(
+            component3,
+            t(locale, "slash_about_discord"),
+            "https://cleanerbot.xyz/discord",
+        )
         await interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_CREATE,
-            t("content"),
+            t(locale, "slash_about_content"),
             components=[component1, component2, component3],
             flags=hikari.MessageFlag.EPHEMERAL,
         )
 
-    async def handle_dashboard(self, interaction: hikari.CommandInteraction):
+    async def handle_dashboard(self, interaction: hikari.CommandInteraction) -> None:
         member = interaction.member
 
         locale = interaction.locale
-        t = lambda s: translate(locale, f"slash_dashboard_{s}")  # noqa E731
 
         if member is None:
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                t("guildonly"),
+                t(locale, "slash_dahsboard_guildonly"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return
@@ -121,7 +139,7 @@ class SlashExtension:
         component = interaction.app.rest.build_action_row()
         add_link(
             component,
-            t("dashboard"),
+            t(locale, "slash_dashboard_dashboard"),
             f"https://cleanerbot.xyz/dash/{interaction.guild_id}",
         )
 
@@ -129,16 +147,17 @@ class SlashExtension:
         if not member.permissions & (
             hikari.Permissions.ADMINISTRATOR | hikari.Permissions.MANAGE_GUILD
         ):
-            note = t("note")
+            note = t(locale, "slash_dashboard_note")
 
         await interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_CREATE,
-            t("content") + (f"\n\n{note}" if note is not None else ""),
+            t(locale, "slash_dashboard_content")
+            + (f"\n\n{note}" if note is not None else ""),
             component=component,
             flags=hikari.MessageFlag.EPHEMERAL,
         )
 
-    async def handle_invite(self, interaction: hikari.CommandInteraction):
+    async def handle_invite(self, interaction: hikari.CommandInteraction) -> None:
         base = "/oauth2/authorize"
         permissions = (
             hikari.Permissions.BAN_MEMBERS
@@ -189,35 +208,35 @@ class SlashExtension:
             flags=hikari.MessageFlag.EPHEMERAL,
         )
 
-    async def handle_login(self, interaction: hikari.CommandInteraction):
+    async def handle_login(self, interaction: hikari.CommandInteraction) -> None:
         locale = interaction.locale
-        t = lambda s: translate(locale, f"slash_login_{s}")  # noqa E731
         database = self.app.database
 
         if not await database.exists((f"user:{interaction.user.id}:oauth:token",)):
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                t("nosession"),
+                t(locale, "nosession"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
         component = interaction.app.rest.build_action_row()
         (
             component.add_button(hikari.ButtonStyle.DANGER, "login")
-            .set_label(t("proceed"))
+            .set_label(t(locale, "slash_login_proceed"))
             .add_to_container()
         )
 
         await interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_CREATE,
-            t("content"),
+            t(locale, "slash_login_content"),
             component=component,
             flags=hikari.MessageFlag.EPHEMERAL,
         )
 
-    async def handle_login_button(self, interaction: hikari.ComponentInteraction):
+    async def handle_login_button(
+        self, interaction: hikari.ComponentInteraction
+    ) -> None:
         locale = interaction.locale
-        t = lambda s: translate(locale, f"slash_login_{s}")  # noqa E731
         database = self.app.database
 
         code = os.urandom(32).hex()
@@ -228,7 +247,7 @@ class SlashExtension:
 
         await interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_UPDATE,
-            t("success"),
+            t(locale, "slash_login_success"),
             component=component,
             flags=hikari.MessageFlag.EPHEMERAL,
         )

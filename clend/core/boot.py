@@ -41,7 +41,7 @@ MODULES_TO_NOT_RELOAD = (
 
 
 class BootExtension:
-    listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
+    listeners: list[tuple[typing.Type[hikari.Event], typing.Any]]
 
     def __init__(self, app: TheCleanerApp) -> None:
         self.app = app
@@ -55,7 +55,7 @@ class BootExtension:
             (hikari.GuildMessageCreateEvent, self.on_message_create),
         ]
 
-    def should_reload_module(self, module: str):
+    def should_reload_module(self, module: str) -> bool | None:
         if module == "clend" or module == "clend.core" or module == __name__:
             return False
         elif module.startswith("cleaner_"):
@@ -81,10 +81,10 @@ class BootExtension:
                 return None
         return False
 
-    async def on_started(self, event: hikari.StartedEvent):
+    async def on_started(self, event: hikari.StartedEvent) -> None:
         self.load_entry()
 
-    def load_entry(self):
+    def load_entry(self) -> None:
         before = set(sys.modules.keys())
         self.app.load_extension(ENTRY_EXTENSION)
         after = set(sys.modules.keys())
@@ -97,17 +97,17 @@ class BootExtension:
             if self.should_reload_module(module) is None:
                 logger.warning(f"dynamic module that is not reloaded: {module}")
 
-    async def on_stopping(self, event: hikari.StoppingEvent):
+    async def on_stopping(self, event: hikari.StoppingEvent) -> None:
         if ENTRY_EXTENSION in self.app.extensions:
             self.app.unload_extension(ENTRY_EXTENSION)
 
-    async def on_message_create(self, event: hikari.GuildMessageCreateEvent):
+    async def on_message_create(self, event: hikari.GuildMessageCreateEvent) -> None:
         if not self.app.is_developer(event.author_id):
             return
         if event.content == "clean!full-reload":
             await self.handle_full_reload(event)
 
-    async def handle_full_reload(self, event: hikari.GuildMessageCreateEvent):
+    async def handle_full_reload(self, event: hikari.GuildMessageCreateEvent) -> None:
         msg = await event.message.respond("Full reloading...")
         ext_errors = ext_unloaded = 0
 

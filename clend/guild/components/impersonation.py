@@ -2,16 +2,17 @@ import hikari
 from cleaner_data.auto.avatars import data as avatar_blacklist
 from cleaner_data.name import is_name_blacklisted
 from cleaner_data.normalize import normalize
-from cleaner_i18n.translate import Message
+from cleaner_i18n import Message
 from hikari.internal.time import utc_datetime
 
+from ...shared.event import IActionChallenge
 from ..guild import CleanerGuild
 from ..helper import action_challenge
 
 
 def on_new_member(
     event: hikari.MemberCreateEvent | hikari.MemberUpdateEvent, guild: CleanerGuild
-):
+) -> tuple[IActionChallenge] | None:
     data = guild.get_data()
     if data is None or (
         isinstance(event, hikari.MemberUpdateEvent)  # prevent duplicate actions
@@ -21,7 +22,7 @@ def on_new_member(
         )
         and (event.member.joined_at - utc_datetime()).total_seconds() < 5
     ):
-        return
+        return None
 
     reason: Message | None = None
     name: str | None = None
@@ -53,7 +54,7 @@ def on_new_member(
         name = "impersonation_custom_blacklist"
 
     if reason is None or name is None:
-        return
+        return None
 
     info = {
         "name": name,

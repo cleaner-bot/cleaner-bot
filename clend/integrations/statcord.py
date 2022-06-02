@@ -10,7 +10,7 @@ class StatcordIntegration:
         self.app = app
         self.statcord_token = statcord_token
 
-    async def update_statcord(self, guild_count: int, user_count: int):
+    async def update_statcord(self, guild_count: int, user_count: int) -> None:
         me = self.app.bot.cache.get_me()
         if me is None:
             # dont bother handling because this should NEVER happen
@@ -27,7 +27,9 @@ class StatcordIntegration:
 
         logger.debug(f"published stats to statcord: {event}")
 
-    def prepare_event(self, guild_count: int, user_count: int) -> dict[str, str | list]:
+    def prepare_event(
+        self, guild_count: int, user_count: int
+    ) -> dict[str, str | list[str]]:
         return {
             "servers": str(guild_count),
             "users": str(user_count),

@@ -14,9 +14,9 @@ logger = logging.getLogger(__name__)
 
 
 class SyncExtension:
-    listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
+    listeners: list[tuple[typing.Type[hikari.Event], typing.Any]]
 
-    def __init__(self, app: TheCleanerApp):
+    def __init__(self, app: TheCleanerApp) -> None:
         self.app = app
         self.listeners = [
             (hikari.GuildJoinEvent, self.on_new_guild),
@@ -33,22 +33,22 @@ class SyncExtension:
         ]
         self.task = None
 
-    def on_load(self):
+    def on_load(self) -> None:
         asyncio.create_task(protected_call(self.loader()))
 
-    async def loader(self):
+    async def loader(self) -> None:
         for guild in tuple(self.app.bot.cache.get_guilds_view().values()):
             await self.new_guild(guild)
         logger.info("initial sync done")
 
     async def on_new_guild(
         self, event: hikari.GuildJoinEvent | hikari.GuildAvailableEvent
-    ):
+    ) -> None:
         guild = event.get_guild()
         if guild is not None:
             await self.new_guild(guild)
 
-    async def new_guild(self, guild: hikari.GatewayGuild):
+    async def new_guild(self, guild: hikari.GatewayGuild) -> None:
         await self.sync(
             guild.id,
             {
@@ -60,11 +60,11 @@ class SyncExtension:
             },
         )
 
-    async def on_destroy_guild(self, event: hikari.GuildLeaveEvent):
+    async def on_destroy_guild(self, event: hikari.GuildLeaveEvent) -> None:
         database = self.app.database
         await database.delete((f"guild:{event.guild_id}:sync",))
 
-    async def on_update_role(self, event: hikari.RoleEvent):
+    async def on_update_role(self, event: hikari.RoleEvent) -> None:
         # TODO: add role.get_guild() to hikari
         guild = self.app.bot.cache.get_guild(event.guild_id)
         if guild is not None:
@@ -77,7 +77,7 @@ class SyncExtension:
                 },
             )
 
-    async def on_update_channel(self, event: hikari.GuildChannelEvent):
+    async def on_update_channel(self, event: hikari.GuildChannelEvent) -> None:
         guild = event.get_guild()
         if guild is not None:
             await self.sync(
@@ -87,7 +87,7 @@ class SyncExtension:
                 },
             )
 
-    async def on_member_update(self, event: hikari.MemberUpdateEvent):
+    async def on_member_update(self, event: hikari.MemberUpdateEvent) -> None:
         me = self.app.bot.get_me()
         if me is None or event.user_id != me.id:
             return
@@ -102,7 +102,7 @@ class SyncExtension:
                 },
             )
 
-    async def on_guild_update(self, event: hikari.GuildUpdateEvent):
+    async def on_guild_update(self, event: hikari.GuildUpdateEvent) -> None:
         await self.sync(
             event.guild_id,
             {
@@ -110,10 +110,10 @@ class SyncExtension:
             },
         )
 
-    def sync_guild(self, guild: hikari.GatewayGuild):
+    def sync_guild(self, guild: hikari.GatewayGuild) -> dict[str, typing.Any]:
         return {"owner_id": guild.owner_id}
 
-    def sync_myself(self, guild: hikari.GatewayGuild):
+    def sync_myself(self, guild: hikari.GatewayGuild) -> dict[str, typing.Any]:
         perms = hikari.Permissions.NONE
         me = guild.get_my_member()
         if me is not None:
@@ -122,7 +122,7 @@ class SyncExtension:
 
         return {"permissions": {k.name: True for k in perms}}
 
-    def sync_roles(self, guild: hikari.GatewayGuild):
+    def sync_roles(self, guild: hikari.GatewayGuild) -> list[dict[str, typing.Any]]:
         me = guild.get_my_member()
         top_role_position = 0
         if me is not None:
@@ -144,10 +144,10 @@ class SyncExtension:
             for role in guild.get_roles().values()
         ]
 
-    def sync_channels(self, guild: hikari.GatewayGuild):
+    def sync_channels(self, guild: hikari.GatewayGuild) -> list[dict[str, typing.Any]]:
         me = guild.get_my_member()
         if me is None:
-            return
+            raise RuntimeError("me not found")
 
         return [
             {
@@ -159,7 +159,7 @@ class SyncExtension:
             if isinstance(channel, hikari.TextableGuildChannel)
         ]
 
-    async def sync(self, guild_id: int, data: dict[str, typing.Any]):
+    async def sync(self, guild_id: int, data: dict[str, typing.Any]) -> None:
         database = self.app.database
         await database.hset(
             f"guild:{guild_id}:sync",

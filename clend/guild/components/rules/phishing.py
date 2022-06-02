@@ -5,17 +5,21 @@ from cleaner_data.phishing_content import get_highest_phishing_match
 from cleaner_data.url import get_urls, has_url
 from Levenshtein import ratio  # type: ignore
 
+from ...guild import CleanerGuild
 
-def phishing_content(message: hikari.PartialMessage, guild):
+
+def phishing_content(message: hikari.PartialMessage, guild: CleanerGuild) -> bool:
     if not message.content or not has_url(message.content):
-        return
+        return False
     match = get_highest_phishing_match(message.content)
     return match > 0.9
 
 
-def phishing_domain_blacklisted(message: hikari.PartialMessage, guild):
+def phishing_domain_blacklisted(
+    message: hikari.PartialMessage, guild: CleanerGuild
+) -> bool:
     if not message.content or not has_url(message.content):
-        return
+        return False
     for url in get_urls(message.content):
         hostname = url.split("/")[2]
         if is_domain_blacklisted(hostname):
@@ -33,7 +37,9 @@ suspicious_parts = (
 )
 
 
-def phishing_domain_heuristic(message: hikari.PartialMessage, guild):
+def phishing_domain_heuristic(
+    message: hikari.PartialMessage, guild: CleanerGuild
+) -> bool:
     if not message.content or not has_url(message.content):
         return False
     for url in get_urls(message.content):
@@ -50,9 +56,9 @@ def phishing_domain_heuristic(message: hikari.PartialMessage, guild):
     return False
 
 
-def phishing_embed(message: hikari.PartialMessage, guild):
+def phishing_embed(message: hikari.PartialMessage, guild: CleanerGuild) -> bool:
     if not message.embeds:
-        return
+        return False
     for embed in message.embeds:
         url = embed.url
         if url is None:

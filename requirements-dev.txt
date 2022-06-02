@@ -6,3 +6,4 @@ flake8-isort>=4.1,<4.2
 mypy==0.960
 codespell>=2.1,<2.2
 types-aiofiles>=0.8,<0.9
+uvloop==0.16.0

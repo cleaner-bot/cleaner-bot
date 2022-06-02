@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class DevExtension:
-    listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
+    listeners: list[tuple[typing.Type[hikari.Event], typing.Any]]
 
     def __init__(self, app: TheCleanerApp) -> None:
         self.app = app
@@ -21,7 +21,7 @@ class DevExtension:
             (hikari.GuildMessageCreateEvent, self.on_message_create),
         ]
 
-    async def on_message_create(self, event: hikari.GuildMessageCreateEvent):
+    async def on_message_create(self, event: hikari.GuildMessageCreateEvent) -> None:
         if not self.app.is_developer(event.author_id) or event.content is None:
             return
         if event.content == "clean!ping":
@@ -53,7 +53,7 @@ class DevExtension:
         elif event.content.startswith("clean!putenv "):
             await self.handle_putenv(event)
 
-    async def handle_ping(self, event: hikari.GuildMessageCreateEvent):
+    async def handle_ping(self, event: hikari.GuildMessageCreateEvent) -> None:
         sent = utc_datetime()
         ws_latency = self.app.bot.heartbeat_latency * 1000
 
@@ -75,11 +75,13 @@ class DevExtension:
             )
         )
 
-    async def handle_stop(self, event: hikari.GuildMessageCreateEvent):
+    async def handle_stop(self, event: hikari.GuildMessageCreateEvent) -> None:
         await event.message.respond("Bye!")
         await self.app.bot.close()
 
-    async def handle_register_slash(self, event: hikari.GuildMessageCreateEvent):
+    async def handle_register_slash(
+        self, event: hikari.GuildMessageCreateEvent
+    ) -> None:
         is_global = event.content and event.content.endswith("-global")
 
         commands = [
@@ -105,7 +107,8 @@ class DevExtension:
 
         me = self.app.bot.get_me()
         if me is None:
-            return await event.message.respond("no me found")
+            await event.message.respond("no me found")
+            return
 
         await event.app.rest.set_application_commands(
             application=me.id,
@@ -115,10 +118,11 @@ class DevExtension:
 
         await event.message.respond("done")
 
-    async def handle_reset_slash(self, event: hikari.GuildMessageCreateEvent):
+    async def handle_reset_slash(self, event: hikari.GuildMessageCreateEvent) -> None:
         me = self.app.bot.get_me()
         if me is None:
-            return await event.message.respond("no me found")
+            await event.message.respond("no me found")
+            return
 
         await event.app.rest.set_application_commands(
             application=me.id,
@@ -128,7 +132,7 @@ class DevExtension:
 
         await event.message.respond("done")
 
-    async def handle_info(self, event: hikari.GuildMessageCreateEvent):
+    async def handle_info(self, event: hikari.GuildMessageCreateEvent) -> None:
         bot = self.app.bot
         guilds = len(bot.cache.get_guilds_view())
         users = len(bot.cache.get_users_view())
@@ -150,7 +154,7 @@ class DevExtension:
             f"Members: {members:,}\n"
         )
 
-    async def handle_pull(self, event: hikari.GuildMessageCreateEvent):
+    async def handle_pull(self, event: hikari.GuildMessageCreateEvent) -> None:
         msg = await event.message.respond("Pulling from git")
         git_pull = await asyncio.create_subprocess_shell(
             "git pull", stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
@@ -161,7 +165,7 @@ class DevExtension:
         )
         await msg.edit(f"```\n{message[:1900]}```" if message else "Done. (no output)")
 
-    async def handle_update(self, event: hikari.GuildMessageCreateEvent):
+    async def handle_update(self, event: hikari.GuildMessageCreateEvent) -> None:
         assert event.message.content
 
         name = event.message.content[13:]
@@ -177,16 +181,17 @@ class DevExtension:
         )
         await msg.edit(f"```\n{message[:1900]}```" if message else "Done. (no output)")
 
-    async def handle_reload(self, event: hikari.GuildMessageCreateEvent):
+    async def handle_reload(self, event: hikari.GuildMessageCreateEvent) -> None:
         assert event.message.content
         name = event.message.content[13:]
         if name.startswith("cleaner."):
-            return await event.message.respond(
+            await event.message.respond(
                 f"Did you mean clend instead of cleaner????\n"
                 f"If so, please enable IQ or go to sleep if it's late. "
                 f"If you did mean to reload {name} then you're out of luck, "
                 f"because I won't let you."
             )
+            return
 
         msg = await event.message.respond(f"Reloading `{name}`")
 
@@ -195,7 +200,8 @@ class DevExtension:
                 self.app.unload_extension(name)
             except Exception as e:
                 logger.error(f"Error unloading {name}", exc_info=e)
-                return await msg.edit("Failed. Unload error.")
+                await msg.edit("Failed. Unload error.")
+                return
 
         reloaded = []
         for module in tuple(sys.modules):
@@ -207,25 +213,24 @@ class DevExtension:
             self.app.load_extension(name)
         except ModuleNotFoundError as e:
             if e.name == name:
-                return await msg.edit(
-                    "Failed because I did not find the extension, idiot."
-                )
+                await msg.edit("Failed because I did not find the extension, idiot.")
+                return
             logger.info(
                 "reloaded modules" + ", ".join(f"`{x}`" for x in reloaded), exc_info=e
             )
-            return await msg.edit("Failed. Load error.")
+            await msg.edit("Failed. Load error.")
         except Exception as e:
             logger.error(f"Error loading {name}", exc_info=e)
             logger.info(
                 "reloaded modules" + ", ".join(f"`{x}`" for x in reloaded), exc_info=e
             )
-            return await msg.edit("Failed. Load error.")
+            await msg.edit("Failed. Load error.")
+        else:
+            await msg.edit(
+                "Success. Reloaded modules: " + ", ".join(f"`{x}`" for x in reloaded)
+            )
 
-        await msg.edit(
-            "Success. Reloaded modules: " + ", ".join(f"`{x}`" for x in reloaded)
-        )
-
-    async def handle_reload_i18n(self, event: hikari.GuildMessageCreateEvent):
+    async def handle_reload_i18n(self, event: hikari.GuildMessageCreateEvent) -> None:
         msg = await event.message.respond("Reloading cleaner-i18n translations")
 
         reloaded = []
@@ -235,16 +240,16 @@ class DevExtension:
                 del sys.modules[module]
                 reloaded.append(module)
 
-        from cleaner_i18n import translate
+        from cleaner_i18n import core
         from cleaner_i18n.locale import localesd
 
-        translate.localesd = localesd
+        core.localesd = localesd
 
         await msg.edit(
             "Success. Reloaded modules: " + ", ".join(f"`{x}`" for x in reloaded)
         )
 
-    async def handle_emergency_ban(self, event: hikari.GuildMessageCreateEvent):
+    async def handle_emergency_ban(self, event: hikari.GuildMessageCreateEvent) -> None:
         if event.message.referenced_message is None:
             await event.message.respond("You have to reply to a message.")
             return
@@ -264,7 +269,7 @@ class DevExtension:
             "until the next reload. Please update `cleaner-data`."
         )
 
-    async def handle_risk(self, event: hikari.GuildMessageCreateEvent):
+    async def handle_risk(self, event: hikari.GuildMessageCreateEvent) -> None:
         assert event.message.content
         parts = event.message.content.split(" ")
         user_id = int(parts[1])
@@ -279,7 +284,7 @@ class DevExtension:
 
         await event.message.respond(f"risk={int(risk * 100)} ({risk:.2%})")
 
-    async def handle_suspend(self, event: hikari.GuildMessageCreateEvent):
+    async def handle_suspend(self, event: hikari.GuildMessageCreateEvent) -> None:
         assert event.message.content
         parts = event.message.content.split(" ")
         guild_id = parts[1]
@@ -287,20 +292,22 @@ class DevExtension:
 
         analytics = self.app.extensions.get("clend.analytics")
         if analytics is None:
-            return await event.message.respond("`clend.analytics` not loaded")
+            await event.message.respond("`clend.analytics` not loaded")
+            return
 
         guild = self.app.bot.cache.get_guild(int(guild_id))
         if guild is None:
-            return await event.message.respond("guild not found")
+            await event.message.respond("guild not found")
+            return
 
         await analytics.suspend(guild, reason)
         await event.message.respond("suspended!")
 
-    async def handle_test(self, event: hikari.GuildMessageCreateEvent):
+    async def handle_test(self, event: hikari.GuildMessageCreateEvent) -> None:
         embed = hikari.Embed(description="a" * 4096)
         await event.message.respond(embeds=[embed, embed])
 
-    async def handle_putenv(self, event: hikari.GuildMessageCreateEvent):
+    async def handle_putenv(self, event: hikari.GuildMessageCreateEvent) -> None:
         assert event.message.content
         parts = event.message.content.split(" ")
         name, value = parts[1:]

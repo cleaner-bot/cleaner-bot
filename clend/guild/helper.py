@@ -1,6 +1,8 @@
+import typing
+
 import hikari
 from cleaner_conf.guild import GuildConfig
-from cleaner_i18n.translate import Message
+from cleaner_i18n import Message
 
 from ..shared.channel_perms import permissions_for
 from ..shared.dangerous import DANGEROUS_PERMISSIONS
@@ -22,7 +24,11 @@ PERM_SEND = hikari.Permissions.SEND_MESSAGES | hikari.Permissions.VIEW_CHANNEL
 
 
 def action_challenge(
-    cguild: CleanerGuild, member: hikari.Member, block: bool = False, **kwargs
+    cguild: CleanerGuild,
+    member: hikari.Member,
+    info: typing.Any,
+    reason: Message,
+    block: bool = False,
 ) -> IActionChallenge:
     guild = member.get_guild()
     data = cguild.get_data()
@@ -37,7 +43,8 @@ def action_challenge(
             can_role=False,
             take_role=False,
             role_id=0,
-            **kwargs
+            info=info,
+            reason=reason,
         )
 
     role: hikari.Role | None = None
@@ -93,14 +100,15 @@ def action_challenge(
         can_role=can_role,
         take_role=True if data is None else data.config.challenge_interactive_take_role,
         role_id=role.id if role else 0,
-        **kwargs
+        info=info,
+        reason=reason,
     )
 
     return action
 
 
 def action_nickname(
-    member: hikari.Member, nickname: str | None, **kwargs
+    member: hikari.Member, nickname: str | None, info: typing.Any, reason: Message
 ) -> IActionNickname:
     guild = member.get_guild()
     if guild is None or member.id == guild.owner_id:
@@ -111,7 +119,8 @@ def action_nickname(
             can_change=False,
             can_kick=False,
             can_ban=False,
-            **kwargs
+            info=info,
+            reason=reason,
         )
 
     me = guild.get_my_member()
@@ -134,12 +143,16 @@ def action_nickname(
         can_change=above_role and my_perms & PERM_NICK > 0,
         can_kick=above_role and my_perms & PERM_KICK > 0,
         can_ban=above_role and my_perms & PERM_BAN > 0,
-        **kwargs
+        info=info,
+        reason=reason,
     )
 
 
 def action_delete(
-    member: hikari.Member, message: hikari.PartialMessage, **kwargs
+    member: hikari.Member,
+    message: hikari.PartialMessage,
+    info: typing.Any,
+    reason: Message,
 ) -> IActionDelete:
     guild = member.get_guild()
     if guild is None:
@@ -150,7 +163,8 @@ def action_delete(
             message_id=message.id,
             can_delete=False,
             message=message,
-            **kwargs
+            info=info,
+            reason=reason,
         )
 
     me = guild.get_my_member()
@@ -164,7 +178,8 @@ def action_delete(
             message_id=message.id,
             can_delete=False,
             message=message,
-            **kwargs
+            info=info,
+            reason=reason,
         )
 
     my_perms = hikari.Permissions.NONE
@@ -189,7 +204,8 @@ def action_delete(
         message_id=message.id,
         can_delete=can_delete,
         message=message,
-        **kwargs
+        info=info,
+        reason=reason,
     )
 
 
@@ -291,7 +307,7 @@ def is_moderator(cguild: CleanerGuild, member: hikari.Member) -> bool:
     return False
 
 
-def is_exception(config_or_guild: CleanerGuild | GuildConfig, channel_id: int):
+def is_exception(config_or_guild: CleanerGuild | GuildConfig, channel_id: int) -> bool:
     if isinstance(config_or_guild, CleanerGuild):
         data = config_or_guild.get_data()
         if data is None:

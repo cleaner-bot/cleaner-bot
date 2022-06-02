@@ -1,7 +1,8 @@
 import hikari
-from cleaner_i18n.translate import Message
+from cleaner_i18n import Message
 
 from ...shared.custom_events import SlowTimerEvent
+from ...shared.event import IActionChallenge
 from ..guild import CleanerGuild
 from ..helper import action_challenge
 
@@ -9,10 +10,12 @@ DAY = 24 * 3600
 mode_timespans = (DAY, 3 * DAY, 7 * DAY)
 
 
-def on_member_create(event: hikari.MemberCreateEvent, cguild: CleanerGuild):
+def on_member_create(
+    event: hikari.MemberCreateEvent, cguild: CleanerGuild
+) -> list[IActionChallenge] | None:
     data = cguild.get_data()
     if data is None or not data.config.antiraid_enabled:
-        return
+        return None
     limit, timeframe = map(int, data.config.antiraid_limit.split("/"))
 
     cguild.member_joins.expires = cguild.member_kicks.expires = timeframe
@@ -32,7 +35,7 @@ def on_member_create(event: hikari.MemberCreateEvent, cguild: CleanerGuild):
         )
 
     if len(matching) <= limit:
-        return
+        return None
 
     reason = Message("components_antiraid_limit", {"limit": data.config.antiraid_limit})
     info = {
@@ -71,7 +74,7 @@ def on_member_create(event: hikari.MemberCreateEvent, cguild: CleanerGuild):
     return actions
 
 
-def on_slow_timer(event: SlowTimerEvent, guild: CleanerGuild):
+def on_slow_timer(event: SlowTimerEvent, guild: CleanerGuild) -> None:
     guild.member_joins.evict()
 
 

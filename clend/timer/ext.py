@@ -12,21 +12,21 @@ logger = logging.getLogger(__name__)
 
 
 class TimerExtension:
-    listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
+    listeners: list[tuple[typing.Type[hikari.Event], typing.Any]]
+    task: asyncio.Task[None] | None = None
 
-    def __init__(self, app: TheCleanerApp):
+    def __init__(self, app: TheCleanerApp) -> None:
         self.app = app
         self.listeners = []
-        self.task = None
 
-    def on_load(self):
+    def on_load(self) -> None:
         self.task = asyncio.create_task(protect(self.timerd))
 
-    def on_unload(self):
+    def on_unload(self) -> None:
         if self.task is not None:
             self.task.cancel()
 
-    async def timerd(self):
+    async def timerd(self) -> None:
         sequence = 0
         while True:
             fast_timer_event = FastTimerEvent(self.app.bot, sequence=sequence)

@@ -49,7 +49,7 @@ class CleanerGuild:
         self.active_mitigations = []
         self.verification_joins = {}  # no cache evict needed
 
-    def evict_cache(self):
+    def evict_cache(self) -> None:
         self.messages.evict()
         self.member_joins.evict()
 

@@ -10,7 +10,7 @@ class DlistGGIntegration:
         self.app = app
         self.dlistgg_token = dlistgg_token
 
-    async def update_dlistgg(self, guild_count: int):
+    async def update_dlistgg(self, guild_count: int) -> None:
         me = self.app.bot.cache.get_me()
         if me is None:
             # dont bother handling because this should NEVER happen

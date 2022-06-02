@@ -1,11 +1,14 @@
 import hikari
-from cleaner_i18n.translate import Message
+from cleaner_i18n import Message
 
+from ...shared.event import IActionNickname
 from ..guild import CleanerGuild
 from ..helper import action_nickname, is_moderator
 
 
-def on_member_update(event: hikari.MemberUpdateEvent, guild: CleanerGuild):
+def on_member_update(
+    event: hikari.MemberUpdateEvent, guild: CleanerGuild
+) -> tuple[IActionNickname] | None:
     data = guild.get_data()
     if (
         data is None
@@ -13,7 +16,7 @@ def on_member_update(event: hikari.MemberUpdateEvent, guild: CleanerGuild):
         or not event.member.display_name.startswith("!")
         or is_moderator(guild, event.member)
     ):
-        return
+        return None
 
     reason = Message("components_dehoist", {})
     nickname: str | None = event.member.display_name.lstrip("! ")

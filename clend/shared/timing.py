@@ -17,13 +17,15 @@ class Timed:
     checkpoints: list[Checkpoint]
     _end_time: float | None = None
 
-    def __init__(self, *, name: str = None, report_threshold: float = 0.05) -> None:
+    def __init__(
+        self, *, name: str | None = None, report_threshold: float = 0.05
+    ) -> None:
         self._start_time = time.monotonic()
         self.checkpoints = []
         self.name = name
         self.report_threshold = report_threshold
 
-    def checkpoint(self, name: str):
+    def checkpoint(self, name: str) -> None:
         self.checkpoints.append(Checkpoint(name, time.monotonic()))
 
     def report(self) -> str:
@@ -53,10 +55,12 @@ class Timed:
 
         return self
 
-    def __exit__(self, exc_type, exc_value, exc_traceback):
+    def __exit__(
+        self, exc_type: typing.Any, exc_value: typing.Any, exc_traceback: typing.Any
+    ) -> None:
         self.close()
 
-    def close(self, force_report: bool = False):
+    def close(self, force_report: bool = False) -> None:
         self._end_time = time.monotonic()
         if self._end_time - self._start_time > self.report_threshold or force_report:
             report = self.report()

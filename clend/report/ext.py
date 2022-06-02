@@ -7,7 +7,8 @@ from datetime import timedelta
 import hikari
 from cleaner_data.phishing_content import get_highest_phishing_match
 from cleaner_data.url import has_url
-from cleaner_i18n.translate import Message, translate
+from cleaner_i18n import Message
+from cleaner_i18n import translate as t
 from expirepy.dict import ExpiringDict
 from hikari import urls
 from hikari.internal.time import utc_datetime
@@ -30,10 +31,10 @@ PERMS_SEND = (
 
 
 class ReportExtension:
-    listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
+    listeners: list[tuple[typing.Type[hikari.Event], typing.Any]]
     message_cache: ExpiringDict[int, hikari.Message]
 
-    def __init__(self, app: TheCleanerApp):
+    def __init__(self, app: TheCleanerApp) -> None:
         self.app = app
         self.listeners = [
             (hikari.InteractionCreateEvent, self.on_interaction_create),
@@ -62,7 +63,7 @@ class ReportExtension:
         self.modals = {"report-message": self.handle_message_report_modal}
         self.message_cache = ExpiringDict(expires=900)
 
-    async def on_interaction_create(self, event: hikari.InteractionCreateEvent):
+    async def on_interaction_create(self, event: hikari.InteractionCreateEvent) -> None:
         InteractionType = hikari.CommandInteraction | hikari.ComponentInteraction
         interaction: InteractionType = event.interaction  # type: ignore
 
@@ -122,43 +123,42 @@ class ReportExtension:
             logger.exception("Error occured during component interaction", exc_info=e)
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=translate(interaction.locale, "report_internal_error"),
+                content=t(interaction.locale, "report_internal_error"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
-    async def handle_message_report(self, interaction: hikari.CommandInteraction):
-        t = lambda s, **k: translate(  # noqa E731
-            interaction.locale, f"report_{s}", **k
-        )
-
+    async def handle_message_report(
+        self, interaction: hikari.CommandInteraction
+    ) -> None:
         channel, message = await self.is_message_report_ok(interaction)
         if channel is None or message is None:
             return  # didnt go ok
 
+        locale = interaction.locale
         component = interaction.app.rest.build_action_row()
 
         (
-            component.add_text_input("reason", t("message_modal_label"))
+            component.add_text_input("reason", t(locale, "report_message_modal_label"))
             .set_style(hikari.TextInputStyle.PARAGRAPH)
             .set_min_length(2)
             .set_max_length(1000)
-            .set_placeholder(t("message_modal_placeholder"))
+            .set_placeholder(t(locale, "report_message_modal_placeholder"))
             .add_to_container()
         )
 
         await interaction.create_modal_response(
-            t("message_modal_title"),
+            t(locale, "report_message_modal_title"),
             f"report-message/{message.id}",
             components=[component],
         )
 
         self.message_cache[message.id] = message
 
-    async def handle_message_report_modal(self, interaction: hikari.ModalInteraction):
+    async def handle_message_report_modal(
+        self, interaction: hikari.ModalInteraction
+    ) -> None:
         database = self.app.database
-        t = lambda s, **k: translate(  # noqa E731
-            interaction.locale, f"report_{s}", **k
-        )
+        locale = interaction.locale
 
         channel, message = await self.is_message_report_ok(interaction)
         if channel is None or message is None:
@@ -179,7 +179,7 @@ class ReportExtension:
         if value > REPORT_SLOWMODE_LIMIT:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("cooldown"),
+                content=t(locale, "report_cooldown"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
@@ -187,12 +187,14 @@ class ReportExtension:
 
         await interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_CREATE,
-            content=t("message_thanks"),
+            content=t(locale, "report_message_thanks"),
             flags=hikari.MessageFlag.EPHEMERAL,
         )
 
         embed = hikari.Embed(
-            title=t("message_embed_title"), description=message.content, color=0xE74C3C
+            title=t(locale, "report_message_embed_title"),
+            description=message.content,
+            color=0xE74C3C,
         )
         embed.set_author(
             name=f"{interaction.user} ({interaction.user.id})",
@@ -202,12 +204,14 @@ class ReportExtension:
             f"{message.author} ({message.author.id})",
             icon=message.author.make_avatar_url(ext="webp", size=64),
         )
-        embed.add_field(t("message_embed_channel"), f"<#{message.channel_id}>")
+        embed.add_field(
+            t(locale, "report_message_embed_channel"), f"<#{message.channel_id}>"
+        )
 
         reason = hikari.Embed(
             description=interaction.components[0].components[0].value,  # type: ignore
             color=0xE74C3C,
-        ).set_author(name=t("message_embed_reason"))
+        ).set_author(name=t(locale, "report_message_embed_reason"))
 
         await interaction.app.rest.create_message(
             data.config.report_channel,
@@ -223,11 +227,9 @@ class ReportExtension:
         message_author_id: int,
         message_channel_id: int,
         message_id: int,
-        only_include: set[str] = None,
-    ):
-        t = lambda s, **k: translate(  # noqa E731
-            interaction.locale, f"report_{s}", **k
-        )
+        only_include: set[str] | None = None,
+    ) -> list[hikari.api.ActionRowBuilder]:
+        locale = interaction.locale
 
         assert interaction.guild_id is not None
 
@@ -236,7 +238,7 @@ class ReportExtension:
         component1 = interaction.app.rest.build_action_row()
         (
             component1.add_button(hikari.ButtonStyle.SECONDARY, "report-message/close")
-            .set_label(t("message_button_close"))
+            .set_label(t(locale, "report_message_button_close"))
             .add_to_container()
         )
         link = (
@@ -245,7 +247,7 @@ class ReportExtension:
         )
         (
             component1.add_button(hikari.ButtonStyle.LINK, link)
-            .set_label(t("message_button_jump"))
+            .set_label(t(locale, "report_message_button_jump"))
             .add_to_container()
         )
 
@@ -260,8 +262,10 @@ class ReportExtension:
             # TODO: add permissions checks
             if only_include is not None and name not in only_include:
                 continue
-            select.add_option(t(f"message_action_{name}"), name).add_to_menu()
-        select.set_placeholder(t("message_action_placeholder"))
+            select.add_option(
+                t(locale, f"report_message_action_{name}"), name
+            ).add_to_menu()
+        select.set_placeholder(t(locale, "report_message_action_placeholder"))
         select.add_to_container()
 
         if select.options:
@@ -271,17 +275,14 @@ class ReportExtension:
 
     async def is_message_report_ok(
         self, interaction: hikari.CommandInteraction | hikari.ModalInteraction
-    ):
+    ) -> tuple[hikari.GuildChannel | None, hikari.Message | None]:
         database = self.app.database
-
-        t = lambda s, **k: translate(  # noqa E731
-            interaction.locale, f"report_{s}", **k
-        )
+        locale = interaction.locale
 
         if interaction.member is None or interaction.guild_id is None:
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("guildonly"),
+                content=t(locale, "report_guildonly"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return None, None
@@ -296,7 +297,7 @@ class ReportExtension:
         if time_passed_since(message_id).total_seconds() > REPORT_MAXAGE:
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("too_old"),
+                content=t(locale, "report_too_old"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return None, None
@@ -306,7 +307,7 @@ class ReportExtension:
         ):
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("already"),
+                content=t(locale, "report_already"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return None, None
@@ -321,7 +322,7 @@ class ReportExtension:
             if message is None:
                 await interaction.create_initial_response(
                     hikari.ResponseType.MESSAGE_CREATE,
-                    content=t("message_modal_expired"),
+                    content=t(locale, "report_message_modal_expired"),
                     flags=hikari.MessageFlag.EPHEMERAL,
                 )
                 return None, None
@@ -329,21 +330,21 @@ class ReportExtension:
         if message is None or message.content is None:
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("nomessage"),
+                content=t(locale, "report_nomessage"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return None, None
         elif message.author.is_bot:
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("nobot"),
+                content=t(locale, "report_nobot"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return None, None
         elif message.author.id == interaction.user.id:
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("noself"),
+                content=t(locale, "report_noself"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return None, None
@@ -352,7 +353,7 @@ class ReportExtension:
         if data is None:
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("message_nosettings"),
+                content=t(locale, "report_message_nosettings"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return None, None
@@ -362,7 +363,7 @@ class ReportExtension:
         ):
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("message_disabled"),
+                content=t(locale, "report_message_disabled"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return None, None
@@ -373,7 +374,7 @@ class ReportExtension:
         if message.author.id == guild.owner_id:
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("message_nostaff"),
+                content=t(locale, "report_message_nostaff"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return None, None
@@ -393,7 +394,7 @@ class ReportExtension:
                 if str(role_id) in data.config.general_modroles:
                     await interaction.create_initial_response(
                         hikari.ResponseType.MESSAGE_CREATE,
-                        content=t("message_nostaff"),
+                        content=t(locale, "report_message_nostaff"),
                         flags=hikari.MessageFlag.EPHEMERAL,
                     )
                     return None, None
@@ -403,7 +404,7 @@ class ReportExtension:
                 ):
                     await interaction.create_initial_response(
                         hikari.ResponseType.MESSAGE_CREATE,
-                        content=t("message_nostaff"),
+                        content=t(locale, "report_message_nostaff"),
                         flags=hikari.MessageFlag.EPHEMERAL,
                     )
                     return None, None
@@ -412,7 +413,7 @@ class ReportExtension:
         if channel is None or channel.guild_id != interaction.guild_id:
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("message_channelnotfound"),
+                content=t(locale, "report_message_channelnotfound"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return None, None
@@ -421,7 +422,7 @@ class ReportExtension:
         if me is None:
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("message_nomyself"),
+                content=t(locale, "report_message_nomyself"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return None, None
@@ -432,7 +433,7 @@ class ReportExtension:
         elif perms & PERMS_SEND != PERMS_SEND:
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("message_noperms"),
+                content=t(locale, "report_message_noperms"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
             return None, None
@@ -441,12 +442,12 @@ class ReportExtension:
 
     async def handle_report_message_close(
         self, interaction: hikari.ComponentInteraction
-    ):
+    ) -> None:
         await interaction.message.edit(components=[])
 
     async def handle_report_message_action(
         self, interaction: hikari.ComponentInteraction
-    ):
+    ) -> None:
         assert interaction.guild_id
         parts = interaction.custom_id.split("/")
         user_id, channel_id, message_id = map(int, parts[2:])
@@ -586,17 +587,16 @@ class ReportExtension:
             name = "failed"
         return Message(f"report_message_action_timeout_week_{name}", {"user": user_id})
 
-    async def handle_phishing_report(self, interaction: hikari.CommandInteraction):
+    async def handle_phishing_report(
+        self, interaction: hikari.CommandInteraction
+    ) -> None:
         database = self.app.database
-
-        t = lambda s, **k: translate(  # noqa E731
-            interaction.locale, f"report_{s}", **k
-        )
+        locale = interaction.locale
 
         if interaction.member is None:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("guildonly"),
+                content=t(locale, "report_guildonly"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
         assert interaction.target_id is not None
@@ -613,28 +613,28 @@ class ReportExtension:
         ):
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("phishing_noperms"),
+                content=t(locale, "report_phishing_noperms"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
         if time_passed_since(interaction.target_id).total_seconds() > REPORT_MAXAGE:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("too_old"),
+                content=t(locale, "report_too_old"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
         elif await database.exists((f"message:{interaction.target_id}:reported",)):
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("already"),
+                content=t(locale, "report_already"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
         elif await database.sismember("report:phishing:banned", interaction.user.id):
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("phishing_banned"),
+                content=t(locale, "report_phishing_banned"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
@@ -642,25 +642,25 @@ class ReportExtension:
         if message is None or message.content is None:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("nomessage"),
+                content=t(locale, "report_nomessage"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
         elif message.author.is_bot:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("nobot"),
+                content=t(locale, "report_nobot"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
         elif message.author.id == interaction.user.id:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("noself"),
+                content=t(locale, "report_noself"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
         elif not has_url(message.content):
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("phishing_nolink"),
+                content=t(locale, "report_phishing_nolink"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
@@ -668,7 +668,7 @@ class ReportExtension:
         if match > 0.9:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("phishing_detected"),
+                content=t(locale, "report_phishing_detected"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
@@ -682,7 +682,7 @@ class ReportExtension:
         if value > REPORT_SLOWMODE_LIMIT:
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t("cooldown"),
+                content=t(locale, "report_cooldown"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
@@ -692,7 +692,7 @@ class ReportExtension:
 
         await interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_CREATE,
-            content=t("phishing_thanks"),
+            content=t(locale, "report_phishing_thanks"),
             flags=hikari.MessageFlag.EPHEMERAL,
         )
 
@@ -737,7 +737,7 @@ class ReportExtension:
 
     async def handle_report_phishing_accept(
         self, interaction: hikari.ComponentInteraction
-    ):
+    ) -> None:
         await interaction.create_initial_response(
             hikari.ResponseType.DEFERRED_MESSAGE_UPDATE
         )
@@ -745,7 +745,7 @@ class ReportExtension:
 
     async def handle_report_phishing_ban(
         self, interaction: hikari.ComponentInteraction
-    ):
+    ) -> None:
         database = self.app.database
         parts = interaction.custom_id.split("/")
         user_id = parts[2]
@@ -771,7 +771,7 @@ class ReportExtension:
 
     async def handle_report_phishing_unban(
         self, interaction: hikari.ComponentInteraction
-    ):
+    ) -> None:
         database = self.app.database
         parts = interaction.custom_id.split("/")
         user_id = parts[2]
@@ -795,5 +795,5 @@ class ReportExtension:
 
         await interaction.message.edit(component=None)
 
-    async def on_slow_timer(self, event: SlowTimerEvent):
+    async def on_slow_timer(self, event: SlowTimerEvent) -> None:
         self.message_cache.evict()

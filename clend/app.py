@@ -54,15 +54,12 @@ class TheCleanerApp:
         self.extensions = {}
         self.guild_has_members_cached = set()
 
-    def run(self, **kwargs):
-        self.bot.run(**kwargs)
-
-    def load_store(self):
+    def load_store(self) -> None:
         from .store import Store
 
         self.store = Store(self)
 
-    def load_extension(self, module: str):
+    def load_extension(self, module: str) -> None:
         if module in self.extensions:
             raise RuntimeError(f"extension already loaded: {module!r}")
         mod = importlib.import_module(module)
@@ -72,7 +69,7 @@ class TheCleanerApp:
         if hasattr(ext, "on_load"):
             ext.on_load()
 
-    def unload_extension(self, module: str):
+    def unload_extension(self, module: str) -> None:
         ext = self.extensions[module]
         if hasattr(ext, "on_unload"):
             ext.on_unload()

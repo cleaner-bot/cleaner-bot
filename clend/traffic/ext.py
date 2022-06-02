@@ -13,10 +13,10 @@ path = Path("../traffic.txt")
 
 
 class TrafficExtension:
-    listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
+    listeners: list[tuple[typing.Type[hikari.Event], typing.Any]]
     data: dict[str, dict[int, int]]
 
-    def __init__(self, app: TheCleanerApp):
+    def __init__(self, app: TheCleanerApp) -> None:
         self.app = app
         self.listeners = [
             (hikari.GuildMessageCreateEvent, self.on_message_create),
@@ -24,7 +24,7 @@ class TrafficExtension:
         ]
         self.data = {}
 
-    def on_load(self):
+    def on_load(self) -> None:
         if not path.exists():
             return
         self.data = {
@@ -35,7 +35,7 @@ class TrafficExtension:
             for line in path.read_text().splitlines()
         }
 
-    def on_unload(self):
+    def on_unload(self) -> None:
         path.write_text(
             "\n".join(
                 f"{key} " + ",".join(f"{k}={v}" for k, v in value.items())
@@ -43,10 +43,10 @@ class TrafficExtension:
             )
         )
 
-    async def on_slow_timer(self, event: SlowTimerEvent):
+    async def on_slow_timer(self, event: SlowTimerEvent) -> None:
         self.on_unload()
 
-    async def on_message_create(self, event: hikari.GuildMessageCreateEvent):
+    async def on_message_create(self, event: hikari.GuildMessageCreateEvent) -> None:
         if event.is_bot or event.is_webhook or event.member is None:
             return
         scores = raw_score_message(event.message)

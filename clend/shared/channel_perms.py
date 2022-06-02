@@ -1,7 +1,9 @@
 import hikari
 
 
-def permissions_for(member: hikari.Member, channel: hikari.GuildChannel):
+def permissions_for(
+    member: hikari.Member, channel: hikari.GuildChannel
+) -> hikari.Permissions:
     permissions = hikari.Permissions.NONE
     for role in member.get_roles():
         permissions |= role.permissions
@@ -35,7 +37,7 @@ def permissions_for(member: hikari.Member, channel: hikari.GuildChannel):
 
 def permissions_for_role(
     role: hikari.Role, guild: hikari.Guild, channel: hikari.GuildChannel
-):
+) -> hikari.Permissions:
     permissions = role.permissions
     if (everyone_role := guild.get_role(guild.id)) is not None:
         permissions |= everyone_role.permissions

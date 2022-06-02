@@ -26,25 +26,25 @@ class OpenFileHandle:
 
 
 class GuildLogExtension:
-    listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
+    listeners: list[tuple[typing.Type[hikari.Event], typing.Any]]
     queue: asyncio.Queue[ILog]
     handles: dict[int, OpenFileHandle]
+    task: asyncio.Task[None] | None = None
 
-    def __init__(self, app: TheCleanerApp):
+    def __init__(self, app: TheCleanerApp) -> None:
         self.app = app
         self.listeners = [
             (SlowTimerEvent, self.on_slow_timer),
         ]
-        self.task = None
         self.file_handle_limit = HANDLE_LIMIT // 4
         self.handles = {}
         self.queue = asyncio.Queue()
         self.now = datetime.utcnow()
 
-    def on_load(self):
+    def on_load(self) -> None:
         self.task = asyncio.create_task(protect(self.logd))
 
-    def on_unload(self):
+    def on_unload(self) -> None:
         if self.task is not None:
             self.task.cancel()
 
@@ -52,7 +52,7 @@ class GuildLogExtension:
         if self.handles:
             asyncio.create_task(self.close_all_handles())
 
-    async def logd(self):
+    async def logd(self) -> None:
         while True:
             log = await self.queue.get()
             handle = await self.get_handle(log.guild_id)
@@ -89,7 +89,7 @@ class GuildLogExtension:
         handle.writes += 1
         return handle.file_handle
 
-    def format_log(self, log: ILog, locale: str = "en-US"):
+    def format_log(self, log: ILog, locale: str = "en-US") -> str:
         timestamp = log.created_at.strftime("%Y-%m-%d %H:%M:%S")
         lines = [f"[{timestamp}] {log.message.translate(locale)}"]
 
@@ -117,7 +117,7 @@ class GuildLogExtension:
 
         return "\n".join(lines) + "\n"
 
-    async def on_slow_timer(self, event: SlowTimerEvent):
+    async def on_slow_timer(self, event: SlowTimerEvent) -> None:
         now = datetime.utcnow()
         if now.year > self.now.year or now.month > self.now.month:
             # new month, reopen all handles
@@ -132,7 +132,7 @@ class GuildLogExtension:
                     del self.handles[guild_id]
                     await handle.file_handle.close()
 
-    async def close_all_handles(self):
+    async def close_all_handles(self) -> None:
         logger.info("closing all file handles")
         futures = [handle.file_handle.close() for handle in self.handles.values()]
         self.handles.clear()

@@ -12,9 +12,9 @@ logger = logging.getLogger(__name__)
 
 
 class AnalyticsExtension:
-    listeners: list[tuple[typing.Type[hikari.Event], typing.Callable]]
+    listeners: list[tuple[typing.Type[hikari.Event], typing.Any]]
 
-    def __init__(self, app: TheCleanerApp):
+    def __init__(self, app: TheCleanerApp) -> None:
         self.app = app
         self.listeners = [
             (hikari.GuildJoinEvent, self.on_guild_join),
@@ -23,7 +23,7 @@ class AnalyticsExtension:
             (hikari.InteractionCreateEvent, self.on_interaction_create),
         ]
 
-    async def on_guild_join(self, event: hikari.GuildJoinEvent):
+    async def on_guild_join(self, event: hikari.GuildJoinEvent) -> None:
         database = self.app.database
         suspended_field = await database.hget(
             f"guild:{event.guild_id}:entitlements", "suspended"
@@ -62,7 +62,7 @@ class AnalyticsExtension:
             embed.add_field(name="Vanity Invite", value=f"https://discord.gg/{vanity}")
         await channel.send(embed=embed)
 
-    async def on_guild_leave(self, event: hikari.GuildLeaveEvent):
+    async def on_guild_leave(self, event: hikari.GuildLeaveEvent) -> None:
         channel = self.get_channel()
         if channel is None:
             return
@@ -94,7 +94,7 @@ class AnalyticsExtension:
 
         await channel.send(embed=embed)
 
-    async def on_member_chunk(self, event: hikari.MemberChunkEvent):
+    async def on_member_chunk(self, event: hikari.MemberChunkEvent) -> None:
         # TODO: remove this (guild chunking is disabled!)
         if event.chunk_index != event.chunk_count - 1:
             return  # guild is not fully chunked yet
@@ -105,7 +105,7 @@ class AnalyticsExtension:
         if guild is not None:
             await self.acheck_guild(guild)
 
-    async def on_interaction_create(self, event: hikari.InteractionCreateEvent):
+    async def on_interaction_create(self, event: hikari.InteractionCreateEvent) -> None:
         interaction = event.interaction
         if not isinstance(interaction, hikari.ComponentInteraction):
             return
@@ -151,7 +151,7 @@ class AnalyticsExtension:
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 
-    async def acheck_guild(self, guild: hikari.GatewayGuild):
+    async def acheck_guild(self, guild: hikari.GatewayGuild) -> None:
         loop = asyncio.get_running_loop()
         is_farm, humans, bots = await loop.run_in_executor(
             None, self.check_guild, guild
@@ -159,7 +159,7 @@ class AnalyticsExtension:
         if is_farm:
             await self.suspend(guild, f"Bot farm (h={humans}, b={bots})")
 
-    def check_guild(self, guild: hikari.GatewayGuild):
+    def check_guild(self, guild: hikari.GatewayGuild) -> tuple[bool, int, int]:
         humans = bots = 0
         members = tuple(guild.get_members().values())  # clone to avoid race conditions
         for member in members:
@@ -177,7 +177,7 @@ class AnalyticsExtension:
 
         return is_farm, humans, bots
 
-    async def suspend(self, guild: hikari.GatewayGuild, reason: str):
+    async def suspend(self, guild: hikari.GatewayGuild, reason: str) -> None:
         database = self.app.database
         data = self.app.store.get_data(guild.id)
         if data is None or data.entitlements.suspended:

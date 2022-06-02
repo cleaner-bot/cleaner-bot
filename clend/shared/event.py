@@ -2,7 +2,7 @@ import typing
 from datetime import datetime
 
 import hikari
-from cleaner_i18n.translate import Message
+from cleaner_i18n import Message
 
 
 class IGuildEvent(typing.Protocol):
