@@ -43,3 +43,9 @@ class Store:
     def get_bot_id(self) -> int | None:
         me = self.app.bot.cache.get_me()
         return None if me is None else me.id
+
+    def ensure_bot_id(self) -> int:
+        me = self.app.bot.cache.get_me()
+        if me is not None:
+            return me.id
+        raise RuntimeError("no me")

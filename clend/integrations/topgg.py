@@ -31,12 +31,7 @@ class TopGGIntegration:
         self.topgg_token = topgg_token
 
     async def update_topgg(self, guild_count: int) -> None:
-        me = self.app.bot.cache.get_me()
-        if me is None:
-            # dont bother handling because this should NEVER happen
-            raise RuntimeError("no bot id available")
-
-        bot_id = str(me.id)
+        bot_id = str(self.app.store.ensure_bot_id())
 
         res = await self.app.store.proxy.post(
             f"top.gg/api/bots/{bot_id}/stats",

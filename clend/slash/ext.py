@@ -174,12 +174,7 @@ class SlashExtension:
         )
         client_id = os.getenv("discord/client-id")
         if client_id is None:
-            me = self.app.bot.cache.get_me()
-            if me is None:
-                # dont bother handling because this should NEVER happen
-                raise RuntimeError("no client_id for invite command")
-
-            client_id = str(me.id)
+            client_id = str(self.app.store.ensure_bot_id())
 
         query = {
             "client_id": client_id,

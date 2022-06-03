@@ -105,13 +105,8 @@ class DevExtension:
             ),
         ]
 
-        me = self.app.bot.get_me()
-        if me is None:
-            await event.message.respond("no me found")
-            return
-
         await event.app.rest.set_application_commands(
-            application=me.id,
+            application=self.app.store.ensure_bot_id(),
             commands=commands,
             guild=hikari.UNDEFINED if is_global else event.guild_id,
         )
@@ -119,13 +114,8 @@ class DevExtension:
         await event.message.respond("done")
 
     async def handle_reset_slash(self, event: hikari.GuildMessageCreateEvent) -> None:
-        me = self.app.bot.get_me()
-        if me is None:
-            await event.message.respond("no me found")
-            return
-
         await event.app.rest.set_application_commands(
-            application=me.id,
+            application=self.app.store.ensure_bot_id(),
             commands=[],
             guild=event.guild_id,
         )
