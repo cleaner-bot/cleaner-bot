@@ -207,7 +207,7 @@ class SlashExtension:
         locale = interaction.locale
         database = self.app.database
 
-        if not await database.exists((f"user:{interaction.user.id}:oauth:token",)):
+        if not await database.exists((f"user:{interaction.user.id}:oauth",)):
             return await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
                 t(locale, "nosession"),
