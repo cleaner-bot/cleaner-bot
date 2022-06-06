@@ -125,7 +125,9 @@ class ConfigExtension:
                     logger.info(
                         f"changed {space}.{name} to {value!r} ({data['guild_id']})"
                     )
-                    setattr(obj, name, value)
+                    # may not exist yet if the bot hasn't restarted
+                    if hasattr(obj, name):
+                        setattr(obj, name, value)
 
             if "worker" in data:
                 logger.info(f"changed worker in {data['guild_id']}")
