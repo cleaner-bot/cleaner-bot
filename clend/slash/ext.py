@@ -60,6 +60,10 @@ class SlashExtension:
         if coro is None:
             return
 
+        interaction = typing.cast(
+            hikari.CommandInteraction | hikari.ComponentInteraction, interaction
+        )
+
         try:
             try:
                 await coro
@@ -75,10 +79,9 @@ class SlashExtension:
 
         except Exception as e:
             logger.exception("Error occured during component interaction", exc_info=e)
-            # mypy is being weird here, thinking that interaction is ModalResponseMixin
-            await interaction.create_initial_response(  # type: ignore
+            await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
-                content=t(interaction.locale, "slash_internal_error"),  # type: ignore
+                content=t(interaction.locale, "slash_internal_error"),
                 flags=hikari.MessageFlag.EPHEMERAL,
             )
 

@@ -58,7 +58,7 @@ class Metrics:
 
 def metrics_reader(
     path: Path | None = None,
-) -> typing.Generator[Item, None, None]:
+) -> typing.Generator[tuple[float, Item], None, None]:
     if path is None:
         path = DEFAULT
     if path.exists():

@@ -77,7 +77,7 @@ class MetricsExtension:
 
     def load_metrics(self) -> None:
         logger.debug("loading metrics.bin")
-        self.metrics.history = list(metrics_reader())  # type: ignore
+        self.metrics.history = list(metrics_reader())
         logger.debug("loaded metrics.bin")
 
     def gather_radar_data(self) -> tuple[bytes, dict[int, bytes]]:

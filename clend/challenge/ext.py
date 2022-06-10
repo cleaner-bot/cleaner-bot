@@ -32,8 +32,7 @@ def get_min_risk(config: GuildConfig, entitlements: GuildEntitlements) -> float 
         level = 2
 
     if level == 0:
-        # no idea why this is Any instead of int
-        return config.challenge_interactive_joinrisk_custom  # type: ignore
+        return typing.cast(int, config.challenge_interactive_joinrisk_custom)
     return [None, 1, 0.7, 0.3, 0][level - 1]
 
 

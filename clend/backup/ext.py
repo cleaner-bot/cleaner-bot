@@ -33,7 +33,6 @@ def calc_channel_diff(
     channel: hikari.GuildChannel, snapshot: SnapshotChannel
 ) -> dict[str, typing.Any]:
     new_snapshot = make_channel_snapshot(channel)
-    # mypy does not like dynamic keys into a TypedDict
     return {
         k: v
         for k, v in snapshot.items()

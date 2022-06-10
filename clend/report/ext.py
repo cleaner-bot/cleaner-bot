@@ -65,7 +65,7 @@ class ReportExtension:
 
     async def on_interaction_create(self, event: hikari.InteractionCreateEvent) -> None:
         InteractionType = hikari.CommandInteraction | hikari.ComponentInteraction
-        interaction: InteractionType = event.interaction  # type: ignore
+        interaction = typing.cast(InteractionType, event.interaction)
 
         handler = None  # type: typing.Any
         if (passed := time_passed_since(interaction.id).total_seconds()) >= 2.5:
