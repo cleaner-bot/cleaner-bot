@@ -9,7 +9,7 @@ import msgpack  # type: ignore
 from ..app import TheCleanerApp
 from ..shared.protect import protect, protected_call
 from ..shared.sub import Message, listen
-from .types import Snapshot, SnapshotChannel, SnapshotRole
+from .types import Snapshot, SnapshotChannel, SnapshotChannelKeys, SnapshotRole
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,11 @@ def calc_channel_diff(
 ) -> dict[str, typing.Any]:
     new_snapshot = make_channel_snapshot(channel)
     # mypy does not like dynamic keys into a TypedDict
-    return {k: v for k, v in snapshot.items() if new_snapshot[k] != v}  # type: ignore
+    return {
+        k: v
+        for k, v in snapshot.items()
+        if new_snapshot[typing.cast(SnapshotChannelKeys, k)] != v
+    }
 
 
 def make_channel_snapshot(channel: hikari.GuildChannel) -> SnapshotChannel:

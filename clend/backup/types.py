@@ -23,6 +23,23 @@ class SnapshotGuild(typing.TypedDict):
     explicit_content_filter: int
 
 
+SnapshotChannelKeys = typing.Literal[
+    "id",
+    "type",
+    "position",
+    "permissions_overwrites",
+    "is_nsfw",
+    "parent_id",
+    "name",
+    "topic",
+    "rate_limit_per_user",
+    "bitrate",
+    "region",
+    "user_limit",
+    "video_quality_mode",
+]
+
+
 class SnapshotChannel(typing.TypedDict):
     id: int
     type: int
