@@ -176,7 +176,7 @@ class MetricsExtension:
                     category = "antiraid"
                 elif name == "impersonation_discord":
                     category = "impersonation_discord"
-                
+
                 if category is not None:
                     result["categories"][category]["total"] += 1
                     guild["categories"][category]["total"] += 1
