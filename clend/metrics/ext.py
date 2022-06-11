@@ -171,13 +171,13 @@ class MetricsExtension:
                     guild["challenges"][data["action"]][span] += 1
 
                 name = data["info"].get("name")
-                category: str | None = None
+                category = ""
                 if name == "antiraid_limit":
                     category = "antiraid"
                 elif name == "impersonation_discord":
                     category = "impersonation_discord"
 
-                if category is not None:
+                if category:
                     result["categories"][category]["total"] += 1
                     guild["categories"][category]["total"] += 1
                     if span is not None:
