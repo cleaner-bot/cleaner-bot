@@ -124,7 +124,7 @@ class JoinGuardExtension:
                 name = "dehoisted"
 
             if name != user.username:
-                nickname = nanme
+                nickname = name
 
         self.whitelisted.add(user_id)
         await self.app.bot.rest.add_user_to_guild(
