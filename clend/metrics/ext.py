@@ -114,6 +114,7 @@ class MetricsExtension:
             "other",
             "dehoist",
             "antiraid",
+            "impersonation_discord",
         )
 
         timespan = 60 * 60 * 24 * 30
@@ -169,8 +170,14 @@ class MetricsExtension:
                     result["challenges"][data["action"]][span] += 1
                     guild["challenges"][data["action"]][span] += 1
 
-                if data["info"].get("name") == "antiraid_limit":
+                name = data["info"].get("name")
+                category: str | None = None
+                if name == "antiraid_limit":
                     category = "antiraid"
+                elif name == "impersonation_discord":
+                    category = "impersonation_discord"
+                
+                if category is not None:
                     result["categories"][category]["total"] += 1
                     guild["categories"][category]["total"] += 1
                     if span is not None:
