@@ -46,18 +46,6 @@ class VerificationExtension:
             (f"guild:{event.guild_id}:user:{event.user_id}:verification",)
         )
 
-    @staticmethod
-    def check_guild(guild: hikari.Guild) -> bool:
-        me = guild.get_my_member()
-        if me is None:
-            return False
-        for role in me.get_roles():
-            if role.permissions & (
-                hikari.Permissions.ADMINISTRATOR | hikari.Permissions.KICK_MEMBERS
-            ):
-                return True
-        return False
-
     async def verifyd(self) -> None:
         pubsub = self.app.database.pubsub()
         await pubsub.subscribe("pubsub:verification-verify")
