@@ -259,16 +259,16 @@ class HTTPService:
                     coro = self.app.bot.rest.kick_user(
                         ev.guild_id, ev.user.id, reason=ev.reason.translate(locale)
                     )
-                    message = "log_nickname_reset_kick"
+                    message = "log_nickname_kick"
                 elif ev.can_ban:
                     coro = self.app.bot.rest.ban_user(
                         ev.guild_id, ev.user.id, reason=ev.reason.translate(locale)
                     )
-                    message = "log_nickname_reset_ban"
+                    message = "log_nickname_ban"
                 else:
                     message = "log_nickname_failure"
             else:
-                message = "log_nickname_reset_success"
+                message = "log_nickname_success"
                 coro = self.app.bot.rest.edit_member(
                     ev.guild_id,
                     ev.user.id,
@@ -276,7 +276,7 @@ class HTTPService:
                     reason=ev.reason.translate(locale),
                 )
 
-        translated = Message(message, {"user": ev.user.id, "name": str(ev.user)})
+        translated = Message(message, {"user": ev.user.id, "name": str(ev.user), "new_name": ev.nickname})
         self.log_queue.put_nowait(
             ILog(ev.guild_id, translated, datetime.utcnow(), ev.reason)
         )
