@@ -7,7 +7,7 @@ from hikari.internal.time import utc_datetime
 
 from ...shared.event import IActionChallenge
 from ..guild import CleanerGuild
-from ..helper import action_challenge
+from ..helper import action_challenge, is_moderator
 
 
 def on_new_member(
@@ -21,6 +21,7 @@ def on_new_member(
             or event.old_member.username == event.member.username
         )
         and (event.member.joined_at - utc_datetime()).total_seconds() < 5
+        and not is_moderator(guild, event.member)
     ):
         return None
 
