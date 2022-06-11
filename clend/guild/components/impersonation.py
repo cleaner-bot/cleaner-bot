@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import hikari
 from cleaner_data.auto.avatars import data as avatar_blacklist
 from cleaner_data.name import is_name_blacklisted
@@ -40,7 +38,7 @@ def on_new_member(
             event.user.avatar_hash is None
             or not event.user.avatar_hash.startswith("a_")
         )
-        and (datetime.utcnow() - event.user.created_at).days < 365
+        and (utc_datetime() - event.user.created_at).days < 365
     ):
         reason = Message("components_impersonation_discord", {})
         name = "impersonation_discord"
