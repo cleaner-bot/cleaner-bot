@@ -17,6 +17,7 @@ EXTENSIONS = [
     "clend.guild",
     "clend.challenge",
     "clend.verification",
+    "clend.joinguard",
     "clend.sync",
     "clend.slash",
     "clend.report",
