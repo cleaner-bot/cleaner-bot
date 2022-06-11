@@ -112,31 +112,21 @@ class JoinGuardExtension:
             or data.entitlements.plan < data.entitlements.joinguard
         ):
             return
+        
+        nickname: hikari.UndefinedOr[str] = hikari.UNDEFINED
+        if data.config.general_dehoisting_enabled:
+            user = self.app.bot.cache.get_user(user_id)
+            if user is None:
+                user = await self.app.bot.rest.fetch_user(user_id)
 
-        user = self.app.bot.cache.get_user(user_id)
-        if user is None:
-            user = await self.app.bot.rest.fetch_user(user_id)
+            name = user.username.lstrip("! ")
+            if not name:
+                name = "dehoisted"
 
-        name = user.username.lstrip("! ")
-        if not name:
-            name = "dehoisted"
-
-        nickname: hikari.UndefinedOr[str] = (
-            hikari.UNDEFINED if name == user.username else name
-        )
+            if name != user.username:
+                nickname = nanme
 
         self.whitelisted.add(user_id)
         await self.app.bot.rest.add_user_to_guild(
             token, guild, user_id, nickname=nickname
         )
-
-        if data.config.logging_enabled and data.config.logging_option_verify:
-            log = ILog(
-                guild.id,
-                Message(
-                    "joinguard_log_join",
-                    {"user": user_id, "name": str(user)},
-                ),
-                datetime.utcnow(),
-            )
-            self.app.store.put_http(log)
