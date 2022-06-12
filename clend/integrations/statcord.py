@@ -1,5 +1,7 @@
 import logging
 
+import psutil  # type: ignore
+
 from ..app import TheCleanerApp
 
 logger = logging.getLogger(__name__)
@@ -9,6 +11,10 @@ class StatcordIntegration:
     def __init__(self, app: TheCleanerApp, statcord_token: str) -> None:
         self.app = app
         self.statcord_token = statcord_token
+
+        # need to call these once so we get accurate numbers later on
+        psutil.virtual_memory()
+        psutil.cpu_percent()
 
     async def update_statcord(self, guild_count: int, user_count: int) -> None:
         bot_id = str(self.app.store.ensure_bot_id())
@@ -25,14 +31,16 @@ class StatcordIntegration:
     def prepare_event(
         self, guild_count: int, user_count: int
     ) -> dict[str, str | list[str]]:
+        memory = psutil.virtual_memory()
+        cpu_percent = psutil.cpu_percent()
         return {
             "servers": str(guild_count),
             "users": str(user_count),
             "active": [],
             "commands": "0",
             "popular": [],
-            "memactive": "0",
-            "memload": "0",
-            "cpuload": "0",
+            "memactive": str(memory.used),
+            "memload": str(memory.percent),
+            "cpuload": str(cpu_percent),
             "bandwidth": "0",
         }
