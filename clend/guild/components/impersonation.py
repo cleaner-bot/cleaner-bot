@@ -38,7 +38,7 @@ def on_new_member(
             event.user.avatar_hash is None
             or not event.user.avatar_hash.startswith("a_")
         )
-        and (utc_datetime() - event.user.created_at).days < 365
+        and (utc_datetime() - event.user.created_at).days < 180
     ):
         reason = Message("components_impersonation_discord", {})
         name = "impersonation_discord"
