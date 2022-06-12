@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import typing
-from datetime import datetime
 
 import hikari
 import msgpack  # type: ignore
@@ -9,7 +8,7 @@ from cleaner_i18n import Message
 from expirepy import ExpiringSet
 
 from ..app import TheCleanerApp
-from ..shared.event import IActionChallenge, ILog
+from ..shared.event import IActionChallenge
 from ..shared.protect import protect, protected_call
 from ..shared.sub import Message as PubMessage
 from ..shared.sub import listen as pubsub_listen
@@ -112,7 +111,7 @@ class JoinGuardExtension:
             or data.entitlements.plan < data.entitlements.joinguard
         ):
             return
-        
+
         nickname: hikari.UndefinedOr[str] = hikari.UNDEFINED
         if data.config.general_dehoisting_enabled:
             user = self.app.bot.cache.get_user(user_id)
