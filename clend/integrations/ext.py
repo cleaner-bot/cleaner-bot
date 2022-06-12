@@ -1,17 +1,19 @@
 import asyncio
 import logging
 import os
+import time
 import typing
 
 import hikari
 
 from ..app import TheCleanerApp
-from ..shared.protect import protect, protected_call
+from ..shared.protect import protect
 from .dlistgg import DlistGGIntegration
 from .statcord import StatcordIntegration
 from .topgg import TopGGIntegration
 
 logger = logging.getLogger(__name__)
+MIN_PUBLISH_DELAY = 600
 
 
 class IntegrationExtension:
@@ -20,6 +22,10 @@ class IntegrationExtension:
     statcord: StatcordIntegration | None = None
     dlistgg: DlistGGIntegration | None = None
     tasks: list[asyncio.Task[None]]
+
+    last_published: float | None = 0
+    last_guilds: int | None = None
+    last_users: int | None = None
 
     def __init__(self, app: TheCleanerApp) -> None:
         self.app = app
@@ -43,15 +49,19 @@ class IntegrationExtension:
         self.tasks = []
 
     def on_load(self) -> None:
+        self.tasks.append(asyncio.create_task(protect(self.update_task)))
         if self.topgg is not None:
             self.tasks.append(asyncio.create_task(protect(self.topgg.vote_task)))
-
-        asyncio.create_task(protected_call(self.update_information()))
 
     def on_unload(self) -> None:
         for task in self.tasks:
             if not task.done():
                 task.cancel()
+
+    async def update_task(self) -> None:
+        while True:
+            await self.update_information()
+            await asyncio.sleep(1800)
 
     async def on_guild_count_change(
         self, event: hikari.GuildJoinEvent | hikari.GuildLeaveEvent
@@ -59,6 +69,14 @@ class IntegrationExtension:
         await self.update_information()
 
     async def update_information(self) -> None:
+        now = time.monotonic()
+        if (
+            self.last_published is not None
+            and now - self.last_published < MIN_PUBLISH_DELAY
+        ):
+            return
+        self.last_published = now
+
         guild_count = len(self.app.bot.cache.get_guilds_view())
         user_count = sum(
             guild.member_count
@@ -66,13 +84,18 @@ class IntegrationExtension:
             if guild.member_count
         )
 
+        should_update_guild = self.last_guilds != guild_count
+        should_update_users = self.last_users != user_count
+        self.last_guilds = guild_count
+        self.last_users = user_count
+
         logger.debug(f"stats: guilds={guild_count} users={user_count}")
 
-        if self.topgg is not None:
+        if self.topgg is not None and should_update_guild:
             await self.topgg.update_topgg(guild_count)
 
-        if self.dlistgg is not None:
+        if self.dlistgg is not None and should_update_guild:
             await self.dlistgg.update_dlistgg(guild_count)
 
-        if self.statcord is not None:
+        if self.statcord is not None and (should_update_guild or should_update_users):
             await self.statcord.update_statcord(guild_count, user_count)
