@@ -246,7 +246,7 @@ class HTTPService:
 
     async def handle_action_nickname(self, ev: IActionNickname) -> None:
         coro: typing.Coroutine[typing.Any, typing.Any, typing.Any] | None = None
-        message = "log_nickname_reset_failure"
+        message = "log_nickname_failure"
 
         guild = self.app.bot.cache.get_guild(ev.guild_id)
         locale = "en-US" if guild is None else guild.preferred_locale
