@@ -59,6 +59,7 @@ class IntegrationExtension:
                 task.cancel()
 
     async def update_task(self) -> None:
+        await asyncio.sleep(10)
         while True:
             await self.update_information()
             await asyncio.sleep(1800)
@@ -85,7 +86,7 @@ class IntegrationExtension:
         )
 
         should_update_guild = self.last_guilds != guild_count
-        should_update_users = self.last_users != user_count
+        # should_update_users = self.last_users != user_count
         self.last_guilds = guild_count
         self.last_users = user_count
 
@@ -97,5 +98,5 @@ class IntegrationExtension:
         if self.dlistgg is not None and should_update_guild:
             await self.dlistgg.update_dlistgg(guild_count)
 
-        if self.statcord is not None and (should_update_guild or should_update_users):
+        if self.statcord is not None:
             await self.statcord.update_statcord(guild_count, user_count)

@@ -1,4 +1,5 @@
 import logging
+import time
 
 import psutil  # type: ignore
 
@@ -15,6 +16,10 @@ class StatcordIntegration:
         # need to call these once so we get accurate numbers later on
         psutil.virtual_memory()
         psutil.cpu_percent()
+
+        net_io = psutil.net_io_counters()
+        self.last_bandwidth_value = net_io.bytes_recv + net_io.bytes_sent
+        self.last_bandwidth_time = time.monotonic()
 
     async def update_statcord(self, guild_count: int, user_count: int) -> None:
         bot_id = str(self.app.store.ensure_bot_id())
@@ -33,6 +38,16 @@ class StatcordIntegration:
     ) -> dict[str, str | list[str]]:
         memory = psutil.virtual_memory()
         cpu_percent = psutil.cpu_percent()
+        net_io = psutil.net_io_counters()
+
+        new_bandwidth = (
+            net_io.bytes_sent + net_io.bytes_recv - self.last_bandwidth_value
+        )
+        now = time.monotonic()
+        time_diff = now - self.last_bandwidth_time
+
+        self.last_bandwidth_value = net_io.bytes_sent + net_io.bytes_recv
+        self.last_bandwidth_time = now
         return {
             "servers": str(guild_count),
             "users": str(user_count),
@@ -42,5 +57,5 @@ class StatcordIntegration:
             "memactive": str(memory.used),
             "memload": str(memory.percent),
             "cpuload": str(cpu_percent),
-            "bandwidth": "0",
+            "bandwidth": str(round(new_bandwidth / time_diff)),
         }
