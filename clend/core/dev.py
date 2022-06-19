@@ -144,7 +144,7 @@ class DevExtension:
             f"__Total__:\n"
             f"Guilds: {guilds:,}\n"
             f"Member count (approximate): {member_count:,}\n"
-            f"Member count (more accueate): {member_count2:,}\n"
+            f"Member count (more accurate): {member_count2:,}\n"
             f"\n__Cache stats__\n"
             f"Users: {users:,}\n"
             f"Members: {members:,}\n"
