@@ -126,6 +126,9 @@ class JoinGuardExtension:
                 nickname = name
 
         self.whitelisted.add(user_id)
-        await self.app.bot.rest.add_user_to_guild(
-            token, guild, user_id, nickname=nickname
-        )
+        try:
+            await self.app.bot.rest.add_user_to_guild(
+                token, guild, user_id, nickname=nickname
+            )
+        except hikari.ForbiddenError:
+            pass  # user is banned probably, dont care tho
