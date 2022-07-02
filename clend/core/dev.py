@@ -250,7 +250,7 @@ class DevExtension:
             await event.message.respond("You have to reply to a message.")
             return
         content = event.message.referenced_message.content
-        if content is None:
+        if not content:
             await event.message.respond("Message is empty.")
             return
 

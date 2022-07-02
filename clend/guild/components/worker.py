@@ -250,22 +250,22 @@ def on_message_create(
                 if event.message.application_id
                 else None
             ),
-            "mention_everyone": event.message.mentions.everyone,
+            "mention_everyone": event.message.mentions_everyone,
             "mention_users": lua.table_from(
-                map(str, event.message.mentions.user_ids)
-                if event.message.mentions.user_ids
+                map(str, event.message.user_mentions_ids)
+                if event.message.user_mentions_ids
                 else []
             ),
             "mention_roles": lua.table_from(
-                map(str, event.message.mentions.role_ids)
-                if event.message.mentions.role_ids
+                map(str, event.message.role_mention_ids)
+                if event.message.role_mention_ids
                 else []
             ),
             "mention_channels": lua.table_from(
                 map(
                     str,
-                    event.message.mentions.channels_ids
-                    if event.message.mentions.channels_ids
+                    event.message.channel_mention_ids
+                    if event.message.channel_mention_ids
                     else [],
                 )
             ),

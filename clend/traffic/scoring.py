@@ -5,11 +5,11 @@ from hikari.internal.time import utc_datetime
 
 
 def user_mentions(message: hikari.Message) -> int:
-    return len(message.mentions.user_ids) if message.mentions.user_ids else 0
+    return len(message.user_mentions_ids) if message.user_mentions_ids else 0
 
 
 def role_mentions(message: hikari.Message) -> int:
-    return len(message.mentions.role_ids) if message.mentions.role_ids else 0
+    return len(message.role_mention_ids) if message.role_mention_ids else 0
 
 
 def embeds(message: hikari.Message) -> int:
