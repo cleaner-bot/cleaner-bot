@@ -125,6 +125,18 @@ class JoinGuardExtension:
             if name != user.username:
                 nickname = name
 
+        me = guild.get_my_member()
+        if me is not None:
+            permissions = hikari.Permissions(0)
+            for role in me.get_roles():
+                permissions |= role.permissions
+            if permissions & hikari.Permissions.ADMINISTRATOR > 0:
+                pass
+            elif permissions & hikari.Permissions.CREATE_INSTANT_INVITE == 0:
+                return  # no perms to create an instant invite
+            elif permissions & hikari.Permissions.CHANGE_NICKNAME == 0:
+                nickname = hikari.UNDEFINED
+
         self.whitelisted.add(user_id)
         try:
             await self.app.bot.rest.add_user_to_guild(
