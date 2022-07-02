@@ -22,7 +22,6 @@ class IntegrationExtension:
     statcord: StatcordIntegration | None = None
     dlistgg: DlistGGIntegration | None = None
     tasks: list[asyncio.Task[None]]
-    member_counts: dict[int, int]
 
     last_published: float | None = 0
     last_guilds: int | None = None
@@ -33,8 +32,6 @@ class IntegrationExtension:
         self.listeners = [
             (hikari.GuildJoinEvent, self.on_guild_count_change),
             (hikari.GuildLeaveEvent, self.on_guild_count_change),
-            (hikari.MemberCreateEvent, self.on_member_create),
-            (hikari.MemberDeleteEvent, self.on_member_delete),
         ]
 
         topgg_token = os.getenv("topgg/api-token")
@@ -50,16 +47,11 @@ class IntegrationExtension:
             self.statcord = StatcordIntegration(app, statcord_token)
 
         self.tasks = []
-        self.member_counts = {}
 
     def on_load(self) -> None:
         self.tasks.append(asyncio.create_task(protect(self.update_task)))
         if self.topgg is not None:
             self.tasks.append(asyncio.create_task(protect(self.topgg.vote_task)))
-
-        for guild in self.app.bot.cache.get_guilds_view().values():
-            if guild.member_count:
-                self.member_counts[guild.id] = guild.member_count
 
     def on_unload(self) -> None:
         for task in self.tasks:
@@ -75,26 +67,7 @@ class IntegrationExtension:
     async def on_guild_count_change(
         self, event: hikari.GuildJoinEvent | hikari.GuildLeaveEvent
     ) -> None:
-        if isinstance(event, hikari.GuildJoinEvent):
-            if event.guild.member_count:
-                self.member_counts[event.guild_id] = event.guild.member_count
-
-        elif event.guild_id in self.member_counts:
-            del self.member_counts[event.guild_id]
-
         await self.update_information()
-
-    async def on_member_create(self, event: hikari.MemberCreateEvent) -> None:
-        if event.guild_id in self.member_counts:
-            self.member_counts[event.guild_id] += 1
-        else:
-            self.member_counts[event.guild_id] = 1
-
-    async def on_member_delete(self, event: hikari.MemberDeleteEvent) -> None:
-        if event.guild_id in self.member_counts:
-            self.member_counts[event.guild_id] -= 1
-        else:
-            self.member_counts[event.guild_id] = 0
 
     async def update_information(self) -> None:
         now = time.monotonic()
@@ -106,7 +79,7 @@ class IntegrationExtension:
         self.last_published = now
 
         guild_count = len(self.app.bot.cache.get_guilds_view())
-        user_count = sum(self.member_counts.values())
+        user_count = self.app.store.get_user_count()
 
         should_update_guild = self.last_guilds != guild_count
         # should_update_users = self.last_users != user_count

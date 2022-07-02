@@ -21,9 +21,33 @@ class AnalyticsExtension:
             (hikari.GuildLeaveEvent, self.on_guild_leave),
             # (hikari.MemberChunkEvent, self.on_member_chunk),
             (hikari.InteractionCreateEvent, self.on_interaction_create),
+            (hikari.MemberCreateEvent, self.on_member_create),
+            (hikari.MemberDeleteEvent, self.on_member_delete),
         ]
 
+    def on_load(self) -> None:
+        if self.app.store.member_counts:
+            return
+        for guild in self.app.bot.cache.get_guilds_view().values():
+            if guild.member_count:
+                self.app.store.member_counts[guild.id] = guild.member_count
+
+    async def on_member_create(self, event: hikari.MemberCreateEvent) -> None:
+        if event.guild_id in self.app.store.member_counts:
+            self.app.store.member_counts[event.guild_id] += 1
+        else:
+            self.app.store.member_counts[event.guild_id] = 1
+
+    async def on_member_delete(self, event: hikari.MemberDeleteEvent) -> None:
+        if event.guild_id in self.app.store.member_counts:
+            self.app.store.member_counts[event.guild_id] -= 1
+        else:
+            self.app.store.member_counts[event.guild_id] = 0
+
     async def on_guild_join(self, event: hikari.GuildJoinEvent) -> None:
+        if event.guild.member_count:
+            self.app.store.member_counts[event.guild_id] = event.guild.member_count
+
         database = self.app.database
         suspended_field = await database.hget(
             f"guild:{event.guild_id}:entitlements", "suspended"
@@ -63,6 +87,9 @@ class AnalyticsExtension:
         await channel.send(embed=embed)
 
     async def on_guild_leave(self, event: hikari.GuildLeaveEvent) -> None:
+        if event.guild_id in self.app.store.member_counts:
+            del self.app.store.member_counts[event.guild_id]
+
         channel = self.get_channel()
         if channel is None:
             return

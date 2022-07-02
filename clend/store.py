@@ -11,6 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class Store:
+    member_counts: dict[int, int]
+
     def __init__(self, app: TheCleanerApp) -> None:
         self.app = app
         secret = os.getenv("backend/proxy-secret")
@@ -21,6 +23,7 @@ class Store:
                 "user-agent": "CleanerBot (cleanerbot.xyz 0.1.0)",
             },
         )
+        self.member_counts = {}
 
     def get_data(self, guild_id: int) -> GuildData | None:
         conf = self.app.extensions.get("clend.conf", None)
@@ -39,6 +42,9 @@ class Store:
         fn = http.queue.sync_q.put if thread_safe else http.queue.async_q.put_nowait
         for item in items:
             fn(item)
+
+    def get_user_count(self) -> int:
+        return sum(self.member_counts.values())
 
     def get_bot_id(self) -> int | None:
         me = self.app.bot.cache.get_me()
