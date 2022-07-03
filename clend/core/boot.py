@@ -30,6 +30,8 @@ MODULES_TO_RELOAD = (
     "h11",
     "rfc3986",
     "Cython",
+    "cython",
+    "psutil",
 )
 MODULES_TO_NOT_RELOAD = (
     "msgpack",
