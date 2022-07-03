@@ -22,28 +22,28 @@ def has_unescaped(content: str, key: str) -> bool:
 
 
 def ping_users_many(message: hikari.PartialMessage, guild: CleanerGuild) -> bool:
-    if message.mentions.user_ids is hikari.UNDEFINED:
+    if message.user_mentions_ids is hikari.UNDEFINED:
         return False
-    pings = len(message.mentions.user_ids)
+    pings = len(message.user_mentions_ids)
     return pings >= 15
 
 
 def ping_users_few(message: hikari.PartialMessage, guild: CleanerGuild) -> bool:
-    if message.mentions.user_ids is hikari.UNDEFINED:
+    if message.user_mentions_ids is hikari.UNDEFINED:
         return False
-    pings = len(message.mentions.user_ids)
+    pings = len(message.user_mentions_ids)
     return pings >= 5
 
 
 def ping_roles(message: hikari.PartialMessage, guild: CleanerGuild) -> bool:
-    if message.mentions.role_ids is hikari.UNDEFINED:
+    if message.role_mention_ids is hikari.UNDEFINED:
         return False
-    pings = len(message.mentions.role_ids)
+    pings = len(message.role_mention_ids)
     return pings >= 5
 
 
 def ping_broad(message: hikari.PartialMessage, guild: CleanerGuild) -> bool:
-    if not message.content or message.mentions.everyone:
+    if not message.content or message.mentions_everyone:
         return False
     return has_unescaped(message.content, "@everyone") or has_unescaped(
         message.content, "@here"
@@ -52,7 +52,7 @@ def ping_broad(message: hikari.PartialMessage, guild: CleanerGuild) -> bool:
 
 def ping_hidden(message: hikari.PartialMessage, guild: CleanerGuild) -> bool:
     if not message.content or (
-        not message.mentions.user_ids and not message.mentions.role_ids
+        not message.user_mentions_ids and not message.role_mention_ids
     ):
         return False
     hidden_part = "||\u200b||"
