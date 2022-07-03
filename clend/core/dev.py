@@ -90,19 +90,23 @@ class DevExtension:
             ),
             event.app.rest.slash_command_builder(
                 "dashboard", "Get a link to the dashboard of this server"
-            ),
+            ).set_is_dm_enabled(False),
             event.app.rest.slash_command_builder(
                 "invite", "Get an invite link for The Cleaner"
             ),
             # event.app.rest.slash_command_builder(
             #     "login", "Create a link to login immediately (useful for phones)"
             # ),
-            event.app.rest.context_menu_command_builder(
-                hikari.CommandType.MESSAGE, "Report to server staff"
-            ),
+            # event.app.rest.context_menu_command_builder(
+            #     hikari.CommandType.MESSAGE, "Report to server staff"
+            # ),
             event.app.rest.context_menu_command_builder(
                 hikari.CommandType.MESSAGE, "Report as phishing"
-            ),
+            )
+            .set_default_member_permissions(
+                hikari.Permissions.ADMINISTRATOR | hikari.Permissions.MANAGE_MESSAGES
+            )
+            .set_is_dm_enabled(False),
         ]
 
         await event.app.rest.set_application_commands(
