@@ -121,7 +121,10 @@ class ChallengeExtension:
         else:
             return
 
-        await member.add_role(role)
+        try:
+            await member.add_role(role)
+        except hikari.NotFoundError:
+            pass
 
     async def on_interaction_create(self, event: hikari.InteractionCreateEvent) -> None:
         interaction = event.interaction
