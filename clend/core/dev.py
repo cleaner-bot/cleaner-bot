@@ -139,16 +139,12 @@ class DevExtension:
             for guild in bot.cache.get_guilds_view().values()
             if guild.member_count
         )
-        member_count2 = 0
-        ext = self.app.extensions.get("clend.integrations")
-        if ext is not None:
-            member_counts: dict[int, int] = ext.member_counts
-            member_count2 = sum(member_counts.values())
+        accurate_member_count = self.app.store.get_user_count()
         await event.message.respond(
             f"__Total__:\n"
             f"Guilds: {guilds:,}\n"
             f"Member count (approximate): {member_count:,}\n"
-            f"Member count (more accurate): {member_count2:,}\n"
+            f"Member count (more accurate): {accurate_member_count:,}\n"
             f"\n__Cache stats__\n"
             f"Users: {users:,}\n"
             f"Members: {members:,}\n"
