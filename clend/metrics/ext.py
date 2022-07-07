@@ -133,11 +133,7 @@ class MetricsExtension:
             },
             "stats": {
                 "guild_count": len(self.app.bot.cache.get_guilds_view()),
-                "user_count": sum(
-                    guild.member_count
-                    for guild in self.app.bot.cache.get_guilds_view().values()
-                    if guild.member_count
-                ),
+                "user_count": self.app.store.get_user_count(),
             },
         }
         guild_template = {
