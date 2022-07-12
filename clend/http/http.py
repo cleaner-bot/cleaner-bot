@@ -57,7 +57,6 @@ class HTTPService:
     member_strikes: ExpiringDict[str, int]
     member_edit: ExpiringDict[int, int]
     challenged_users: ExpiringSet[str]
-    banned_users: ExpiringSet[str]
     deleted_messages: ExpiringSet[int]
     bulk_delete_cooldown: ExpiringSet[int]
 
@@ -71,7 +70,6 @@ class HTTPService:
         self.member_strikes = ExpiringDict(expires=3600)
         self.member_edit = ExpiringDict(expires=10)
         self.challenged_users = ExpiringSet(expires=5)
-        self.banned_users = ExpiringSet(expires=60)
         self.deleted_messages = ExpiringSet(expires=60)
         self.bulk_delete_cooldown = ExpiringSet(expires=3)
 
@@ -193,7 +191,6 @@ class HTTPService:
                 delete_message_days=1,
                 reason=ev.reason.translate(locale),
             )
-            self.banned_users.add(f"{ev.guild_id}-{ev.user.id}")
 
         translated = Message(message, {"user": ev.user.id, "name": str(ev.user)})
         self.log_queue.put_nowait(
@@ -212,8 +209,6 @@ class HTTPService:
 
     async def handle_action_delete(self, ev: IActionDelete) -> None:
         if ev.message_id in self.deleted_messages:
-            return
-        elif f"{ev.guild_id}-{ev.user.id}" in self.banned_users:
             return
         self.deleted_messages.add(ev.message_id)
 
@@ -529,8 +524,6 @@ class HTTPService:
             futures = []
             while not self.delete_queue.empty():
                 delete = self.delete_queue.get_nowait()
-                if f"{delete.guild_id}-{delete.user.id}" in self.banned_users:
-                    continue
                 if delete.channel_id not in channels:
                     channels[delete.channel_id] = []
                 channels[delete.channel_id].append(delete)
