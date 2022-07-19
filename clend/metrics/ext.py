@@ -213,7 +213,7 @@ class MetricsExtension:
                         guild["categories"][delete_category][span] += 1
 
             elif data["name"] == "nickname":
-                if data["action"] == "reset_success":
+                if data["action"] in ("reset_success", "success"):
                     category = data["info"]["name"]
                     result["categories"][category]["total"] += 1
                     guild["categories"][category]["total"] += 1
