@@ -36,6 +36,10 @@ def normalized_words(message: hikari.Message) -> int:
     return len(normalize(message.content).split()) if message.content else 0
 
 
+def message_lines(message: hikari.Message) -> int:
+    return len(message.content.split("\n")) if message.content else 0
+
+
 def message_links(message: hikari.Message) -> int:
     if message.content is None:
         return 0
@@ -62,6 +66,8 @@ scoring = [
     replied,
     message_length,
     normalized_message_length,
+    normalized_words,
+    message_lines,
     message_links,
     author_age_days,
     author_age_weeks,
