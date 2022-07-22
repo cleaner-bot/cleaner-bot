@@ -2,7 +2,7 @@ python-Levenshtein==0.12.2
 coredis>=3.4,<4.3
 emoji>=1.6,<2.1
 python-dotenv>=0.19,<0.21
-sentry_sdk>=1.5,<1.8
+sentry_sdk>=1.5,<1.9
 janus>=1.0,<1.1
 msgpack>=1,<1.1
 aiofiles>=0.8,<0.9
