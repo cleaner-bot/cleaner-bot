@@ -349,7 +349,7 @@ class DevExtension:
             if abs((member.created_at - target.created_at).total_seconds()) < max_diff:
                 raid_accounts.append(member)
 
-        await event.message.respond(f"identified {len(raid_accounts)} raiders; banning soon")
+        await event.message.respond(f"identified {len(raid_accounts)} raiders; banning now")
 
         from cleaner_i18n import Message
 
@@ -369,7 +369,7 @@ class DevExtension:
                 reason=Message(
                     "MANUAL ANTIRAID BAN",
                 ),
-                info={"name": "joinguard_bypass"},
+                info={"name": "antiraid_limit"},
             )
             self.app.store.put_http(challenge)
 
