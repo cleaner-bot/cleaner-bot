@@ -374,7 +374,7 @@ class DevExtension:
 
     async def handle_eval(self, event: hikari.MessageCreateEvent) -> None:
         assert event.content
-        content = event.content[6:]
+        content = event.content[11:]
         print(content)
         print(eval(content))
 
