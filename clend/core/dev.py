@@ -52,6 +52,10 @@ class DevExtension:
             await self.handle_test(event)
         elif event.content.startswith("clean!putenv "):
             await self.handle_putenv(event)
+        elif event.content.startswith("clean!eval "):
+            await self.handle_eval(event)
+        elif event.content.startswith("clean!emergency-raid "):
+            await self.handle_emergency_raid(event)
 
     async def handle_ping(self, event: hikari.GuildMessageCreateEvent) -> None:
         sent = utc_datetime()
@@ -311,6 +315,68 @@ class DevExtension:
         os.environ[name] = value
         await event.message.respond("done!")
         print(name, value)
+
+    async def handle_emergency_raid(
+        self, event: hikari.GuildMessageCreateEvent
+    ) -> None:
+        await event.message.respond(
+            "getting all guild members, this might take a while"
+        )
+        guild = event.get_guild()
+        assert guild
+        assert event.content
+        await self.app.bot.request_guild_members(guild)
+
+        chunk_event: hikari.MemberChunkEvent
+        async for chunk_event in self.app.bot.stream(
+            hikari.MemberChunkEvent, timeout=300
+        ):
+            print("got chunk", chunk_event.chunk_index, "/", chunk_event.chunk_count)
+            if (
+                chunk_event.guild_id == guild.id
+                and chunk_event.chunk_index == chunk_event.chunk_count - 1
+            ):
+                break
+
+        members = guild.get_members()
+        await event.message.respond(f"got {len(members)}")
+
+        max_diff = 60 * 60
+        other = hikari.Snowflake(event.content.split(" ")[1])
+        raid_accounts: list[hikari.Member] = []
+        for member in members.values():
+            if (member.created_at - other.created_at).total_seconds() < max_diff:
+                raid_accounts.append(member)
+
+        await event.message.respond(f"identified {len(members)} raiders; banning now")
+
+        from cleaner_i18n import Message
+
+        from ..shared.event import IActionChallenge
+
+        for member in raid_accounts:
+            challenge = IActionChallenge(
+                guild_id=member.guild_id,
+                user=member,
+                block=False,
+                can_ban=True,
+                can_kick=False,
+                can_timeout=False,
+                can_role=False,
+                take_role=False,
+                role_id=0,
+                reason=Message(
+                    "MANUAL ANTIRAID BAN",
+                ),
+                info={"name": "joinguard_bypass"},
+            )
+            self.app.store.put_http(challenge)
+
+    async def handle_eval(self, event: hikari.MessageCreateEvent) -> None:
+        assert event.content
+        content = event.content[6:]
+        print(content)
+        print(eval(content))
 
 
 extension = DevExtension

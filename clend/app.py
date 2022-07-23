@@ -12,6 +12,7 @@ from hikari.impl.config import CacheSettings
 
 DEVELOPERS = {
     633993042755452932,
+    922118393178517545,
 }
 
 if typing.TYPE_CHECKING:
