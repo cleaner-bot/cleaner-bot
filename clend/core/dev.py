@@ -346,11 +346,10 @@ class DevExtension:
         target = hikari.Snowflake(event.content.split(" ")[1])
         raid_accounts: list[hikari.Member] = []
         for member in members.values():
-            print(member.created_at, target.created_at, abs((member.created_at - target.created_at).total_seconds()))
             if abs((member.created_at - target.created_at).total_seconds()) < max_diff:
                 raid_accounts.append(member)
 
-        await event.message.respond(f"identified {len(members)} raiders; banning soon")
+        await event.message.respond(f"identified {len(raid_accounts)} raiders; banning soon")
 
         from cleaner_i18n import Message
 
@@ -372,7 +371,7 @@ class DevExtension:
                 ),
                 info={"name": "joinguard_bypass"},
             )
-            # self.app.store.put_http(challenge)
+            self.app.store.put_http(challenge)
 
     async def handle_eval(self, event: hikari.MessageCreateEvent) -> None:
         assert event.content
