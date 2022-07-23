@@ -330,7 +330,7 @@ class DevExtension:
         chunk_event: hikari.MemberChunkEvent
         async for chunk_event in self.app.bot.stream(
             hikari.MemberChunkEvent, timeout=300
-        ):
+        ).open():
             print("got chunk", chunk_event.chunk_index, "/", chunk_event.chunk_count)
             if (
                 chunk_event.guild_id == guild.id
