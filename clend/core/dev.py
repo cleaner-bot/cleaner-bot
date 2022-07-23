@@ -328,15 +328,16 @@ class DevExtension:
         await self.app.bot.request_guild_members(guild)
 
         chunk_event: hikari.MemberChunkEvent
-        async for chunk_event in self.app.bot.stream(
+        with self.app.bot.stream(
             hikari.MemberChunkEvent, timeout=300
-        ).open():
-            print("got chunk", chunk_event.chunk_index, "/", chunk_event.chunk_count)
-            if (
-                chunk_event.guild_id == guild.id
-                and chunk_event.chunk_index == chunk_event.chunk_count - 1
-            ):
-                break
+        ) as stream:
+            async for chunk_event in stream:
+                print("got chunk", chunk_event.chunk_index, "/", chunk_event.chunk_count)
+                if (
+                    chunk_event.guild_id == guild.id
+                    and chunk_event.chunk_index == chunk_event.chunk_count - 1
+                ):
+                    break
 
         members = guild.get_members()
         await event.message.respond(f"got {len(members)}")
