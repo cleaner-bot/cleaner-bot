@@ -54,6 +54,10 @@ def on_new_member(
     ):
         reason = Message("components_impersonation_blacklist", {})
         name = "impersonation_custom_blacklist"
+    
+    if event.guild_id == 570675358454775808 and "﷽" in event.user.username:
+        reason = Message("components_impersonation_blacklist", {})
+        name = "impersonation_custom_blacklist"
 
     if reason is None or name is None:
         return None
