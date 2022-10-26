@@ -1,0 +1,56 @@
+import hikari
+from hikari.internal.time import utc_datetime
+
+from ._types import DehoistTriggeredEvent, KernelType
+from .helpers.binding import complain_if_none, safe_call
+from .helpers.localization import Message
+
+
+class DehoistService:
+    def __init__(self, kernel: KernelType) -> None:
+        self.kernel = kernel
+
+        self.kernel.bindings["dehoist:create"] = self.dehoist
+        self.kernel.bindings["dehoist:update"] = self.member_update
+
+    async def member_update(self, event: hikari.MemberUpdateEvent) -> bool:
+        if (
+            event.old_member is None
+            or event.old_member.display_name == event.member.display_name
+        ) and (utc_datetime() - event.member.joined_at).total_seconds() < 5:
+            return False
+        return await self.dehoist(event.member)
+
+    async def dehoist(self, member: hikari.Member) -> bool:
+        new_nickname = self.nickname(member)
+        if new_nickname is hikari.UNDEFINED:
+            return False
+
+        if nickname := complain_if_none(
+            self.kernel.bindings.get("http:nickname"), "http:nickname"
+        ):
+            if track := complain_if_none(self.kernel.bindings.get("track"), "track"):
+                info: DehoistTriggeredEvent = {
+                    "name": "dehoist",
+                    "guild_id": member.guild_id,
+                }
+                await safe_call(track(info), True)
+
+            reason = Message("log_dehoist")
+            await safe_call(nickname(member, new_nickname, reason), True)
+
+        return True
+
+    def nickname(self, member: hikari.Member) -> hikari.UndefinedNoneOr[str]:
+        nickname = member.display_name.lstrip("! ")
+        # empty display_name, contains only "!"
+        if not nickname:
+            if not member.username.startswith("!"):
+                # username is ok, so reset nickname
+                return None
+            nickname = member.username.lstrip("! ")
+        # empty user_name, contains only "!", so change to "dehoisted"
+        if not nickname:
+            nickname = "dehoisted"
+        # return UNDEFINED if no changes are made
+        return hikari.UNDEFINED if nickname == member.display_name else nickname

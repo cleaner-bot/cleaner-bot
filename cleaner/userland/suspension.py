@@ -1,0 +1,55 @@
+import logging
+
+import hikari
+
+from ._types import ConfigType, EntitlementsType, KernelType, SuspendedActionEvent
+from .helpers.binding import complain_if_none, safe_call
+from .helpers.localization import Message
+
+logger = logging.getLogger(__name__)
+
+
+class SuspensionService:
+    def __init__(self, kernel: KernelType) -> None:
+        self.kernel = kernel
+
+        self.kernel.bindings["suspension:user"] = self.member_create
+        self.kernel.bindings["suspension:guild"] = self.guild_create
+
+    async def member_create(
+        self, member: hikari.Member, config: ConfigType, entitlements: EntitlementsType
+    ) -> bool:
+        suspended = await self.kernel.database.hgetall(f"user:{member.id}:suspended")
+        if not suspended:
+            return False
+        reason = suspended.get(b"reason", b"").decode()
+        logger.debug(
+            f"suspended user tried to join (user={member.id} guild={member.guild_id} "
+            f"reason={reason!r})"
+        )
+
+        if track := complain_if_none(self.kernel.bindings.get("track"), "track"):
+            info: SuspendedActionEvent = {
+                "name": "suspended",
+                "guild_id": member.guild_id,
+                "type": "user",
+                "reason": reason,
+            }
+            await safe_call(track(info), True)
+
+        if challenge := complain_if_none(
+            self.kernel.bindings.get("http:challenge"), "http:challenge"
+        ):
+            log_reason = Message("log_suspension_user")
+            await safe_call(challenge(member, config, True, log_reason, 2), True)
+
+        return True
+
+    async def guild_create(
+        self, guild: hikari.GatewayGuild, entitlements: EntitlementsType
+    ) -> bool:
+        if not entitlements["suspended"]:
+            return False
+
+        await safe_call(self.kernel.bot.rest.leave_guild(guild), True)
+        return True

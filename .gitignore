@@ -152,6 +152,4 @@ cython_debug/
 .idea/
 
 .DS_Store
-metrics.bin
-debug.log
-guild-log
+pdata
