@@ -1,9 +1,13 @@
+import string
+
 import hikari
 from hikari.internal.time import utc_datetime
 
 from ._types import DehoistTriggeredEvent, KernelType
 from .helpers.binding import complain_if_none, safe_call
 from .helpers.localization import Message
+
+DEHOIST_CHARS = string.whitespace + string.punctuation
 
 
 class DehoistService:
@@ -42,13 +46,13 @@ class DehoistService:
         return True
 
     def nickname(self, member: hikari.Member) -> hikari.UndefinedNoneOr[str]:
-        nickname = member.display_name.lstrip("! ")
+        nickname = member.display_name.lstrip(DEHOIST_CHARS)
         # empty display_name, contains only "!"
         if not nickname:
-            if not member.username.startswith("!"):
+            if not any(member.username.startswith(x) for x in DEHOIST_CHARS):
                 # username is ok, so reset nickname
                 return None
-            nickname = member.username.lstrip("! ")
+            nickname = member.username.lstrip(DEHOIST_CHARS)
         # empty user_name, contains only "!", so change to "dehoisted"
         if not nickname:
             nickname = "dehoisted"
