@@ -1,6 +1,5 @@
 import asyncio
 import base64
-from codecs import replace_errors
 import random
 import string
 import typing

@@ -8,9 +8,8 @@ from datetime import datetime
 import hikari
 from decancer_py import parse
 from hikari.internal.time import utc_datetime
-from Levenshtein import ratio  # type: ignore
 
-from ._types import ConfigType, EntitlementsType, KernelType, InteractionResponse
+from ._types import ConfigType, EntitlementsType, InteractionResponse, KernelType
 from .helpers.binding import complain_if_none, safe_call
 from .helpers.embedize import embedize_guild
 from .helpers.regex import DISCORD_INVITE
@@ -318,7 +317,7 @@ class RadarService:
         if row.components:
             (
                 row.add_button(hikari.ButtonStyle.SECONDARY, "x-d-dismiss")
-                .set_label(f"Dismiss")
+                .set_label("Dismiss")
                 .add_to_container()
             )
 
