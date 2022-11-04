@@ -65,6 +65,8 @@ class SuperVerificationService:
                         f" {guild.id=} because not in cached"
                     )
                     continue
+                elif member.role_ids:  # member was verified in some other way
+                    continue
 
                 if track := complain_if_none(
                     self.kernel.bindings.get("track"), "track"
