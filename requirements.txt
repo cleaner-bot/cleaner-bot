@@ -9,6 +9,6 @@ aiofiles>=0.8,<0.9
 httpx>=0.16,<0.24
 psutil>=5.9,<5.10
 decancer-py==0.1.0
-git+https://github.com/Shinobou/captcha-rs
+captcha-rs@git+https://github.com/Shinobou/captcha-rs.git
 hikari@git+https://github.com/cleaner-bot/hikari.git
 expirepy@git+https://github.com/cleaner-bot/expirepy.git
