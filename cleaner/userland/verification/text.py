@@ -117,7 +117,7 @@ class TextCaptchaVerificationService:
                         "verification_text_content", {"remaining": len(text)}
                     ).translate(self.kernel, interaction.locale),
                     components=components,
-                    replace_attachments=False,
+                    attachments=None,
                 )
                 return {}
 
@@ -136,9 +136,8 @@ class TextCaptchaVerificationService:
                     issue_verification(interaction, guild, solved, False)
                 )
             ) is not None:
-                await interaction.edit_message(
-                    interaction.message, **response, replace_attachments=True
-                )
+                response.setdefault("attachments", None)
+                await interaction.edit_message(interaction.message, **response)
                 return {}
 
         return None
@@ -162,9 +161,8 @@ class TextCaptchaVerificationService:
                     issue_verification(interaction, guild, int(solved), True)
                 )
             ) is not None:
-                await interaction.edit_message(
-                    interaction.message, **response, replace_attachments=True
-                )
+                response.setdefault("attachments", None)
+                await interaction.edit_message(interaction.message, **response)
                 return {}
 
         return None

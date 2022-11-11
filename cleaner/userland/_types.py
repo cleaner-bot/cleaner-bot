@@ -254,7 +254,7 @@ EventType = (
 class InteractionResponse(typing.TypedDict, total=False):
     content: str
     attachment: hikari.Resourceish
-    attachments: typing.Sequence[hikari.Resourceish]
+    attachments: typing.Sequence[hikari.Resourceish] | None
     component: hikari.api.ComponentBuilder
     components: typing.Sequence[hikari.api.ComponentBuilder]
     embed: hikari.Embed

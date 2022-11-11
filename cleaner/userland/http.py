@@ -446,7 +446,22 @@ class HTTPService:
             logger.debug("cant announce, I am gone")
             return
 
-        perms = permissions_for(me, channel)
+        perms_channel: hikari.GuildChannel | None = channel
+        if isinstance(channel, hikari.GuildThreadChannel):
+            perms_channel = self.kernel.bot.cache.get_guild_channel(channel.parent_id)
+
+        if perms_channel is None:
+            logger.debug(
+                "cant announce, cant find parent thread channel to "
+                "compute permissions"
+            )
+            return
+
+        assert isinstance(
+            perms_channel, hikari.PermissibleGuildChannel
+        ), "impossible threads should be handled"
+
+        perms = permissions_for(me, perms_channel)
 
         can_send = perms & hikari.Permissions.ADMINISTRATOR > 0
         if not can_send:

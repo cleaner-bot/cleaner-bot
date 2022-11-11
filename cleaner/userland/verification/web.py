@@ -21,7 +21,7 @@ from ..helpers.settings import get_config
 logger = logging.getLogger(__name__)
 
 
-class WebCaptchaVerificationService:
+class ExternalVerificationService:
     def __init__(self, kernel: KernelType) -> None:
         self.kernel = kernel
 
@@ -104,7 +104,7 @@ class WebCaptchaVerificationService:
                 self.kernel, interaction.locale
             ),
             component=component,
-            replace_attachments=True,
+            attachments=None,
         )
         return {}
 
@@ -133,12 +133,12 @@ class WebCaptchaVerificationService:
             if response := await check_circumstances(
                 guild, member, data["locale"], config
             ):
+                response.setdefault("attachments", None)
                 if not interaction_expired:
                     await self.kernel.bot.rest.edit_interaction_response(
                         data["application_id"],
                         data["token"],
                         **response,
-                        replace_attachments=True,
                     )
                 return {
                     "ok": False,
@@ -155,11 +155,11 @@ class WebCaptchaVerificationService:
             response = await verification_solved(member, config, data["locale"])
             if not interaction_expired:
                 try:
+                    response.setdefault("attachments", None)
                     await self.kernel.bot.rest.edit_interaction_response(
                         data["application_id"],
                         data["token"],
                         **response,
-                        replace_attachments=True,
                     )
                 except hikari.NotFoundError:
                     pass  # message dismissed

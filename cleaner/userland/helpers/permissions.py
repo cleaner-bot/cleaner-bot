@@ -29,7 +29,7 @@ DANGEROUS_PERMISSIONS = (
 
 
 def permissions_for(
-    member: hikari.Member, channel: hikari.GuildChannel
+    member: hikari.Member, channel: hikari.PermissibleGuildChannel
 ) -> hikari.Permissions:
     permissions = hikari.Permissions.NONE
     for role in member.get_roles():
@@ -63,7 +63,7 @@ def permissions_for(
 
 
 def permissions_for_role(
-    role: hikari.Role, guild: hikari.Guild, channel: hikari.GuildChannel
+    role: hikari.Role, guild: hikari.Guild, channel: hikari.PermissibleGuildChannel
 ) -> hikari.Permissions:
     permissions = role.permissions
     if (everyone_role := guild.get_role(guild.id)) is not None:

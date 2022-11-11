@@ -371,7 +371,7 @@ class VerificationService:
                 "data": None,
             }
 
-        await channel.send(**self.build_message())
+        await channel.send(**self.build_message())  # type: ignore
         return {"ok": True, "message": "OK", "data": None}
 
     def build_message(self) -> InteractionResponse:

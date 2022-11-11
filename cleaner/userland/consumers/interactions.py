@@ -120,9 +120,8 @@ class InteractionsConsumerService:
             }
 
         if response:
-            await interaction.edit_initial_response(
-                **response, replace_attachments=True
-            )
+            response.setdefault("attachments", None)
+            await interaction.edit_initial_response(**response)
 
         elif isinstance(interaction, hikari.ComponentInteraction) and not is_modal:
             await interaction.delete_initial_response()
