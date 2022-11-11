@@ -41,7 +41,7 @@ EXTENSIONS: typing.Final = (
     "cleaner.userland.commands:CommandsService",
     "cleaner.userland.members:MembersService",
     "cleaner.userland.auth:AuthService",
-    "cleaner.userland.mfa:MFAService",
+    # "cleaner.userland.mfa:MFAService",
     "cleaner.userland.dashboard:DashboardService",
     "cleaner.userland.statistics:StatisticsService",
     "cleaner.userland.dev:DeveloperService",
