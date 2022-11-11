@@ -416,7 +416,7 @@ class BasicConsumerService:
                     await safe_call(members_timer(), True)
 
             # 6. Publish stats to integrations
-            if sequence % (30 * 6) == 0:  # only run every 30mins
+            if sequence % (30 * 6) == 5 * 6:  # only run every 30mins
                 if integration_timer := complain_if_none(
                     self.kernel.bindings.get("integration:timer"), "integration:timer"
                 ):
