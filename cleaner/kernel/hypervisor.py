@@ -86,7 +86,11 @@ class CleanerHypervisor:
 
 
 def create_gateway_bot(token: str) -> hikari.GatewayBot:
-    intents = hikari.Intents.ALL_GUILDS_UNPRIVILEGED | hikari.Intents.GUILD_MEMBERS
+    intents = (
+        hikari.Intents.ALL_GUILDS_UNPRIVILEGED
+        | hikari.Intents.GUILD_MEMBERS
+        | hikari.Intents.MESSAGE_CONTENT
+    )
 
     cache_settings = CacheSettings()
     cache_settings.components = (
