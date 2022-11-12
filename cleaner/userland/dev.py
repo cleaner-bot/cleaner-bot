@@ -37,6 +37,7 @@ class DeveloperService:
             "set-entitlement": self.set_entitlement,
             "load-data": self.load_data,
             "save-data": self.save_data,
+            "button": self.button,
         }
 
     async def message_create(
@@ -301,3 +302,12 @@ class DeveloperService:
         save_data = self.kernel.bindings["data:save"]
         save_data(name)
         await message.add_reaction("👍")
+
+    async def button(self, message: hikari.Message, custom_id: str) -> None:
+        component = self.kernel.bot.rest.build_action_row()
+        (
+            component.add_button(hikari.ButtonStyle.SECONDARY, custom_id)
+            .set_label("?")
+            .add_to_container()
+        )
+        await message.respond(component=component, reply=True)
