@@ -360,12 +360,16 @@ class DeveloperService:
                 async for message in messages:
                     if not message.attachments:
                         continue
-                    out = origin / channel.name / f"{message.id}.jpg"
-                    if out.exists():
+                    if (origin / channel.name / f"{message.id}.jpg").exists():
                         break
-                    url = message.attachments[0].proxy_url
-                    tasks.append(asyncio.ensure_future(download_image(url, out)))
-                    total += 1
+                    for i, attachment in enumerate(message.attachments):
+                        out = origin / channel.name / f"{message.id + i}.jpg"
+                        tasks.append(
+                            asyncio.ensure_future(
+                                download_image(attachment.proxy_url, out)
+                            )
+                        )
+                        total += 1
 
                 if total:
                     logger.debug(f"downloading {total} for {channel.name}")
