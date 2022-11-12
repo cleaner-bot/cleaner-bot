@@ -244,7 +244,7 @@ class VerificationService:
         interaction: hikari.ComponentInteraction,
         guild: hikari.Guild,
         solved: int = 0,
-        force_webcaptcha: bool = False,
+        force_external: bool = False,
     ) -> InteractionResponse | None:
         assert interaction.member
         config = await get_config(self.kernel.database, guild.id)
@@ -266,8 +266,8 @@ class VerificationService:
         ):
             verification_level += int(level)
 
-        if verification_level >= 10:
-            force_webcaptcha = True
+        if verification_level >= 5:
+            force_external = True
 
         age = (utc_datetime() - interaction.user.id.created_at).total_seconds()
         if age < config["verification_age"]:
@@ -293,25 +293,25 @@ class VerificationService:
                 "components": [],
             }
 
-        if danger >= 20 or force_webcaptcha:
-            if issue_webcaptcha_verification := complain_if_none(
-                self.kernel.bindings.get("verification:webcaptcha:issue"),
-                "verification:webcaptcha:issue",
+        if danger >= 20 or force_external:
+            if issue_external_verification := complain_if_none(
+                self.kernel.bindings.get("verification:external:issue"),
+                "verification:external:issue",
             ):
                 if (
                     response := await safe_call(
-                        issue_webcaptcha_verification(interaction)
+                        issue_external_verification(interaction)
                     )
                 ) is not None:
                     return response
 
-        if issue_textcaptcha_verification := complain_if_none(
-            self.kernel.bindings.get("verification:textcaptcha:issue"),
-            "verification:textcaptcha:issue",
+        if issue_discord_verification := complain_if_none(
+            self.kernel.bindings.get("verification:discord:issue"),
+            "verification:discord:issue",
         ):
             if (
                 response := await safe_call(
-                    issue_textcaptcha_verification(solved, interaction.locale)
+                    issue_discord_verification(solved, interaction.locale)
                 )
             ) is not None:
                 return response

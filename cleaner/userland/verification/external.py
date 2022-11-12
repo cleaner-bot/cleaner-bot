@@ -28,17 +28,17 @@ class ExternalVerificationService:
         components: dict[
             str, typing.Callable[..., typing.Awaitable[InteractionResponse | None]]
         ] = {
-            "v-chl-web-info": self.on_info_webcaptcha,
+            "v-chl-ext-info": self.on_info_external,
         }
 
         self.kernel.interactions["components"].update(components)
 
         self.kernel.bindings[
-            "verification:webcaptcha:issue"
-        ] = self.issue_webcaptcha_verification
-        self.kernel.rpc["verification:webcaptcha:verify"] = self.on_webcaptcha_solve
+            "verification:external:issue"
+        ] = self.issue_external_verification
+        self.kernel.rpc["verification:external:verify"] = self.on_external_solve
 
-    async def issue_webcaptcha_verification(
+    async def issue_external_verification(
         self, interaction: hikari.ComponentInteraction
     ) -> InteractionResponse | None:
         assert interaction.guild_id
@@ -60,7 +60,7 @@ class ExternalVerificationService:
         flow_id = base64.urlsafe_b64encode(raw_flow_id).decode().strip("=")
 
         logger.debug(
-            f"registered webcaptcha challenge for "
+            f"registered external challenge for "
             f"{interaction.user.id}@{interaction.guild_id}"
         )
 
@@ -72,11 +72,11 @@ class ExternalVerificationService:
             "state": "",
         }
         await self.kernel.database.hset(
-            f"verification:webcaptcha:{interaction.guild_id}-{interaction.user.id}",
+            f"verification:external:{interaction.guild_id}-{interaction.user.id}",
             typing.cast(dict[str | bytes, str | bytes | int | float], data),
         )
         await self.kernel.database.expire(
-            f"verification:webcaptcha:{interaction.guild_id}-{interaction.user.id}",
+            f"verification:external:{interaction.guild_id}-{interaction.user.id}",
             60 * 60,
         )
 
@@ -86,29 +86,26 @@ class ExternalVerificationService:
                 hikari.ButtonStyle.LINK, f"https://cleanerbot.xyz/chl#{flow_id}"
             )
             .set_label(
-                Message("verification_webcaptcha_link").translate(
+                Message("verification_external_link").translate(
                     self.kernel, interaction.locale
                 )
             )
             .add_to_container()
         )
         (
-            component.add_button(hikari.ButtonStyle.SECONDARY, "v-chl-web-info")
+            component.add_button(hikari.ButtonStyle.SECONDARY, "v-chl-ext-info")
             .set_label("?")
             .add_to_container()
         )
 
-        await interaction.edit_message(
-            interaction.message,
-            content=Message("verification_webcaptcha_content").translate(
+        return {
+            "content": Message("verification_external_content").translate(
                 self.kernel, interaction.locale
             ),
-            component=component,
-            attachments=None,
-        )
-        return {}
+            "component": component,
+        }
 
-    async def on_webcaptcha_solve(
+    async def on_external_solve(
         self, user_id: int, guild_id: int, data: InteractionDatabaseType
     ) -> RPCResponse:
         guild = self.kernel.bot.cache.get_guild(guild_id)
@@ -172,11 +169,11 @@ class ExternalVerificationService:
                 "data": None,
             }
 
-    async def on_info_webcaptcha(
+    async def on_info_external(
         self, interaction: hikari.ComponentInteraction
     ) -> InteractionResponse:
         return {
-            "content": Message("verification_webcaptcha_info").translate(
+            "content": Message("verification_external_info").translate(
                 self.kernel, interaction.locale
             ),
         }

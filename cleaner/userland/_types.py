@@ -425,10 +425,10 @@ Bindings = typing.TypedDict(
         "verification:solved": typing.Callable[
             [hikari.Member, ConfigType, str], typing.Awaitable[InteractionResponse]
         ],
-        "verification:webcaptcha:issue": typing.Callable[
+        "verification:external:issue": typing.Callable[
             [hikari.ComponentInteraction], typing.Awaitable[InteractionResponse | None]
         ],
-        "verification:textcaptcha:issue": typing.Callable[
+        "verification:discord:issue": typing.Callable[
             [int, str], typing.Awaitable[InteractionResponse | None]
         ],
         "mfa:request": typing.Callable[
@@ -467,7 +467,7 @@ RPC = typing.TypedDict(
         "verification:post-message": typing.Callable[
             [int, int], typing.Awaitable[RPCResponse]
         ],
-        "verification:webcaptcha:verify": typing.Callable[
+        "verification:external:verify": typing.Callable[
             [int, int, InteractionDatabaseType], typing.Awaitable[RPCResponse]
         ],
         "super-verification": typing.Callable[

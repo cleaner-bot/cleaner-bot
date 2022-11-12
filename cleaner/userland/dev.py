@@ -4,6 +4,7 @@ import asyncio
 import logging
 import sys
 import typing
+from pathlib import Path
 
 import hikari
 from hikari.internal.time import utc_datetime
@@ -40,6 +41,7 @@ class DeveloperService:
             "save-data": self.save_data,
             "button": self.button,
             "git-pull": self.git_pull,
+            "get-captcha-data": self.get_captcha_data,
         }
 
     async def message_create(
@@ -327,4 +329,66 @@ class DeveloperService:
         log = (stdout.decode() if stdout else "") + (stderr.decode() if stderr else "")
         await message.respond(
             f"```\n{log[:1900]}```" if message else "Done. (no output)", reply=msg
+        )
+
+    async def get_captcha_data(self, original_message: hikari.Message) -> None:
+        from httpx import AsyncClient
+
+        from .captcha.dataset import datasets, load_dataset, origin
+
+        channels = self.kernel.bot.cache.get_guild_channels_view_for_guild(
+            963042403474882600
+        )
+        new: dict[str, int] = {}
+        tasks = []
+        async with AsyncClient(
+            http2=True, headers={"user-agent": "CleanerBot (cleanerbot.xyz, 0.1.0)"}
+        ) as client:
+
+            async def download_image(url: str, out: Path) -> None:
+                loop = asyncio.get_running_loop()
+                raw_image = await client.get(url + "?width=100&height=100")
+                await loop.run_in_executor(None, out.write_bytes, raw_image.content)
+
+            for channel in channels.values():
+                if channel.parent_id != 1040969542626705429:
+                    continue
+                assert channel.name
+                (origin / channel.name).mkdir(exist_ok=True, parents=True)
+                messages = self.kernel.bot.rest.fetch_messages(channel.id)
+                total = 0
+                async for message in messages:
+                    if not message.attachments:
+                        continue
+                    out = origin / channel.name / f"{message.id}.jpg"
+                    if out.exists():
+                        break
+                    url = message.attachments[0].proxy_url
+                    tasks.append(asyncio.ensure_future(download_image(url, out)))
+                    total += 1
+
+                if total:
+                    logger.debug(f"downloading {total} for {channel.name}")
+                    new[channel.name] = total
+
+            if tasks:
+                logger.debug(f"performing {len(tasks)} downloads")
+                await asyncio.gather(*tasks)
+                logger.debug(f"performed {len(tasks)} downloads")
+
+        if tasks:
+            load_dataset()
+
+        prompts = sorted(
+            ((k, len(v)) for k, v in datasets.items()), key=lambda x: x[1], reverse=True
+        )
+        largest_len = len(f"{prompts[0][1]:,}")
+        await original_message.respond(
+            "Datasets:\n"
+            + "\n".join(
+                "`"
+                + f"{count:,}".rjust(largest_len)
+                + f"` - {name} (`{new.get(name, 0):+}`)"
+                for name, count in prompts
+            )
         )
