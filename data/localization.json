@@ -127,7 +127,7 @@
         "image_label_transcribe_task": "Click on the button in the corresponding order as shown in the image.\n\nCurrent input: {input} *(case insensitive)*",
         "image_label_transcribe_submit": "Submit",
         "verification_discord_info": "The security level of this server requires you to solve a test to prove you are human.\n\nAre you an accessibility user? Click the button below for a CAPTCHA supporting more Accessibility options.",
-        "verification_discord_info_button": "Accessibility user friendly CAPTCHA",
+        "verification_discord_info_button": "Accessible CAPTCHA",
         "image_objects_cat": "Cat",
         "image_objects_dog": "Dog",
         "image_objects_rabbit": "Rabbit",
