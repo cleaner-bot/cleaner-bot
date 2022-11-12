@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import sys
 import typing
@@ -38,6 +39,7 @@ class DeveloperService:
             "load-data": self.load_data,
             "save-data": self.save_data,
             "button": self.button,
+            "git-pull": self.git_pull,
         }
 
     async def message_create(
@@ -311,3 +313,18 @@ class DeveloperService:
             .add_to_container()
         )
         await message.respond(component=component, reply=True)
+
+    async def git_pull(self, message: hikari.Message) -> None:
+        command = "git pull"
+        msg = await message.respond(f"Running `{command}`")
+
+        pip = await asyncio.create_subprocess_shell(
+            command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await pip.communicate()
+        log = (stdout.decode() if stdout else "") + (stderr.decode() if stderr else "")
+        await message.respond(
+            f"```\n{log[:1900]}```" if message else "Done. (no output)", reply=msg
+        )
