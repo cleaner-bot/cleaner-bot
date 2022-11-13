@@ -91,6 +91,7 @@ class NameService:
         return not bool(parts - blacklisted)
 
     def is_custom_blacklist(self, name: str, words: list[str]) -> bool:
+        print(name, words)
         name = parse(name)
         split_name = name.split()
         for word in words:
