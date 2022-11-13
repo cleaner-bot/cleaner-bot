@@ -170,7 +170,9 @@ class ExternalVerificationService:
             self.kernel.bindings.get("verification:solved"), "verification:solved"
         ):
             response = await verification_solved(member, config, data["locale"])
-            await self.kernel.database.delete((f"verification:external:{guild_id}-{user_id}",))
+            await self.kernel.database.delete(
+                (f"verification:external:{guild_id}-{user_id}",)
+            )
             if interaction_expired:
                 pass
             elif data["message_id"] == "0":
