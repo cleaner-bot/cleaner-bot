@@ -448,10 +448,10 @@ Bindings = typing.TypedDict(
 
 
 class InteractionDatabaseType(typing.TypedDict):
-    id: int
-    application_id: int
+    id: str
+    application_id: str
     token: str
-    message_id: int | None
+    message_id: str
     locale: str
 
 

@@ -65,10 +65,14 @@ class ExternalVerificationService:
         )
 
         data: InteractionDatabaseType = {
-            "id": interaction.id,
-            "application_id": interaction.application_id,
+            "id": str(interaction.id),
+            "application_id": str(interaction.application_id),
             "token": interaction.token,
-            "message_id": interaction.message.id if interaction.message.flags & hikari.MessageFlag.EPHEMERAL else None,
+            "message_id": (
+                str(interaction.message.id)
+                if interaction.message.flags & hikari.MessageFlag.EPHEMERAL
+                else "0"
+            ),
             "locale": interaction.locale,
         }
         await self.kernel.database.hset(
@@ -134,10 +138,10 @@ class ExternalVerificationService:
                 response.setdefault("attachments", None)
                 if interaction_expired:
                     pass
-                elif data["message_id"] is None:
+                elif data["message_id"] == "0":
                     try:
                         await self.kernel.bot.rest.edit_interaction_response(
-                            data["application_id"],
+                            int(data["application_id"]),
                             data["token"],
                             **response,
                         )
@@ -146,9 +150,9 @@ class ExternalVerificationService:
                 else:
                     try:
                         await self.kernel.bot.rest.edit_webhook_message(
-                            data["application_id"],
+                            int(data["application_id"]),
                             data["token"],
-                            data["message_id"],
+                            int(data["message_id"]),
                             **response,
                         )
                     except hikari.NotFoundError:
@@ -168,11 +172,11 @@ class ExternalVerificationService:
             response = await verification_solved(member, config, data["locale"])
             if interaction_expired:
                 pass
-            elif data["message_id"] is None:
+            elif data["message_id"] == "0":
                 try:
                     response.setdefault("attachments", None)
                     await self.kernel.bot.rest.edit_interaction_response(
-                        data["application_id"],
+                        int(data["application_id"]),
                         data["token"],
                         **response,
                     )
@@ -182,9 +186,9 @@ class ExternalVerificationService:
                 try:
                     response.setdefault("attachments", None)
                     await self.kernel.bot.rest.edit_webhook_message(
-                        data["application_id"],
+                        int(data["application_id"]),
                         data["token"],
-                        data["message_id"],
+                        int(data["message_id"]),
                         **response,
                     )
                 except hikari.NotFoundError:
