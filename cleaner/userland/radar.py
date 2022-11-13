@@ -9,7 +9,7 @@ import hikari
 from decancer_py import parse
 from hikari.internal.time import utc_datetime
 
-from ._types import ConfigType, EntitlementsType, InteractionResponse, KernelType
+from ._types import ConfigType, EntitlementsType, InteractionResponse, KernelType, RaidDetectedEvent
 from .helpers.binding import complain_if_none, safe_call
 from .helpers.embedize import embedize_guild
 from .helpers.regex import DISCORD_INVITE
@@ -55,8 +55,8 @@ class RadarService:
             lambda: {
                 "start": None,
                 "last_action": None,
-                "kick": 0,
-                "ban": 0,
+                "kicks": 0,
+                "bans": 0,
                 "ongoing_announced": False,
             }
         )
@@ -78,7 +78,7 @@ class RadarService:
         else:
             guild["last_action"] = utc_datetime()
 
-        guild[field] += 1
+        guild[field + "s"] += 1
 
     async def on_timer(self) -> None:
         now = utc_datetime()
@@ -88,7 +88,7 @@ class RadarService:
                 continue
 
             if (now - guild["last_action"]).total_seconds() < RAID_TIMEOUT:
-                if guild["kick"] + guild["ban"] >= ACTION_THRESHOLD:
+                if guild["kicks"] + guild["bans"] >= ACTION_THRESHOLD:
                     logger.debug(f"raid ongoing guild={guild_id} info={guild}")
                     if not guild["ongoing_announced"]:
                         guild["ongoing_announced"] = True
@@ -100,14 +100,14 @@ class RadarService:
                                 raid_ongoing(
                                     guild_id,
                                     guild["start"],
-                                    guild["kick"],
-                                    guild["ban"],
+                                    guild["kicks"],
+                                    guild["bans"],
                                 )
                             )
 
                 continue  # raid is still ongoing
 
-            if guild["kick"] + guild["ban"] >= ACTION_THRESHOLD:
+            if guild["kicks"] + guild["bans"] >= ACTION_THRESHOLD:
                 logger.debug(f"raid complete guild={guild_id} info={guild}")
 
                 if raid_complete := complain_if_none(
@@ -118,11 +118,22 @@ class RadarService:
                             guild_id,
                             guild["start"],
                             guild["last_action"],
-                            guild["kick"],
-                            guild["ban"],
+                            guild["kicks"],
+                            guild["bans"],
                         )
                     )
 
+            if track := complain_if_none(self.kernel.bindings.get("track"), "track"):
+                info: RaidDetectedEvent = {
+                    "name": "raid",
+                    "guild_id": guild_id,
+                    "start": int(guild["start"].timestamp()),
+                    "end": int(guild["last_action"].timestamp()),
+                    "kicks": guild["kicks"],
+                    "bans": guild["bans"],
+                }
+                await safe_call(track(info), True)
+                
             del self.guilds[guild_id]
 
     async def phishing_submit(self, message: hikari.Message, rule: str) -> None:
@@ -411,6 +422,6 @@ class RadarService:
 class GuildInfo(typing.TypedDict):
     start: datetime | None
     last_action: datetime | None
-    kick: int
-    ban: int
+    kicks: int
+    bans: int
     ongoing_announced: bool
