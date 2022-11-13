@@ -141,6 +141,7 @@ class MembersService:
         members = guild.get_members()
         member_ids = tuple(members.keys())
 
+        without_sleep = 0
         for member_id in member_ids:
             member = members.get(member_id)
             if member is None:
@@ -159,17 +160,23 @@ class MembersService:
 
                 list_id = config["bansync_subscribed"][index]
                 await safe_call(bansync_ban(member, config, list_id), True)
+                without_sleep = 0
 
             elif (
                 analyze_name
                 and (config["name_discord_enabled"] or config["name_advanced_enabled"])
                 and await safe_call(analyze_name(member, config, entitlements))
             ):
-                pass
+                without_sleep = 0
 
             elif (
                 dehoist_member
                 and config["name_dehoisting_enabled"]
                 and await safe_call(dehoist_member(member))
             ):
-                pass
+                without_sleep = 0
+            
+            else:
+                without_sleep += 1
+                if without_sleep > 1_000:
+                    await asyncio.sleep(0.1)
