@@ -180,7 +180,10 @@ class RadarService:
             row.add_button(hikari.ButtonStyle.PRIMARY, "x-p-ban")
             .set_label("Mark as correct")
             .set_is_disabled(
-                fingerprint in self.kernel.data["phishing_domain_blacklist"]
+                (
+                    not fingerprint
+                    or fingerprint in self.kernel.data["phishing_domain_blacklist"]
+                )
                 and all(
                     x in self.kernel.data["phishing_domain_blacklist"] for x in domains
                 )
