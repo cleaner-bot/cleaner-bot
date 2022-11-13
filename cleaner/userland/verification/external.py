@@ -124,6 +124,7 @@ class ExternalVerificationService:
             utc_datetime() - hikari.Snowflake(data["id"]).created_at
         ).total_seconds() > 840
 
+        logger.debug(f"verify {data}")
         if check_circumstances := complain_if_none(
             self.kernel.bindings.get("verification:check"), "verification:check"
         ):
