@@ -81,7 +81,7 @@ class NameService:
         if challenge := complain_if_none(
             self.kernel.bindings.get("http:challenge"), "http:challenge"
         ):
-            await safe_call(challenge(member, config, True, reason, 1), True)
+            await safe_call(challenge(member, config, False, reason, 1), True)
 
         return True
 
@@ -91,7 +91,6 @@ class NameService:
         return not bool(parts - blacklisted)
 
     def is_custom_blacklist(self, name: str, words: list[str]) -> bool:
-        print(name, words)
         name = parse(name)
         split_name = name.split()
         for word in words:
