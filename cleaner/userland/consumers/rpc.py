@@ -38,12 +38,12 @@ class RPCConsumerService:
     ) -> None:
         await self.kernel.database.publish(f"pubsub:rpc:{call_id}", "ACK")
 
-        response = {"ok": False, "message": "rpc function not found", "data": None}
+        response = {"ok": False, "message": "Function Not Found", "data": None}
         if rpc := complain_if_none(self.kernel.rpc.get(fn_name), fn_name):
             if resp := await safe_call(rpc(*args)):  # type: ignore
                 response = resp
             else:
-                response["message"] = "rpc function errored"
+                response["message"] = "Internal error"
 
         await self.kernel.database.publish(
             f"pubsub:rpc:{call_id}", msgpack.packb(response)
