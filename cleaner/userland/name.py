@@ -7,6 +7,7 @@ from hikari.internal.time import utc_datetime
 
 from ._types import ConfigType, EntitlementsType, KernelType, NameTriggeredEvent
 from .helpers.binding import complain_if_none, safe_call
+from .helpers.escape import escape_markdown
 from .helpers.localization import Message
 
 logger = logging.getLogger(__name__)
@@ -54,12 +55,16 @@ class NameService:
         elif (
             entitlements["name_advanced"] <= entitlements["plan"]
             and config["name_advanced_enabled"]
-            and self.is_custom_blacklist(
-                member.display_name, config["name_advanced_words"]
+            and (
+                word := self.is_custom_blacklist(
+                    member.display_name, config["name_advanced_words"]
+                )
             )
         ):
             detection = "custom"
-            reason = Message("components_name_blacklist")
+            reason = Message(
+                "components_name_blacklist", {"word": escape_markdown(word)}
+            )
 
         if detection is None or reason is None:
             return False
@@ -90,7 +95,7 @@ class NameService:
         blacklisted = set(self.kernel.data["discord_impersonation_names"])
         return not bool(parts - blacklisted)
 
-    def is_custom_blacklist(self, name: str, words: list[str]) -> bool:
+    def is_custom_blacklist(self, name: str, words: list[str]) -> str | None:
         name = parse(name)
         split_name = name.split()
         for word in words:
@@ -99,20 +104,20 @@ class NameService:
             word = parse(word)
 
             if word in split_name:
-                return True
+                return word
 
             elif any_start and any_end:
                 if contains(name, word[1:-1], parse=False):
-                    return True
+                    return word
 
             elif any_start:
                 for subword in split_name:
                     if subword.endswith(word[1:]):
-                        return True
+                        return word
 
             elif any_end:
                 for subword in split_name:
                     if subword.startswith(word[:-1]):
-                        return True
+                        return word
 
-        return False
+        return None

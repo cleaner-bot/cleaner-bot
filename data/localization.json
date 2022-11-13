@@ -34,7 +34,7 @@
         "components_antispam": "Triggered antispam: `{mitigation}`",
         "components_antispam_announcement": ":warning: **Spam detected!**\nSending the same message or sending multiple messages in a short time frame will result in a punishment.",
         "components_name_discord": "Tried impersonating Discord staff",
-        "components_name_blacklist": "Name contains blacklisted parts",
+        "components_name_blacklist": "Name contains blacklisted word: {word}",
         "components_automod": "Triggered automod rule: `{rule}`",
         "components_automod_phishing_content": "Hey <@{user}>, please don't post content that is likely to be phishing.",
         "components_automod_phishing_domain_blacklisted": "Hey <@{user}>, please don't post content that is likely to be phishing.",
