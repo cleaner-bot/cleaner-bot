@@ -51,7 +51,7 @@ class NameService:
             detection = "discord"
             reason = Message("components_name_discord")
 
-        if (
+        elif (
             entitlements["name_advanced"] <= entitlements["plan"]
             and config["name_advanced_enabled"]
             and self.is_custom_blacklist(
