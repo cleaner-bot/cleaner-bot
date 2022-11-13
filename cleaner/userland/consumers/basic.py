@@ -165,7 +165,7 @@ class BasicConsumerService:
             self.kernel.bindings.get("http:member:create"),
             "http:member:create",
         ):
-            await safe_call(http_member_create(event.guild_id))
+            await safe_call(http_member_create(event.member))
 
         # 1. Analytics (total user count)
         if members_member_create := complain_if_none(
