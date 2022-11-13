@@ -47,6 +47,7 @@ class HTTPService:
         self.kernel.bindings["http:announcement"] = self.announcement
         self.kernel.bindings["http:channel_ratelimit"] = self.channel_ratelimit
         self.kernel.bindings["http:danger_level"] = self.get_danger_level
+        self.kernel.bindings["http:member:join"] = self.on_member_join
 
         self.tasks = [
             asyncio.create_task(self.delete_task(), name="delete"),
@@ -55,6 +56,13 @@ class HTTPService:
     def on_unload(self) -> None:
         for task in self.tasks:
             task.cancel()
+
+    async def on_member_join(self, member: hikari.Member) -> None:
+        bound_member_id = f"{member.guild_id}-{member.id}"
+        try:
+            self.challenged_members.remove(bound_member_id)
+        except KeyError:
+            pass
 
     async def challenge(
         self,

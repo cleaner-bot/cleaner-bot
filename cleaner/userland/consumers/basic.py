@@ -160,6 +160,13 @@ class BasicConsumerService:
         config = await get_config(self.kernel.database, event.guild_id)
         entitlements = await get_entitlements(self.kernel.database, event.guild_id)
 
+        # 0. Remove from deduplicator
+        if http_member_create := complain_if_none(
+            self.kernel.bindings.get("http:member:create"),
+            "http:member:create",
+        ):
+            await safe_call(http_member_create(event.guild_id))
+
         # 1. Analytics (total user count)
         if members_member_create := complain_if_none(
             self.kernel.bindings.get("members:member:create"),
