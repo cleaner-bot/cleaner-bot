@@ -68,8 +68,8 @@ class ExternalVerificationService:
             "id": interaction.id,
             "application_id": interaction.application_id,
             "token": interaction.token,
+            "message_id": interaction.message.id if interaction.message.flags & hikari.MessageFlag.EPHEMERAL else None,
             "locale": interaction.locale,
-            "state": "",
         }
         await self.kernel.database.hset(
             f"verification:external:{interaction.guild_id}-{interaction.user.id}",
@@ -131,11 +131,23 @@ class ExternalVerificationService:
                 guild, member, data["locale"], config
             ):
                 response.setdefault("attachments", None)
-                if not interaction_expired:
+                if interaction_expired:
+                    pass
+                elif data["message_id"] is None:
                     try:
                         await self.kernel.bot.rest.edit_interaction_response(
                             data["application_id"],
                             data["token"],
+                            **response,
+                        )
+                    except hikari.NotFoundError:
+                        pass  # message: dismissed
+                else:
+                    try:
+                        await self.kernel.bot.rest.edit_webhook_message(
+                            data["application_id"],
+                            data["token"],
+                            data["message_id"],
                             **response,
                         )
                     except hikari.NotFoundError:
@@ -153,12 +165,25 @@ class ExternalVerificationService:
             self.kernel.bindings.get("verification:solved"), "verification:solved"
         ):
             response = await verification_solved(member, config, data["locale"])
-            if not interaction_expired:
+            if interaction_expired:
+                pass
+            elif data["message_id"] is None:
                 try:
                     response.setdefault("attachments", None)
                     await self.kernel.bot.rest.edit_interaction_response(
                         data["application_id"],
                         data["token"],
+                        **response,
+                    )
+                except hikari.NotFoundError:
+                    pass  # message dismissed
+            else:
+                try:
+                    response.setdefault("attachments", None)
+                    await self.kernel.bot.rest.edit_webhook_message(
+                        data["application_id"],
+                        data["token"],
+                        data["message_id"],
                         **response,
                     )
                 except hikari.NotFoundError:

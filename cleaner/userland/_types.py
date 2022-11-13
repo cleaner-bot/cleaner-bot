@@ -451,8 +451,8 @@ class InteractionDatabaseType(typing.TypedDict):
     id: int
     application_id: int
     token: str
+    message_id: int | None
     locale: str
-    state: str
 
 
 class RPCResponse(typing.TypedDict):
