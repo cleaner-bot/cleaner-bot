@@ -132,11 +132,14 @@ class ExternalVerificationService:
             ):
                 response.setdefault("attachments", None)
                 if not interaction_expired:
-                    await self.kernel.bot.rest.edit_interaction_response(
-                        data["application_id"],
-                        data["token"],
-                        **response,
-                    )
+                    try:
+                        await self.kernel.bot.rest.edit_interaction_response(
+                            data["application_id"],
+                            data["token"],
+                            **response,
+                        )
+                    except hikari.NotFoundError:
+                        pass  # message: dismissed
                 return {
                     "ok": False,
                     "message": response.get(
