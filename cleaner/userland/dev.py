@@ -42,6 +42,7 @@ class DeveloperService:
             "button": self.button,
             "git-pull": self.git_pull,
             "get-captcha-data": self.get_captcha_data,
+            "members-scan": self.members_scan,
         }
 
     async def message_create(
@@ -396,3 +397,13 @@ class DeveloperService:
                 for name, count in prompts
             )
         )
+
+    async def members_scan(self, message: hikari.Message) -> None:
+        from .helpers.binding import complain_if_none, safe_call
+        
+        if members_timer := complain_if_none(
+            self.kernel.bindings.get("members:timer"), "data:save"
+        ):
+            await safe_call(members_timer(), True)
+
+        await message.add_reaction("👍")
