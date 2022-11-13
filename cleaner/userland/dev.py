@@ -400,7 +400,7 @@ class DeveloperService:
 
     async def members_scan(self, message: hikari.Message) -> None:
         from .helpers.binding import complain_if_none, safe_call
-        
+
         if members_timer := complain_if_none(
             self.kernel.bindings.get("members:timer"), "data:save"
         ):

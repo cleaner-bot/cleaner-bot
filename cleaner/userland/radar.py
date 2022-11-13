@@ -9,7 +9,13 @@ import hikari
 from decancer_py import parse
 from hikari.internal.time import utc_datetime
 
-from ._types import ConfigType, EntitlementsType, InteractionResponse, KernelType, RaidDetectedEvent
+from ._types import (
+    ConfigType,
+    EntitlementsType,
+    InteractionResponse,
+    KernelType,
+    RaidDetectedEvent,
+)
 from .helpers.binding import complain_if_none, safe_call
 from .helpers.embedize import embedize_guild
 from .helpers.regex import DISCORD_INVITE
@@ -78,7 +84,7 @@ class RadarService:
         else:
             guild["last_action"] = utc_datetime()
 
-        guild[field + "s"] += 1
+        guild[field + "s"] += 1  # type: ignore
 
     async def on_timer(self) -> None:
         now = utc_datetime()
@@ -133,7 +139,7 @@ class RadarService:
                     "bans": guild["bans"],
                 }
                 await safe_call(track(info), True)
-                
+
             del self.guilds[guild_id]
 
     async def phishing_submit(self, message: hikari.Message, rule: str) -> None:

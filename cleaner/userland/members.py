@@ -175,7 +175,7 @@ class MembersService:
                 and await safe_call(dehoist_member(member))
             ):
                 without_sleep = 0
-            
+
             else:
                 without_sleep += 1
                 if without_sleep > 1_000:
