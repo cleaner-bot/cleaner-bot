@@ -129,16 +129,16 @@ class RadarService:
                         )
                     )
 
-            if track := complain_if_none(self.kernel.bindings.get("track"), "track"):
-                info: RaidDetectedEvent = {
-                    "name": "raid",
-                    "guild_id": guild_id,
-                    "start": int(guild["start"].timestamp()),
-                    "end": int(guild["last_action"].timestamp()),
-                    "kicks": guild["kicks"],
-                    "bans": guild["bans"],
-                }
-                await safe_call(track(info), True)
+                if track := complain_if_none(self.kernel.bindings.get("track"), "track"):
+                    info: RaidDetectedEvent = {
+                        "name": "raid",
+                        "guild_id": guild_id,
+                        "start": int(guild["start"].timestamp()),
+                        "end": int(guild["last_action"].timestamp()),
+                        "kicks": guild["kicks"],
+                        "bans": guild["bans"],
+                    }
+                    await safe_call(track(info), True)
 
             del self.guilds[guild_id]
 
