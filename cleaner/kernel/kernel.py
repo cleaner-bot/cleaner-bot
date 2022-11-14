@@ -43,6 +43,7 @@ EXTENSIONS: typing.Final = (
     "cleaner.userland.auth:AuthService",
     # "cleaner.userland.mfa:MFAService",
     "cleaner.userland.dashboard:DashboardService",
+    "cleaner.userland.report:ReportService",
     "cleaner.userland.statistics:StatisticsService",
     "cleaner.userland.dev:DeveloperService",
 )
