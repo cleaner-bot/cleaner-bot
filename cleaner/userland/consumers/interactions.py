@@ -120,7 +120,7 @@ class InteractionsConsumerService:
 
         if response:
             response.setdefault("attachments", None)
-            if is_modal:
+            if is_modal or isinstance(interaction, hikari.ModalInteraction):
                 await interaction.create_initial_response(
                     hikari.ResponseType.MESSAGE_CREATE,
                     flags=hikari.MessageFlag.EPHEMERAL,
