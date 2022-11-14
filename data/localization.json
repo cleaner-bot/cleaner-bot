@@ -202,6 +202,7 @@
         "report_action_errors_noperms": "I do not have the necessary permissions to perform this action. This may be due to missing permissions, role hierarchy issues or ratelimits.",
         "report_action_delete_success": "Message deleted successfully.",
         "report_action_delete_fail": "Failed to delete message.",
+        "report_action_delete_reason": "Moderator <@{user}> ({name}) deleted the message.",
         "report_action_timeout_modal_title": "Timeout duration",
         "report_action_timeout_modal_placeholder": "Example duration: `11d11h11m11s` (max 28d). Accepted: w(eek), d(ay), h(our), m(inute), s(econd)",
         "report_action_timeout_errors_duration": "Invalid duration. Please make sure you formatted it properly and are below 28 days.",

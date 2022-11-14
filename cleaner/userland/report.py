@@ -655,6 +655,7 @@ class ReportService:
     async def delete_reported_message(
         self, interaction: hikari.ComponentInteraction
     ) -> InteractionResponse:
+        assert interaction.guild_locale
         message_link_button = typing.cast(
             hikari.ButtonComponent,
             typing.cast(
@@ -698,7 +699,23 @@ class ReportService:
             builders[0].components[1],
         ).set_is_disabled(True)
 
-        await interaction.edit_message(interaction.message, components=builders)
+        assert interaction.message.content
+        reasons = interaction.message.content.split("\n")
+        if len(reasons) >= 5:
+            reasons.pop(1)
+        reasons.append(
+            Message(
+                "report_action_delete_reason",
+                {
+                    "user": interaction.user.id,
+                    "name": escape_markdown(str(interaction.user)),
+                },
+            ).translate(self.kernel, interaction.guild_locale)
+        )
+
+        await interaction.edit_message(
+            interaction.message, "\n".join(reasons), components=builders
+        )
 
         return {"content": Message(result).translate(self.kernel, interaction.locale)}
 
