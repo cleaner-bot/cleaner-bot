@@ -124,7 +124,7 @@ class InteractionsConsumerService:
                 await interaction.create_initial_response(
                     hikari.ResponseType.MESSAGE_CREATE,
                     flags=hikari.MessageFlag.EPHEMERAL,
-                    **response
+                    **response,
                 )
             else:
                 await interaction.edit_initial_response(**response)
