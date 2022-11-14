@@ -50,7 +50,6 @@ class InteractionsConsumerService:
             )
         )
 
-        # using rest cuz partialinteraction doesnt have functions for responding
         if isinstance(interaction, hikari.ComponentInteraction) and not is_modal:
             await interaction.create_initial_response(
                 hikari.ResponseType.MESSAGE_CREATE,
@@ -121,7 +120,10 @@ class InteractionsConsumerService:
 
         if response:
             response.setdefault("attachments", None)
-            await interaction.edit_initial_response(**response)
+            if is_modal:
+                await interaction.create_initial_response(**response)  # type: ignore
+            else:
+                await interaction.edit_initial_response(**response)
 
         elif isinstance(interaction, hikari.ComponentInteraction) and not is_modal:
             await interaction.delete_initial_response()
