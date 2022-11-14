@@ -498,7 +498,9 @@ class HTTPService:
 
         guild = channel.get_guild()
         locale = "en-US" if guild is None else guild.preferred_locale
-        msg = await channel.send(announcement.translate(self.kernel, locale))
+        msg = await channel.send(
+            announcement.translate(self.kernel, locale), user_mentions=True
+        )
 
         if delete_after > 0:
             await asyncio.sleep(delete_after)

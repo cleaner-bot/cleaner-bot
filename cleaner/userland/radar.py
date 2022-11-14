@@ -129,7 +129,9 @@ class RadarService:
                         )
                     )
 
-                if track := complain_if_none(self.kernel.bindings.get("track"), "track"):
+                if track := complain_if_none(
+                    self.kernel.bindings.get("track"), "track"
+                ):
                     info: RaidDetectedEvent = {
                         "name": "raid",
                         "guild_id": guild_id,
