@@ -144,8 +144,6 @@ class EntitlementsType(typing.TypedDict):
     verification: int
     super_verification: int
     bansync_subscription_limit: int
-    bansync_own_limit: int
-    bansync_user_limit: int
     auth: int
     linkfilter: int
 

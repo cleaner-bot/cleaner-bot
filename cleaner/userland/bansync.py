@@ -11,9 +11,10 @@ from ._types import (
 )
 from .helpers.binding import complain_if_none, safe_call
 from .helpers.localization import Message
-from .helpers.settings import get_entitlements
+from .helpers.settings import get_config
 
 logger = logging.getLogger(__name__)
+USER_LIMIT = 50_000
 
 
 class BanSyncService:
@@ -66,11 +67,8 @@ class BanSyncService:
         return False
 
     async def on_ban_create(self, event: hikari.BanCreateEvent) -> None:
-        entitlements = await get_entitlements(self.kernel.database, event.guild_id)
-        banlists = await self.kernel.database.smembers(
-            f"guild:{event.guild_id}:bansync:lists"
-        )
-        for list_id in map(bytes.decode, banlists):
+        config = await get_config(self.kernel.database, event.guild_id)
+        for list_id in config["bansync_subscribed"]:
             auto_sync = await self.kernel.database.hget(
                 f"bansync:banlist:{list_id}", "auto_sync"
             )
@@ -79,7 +77,7 @@ class BanSyncService:
             ):
                 continue
             count = await self.kernel.database.scard(f"bansync:banlist:{list_id}:users")
-            if count >= entitlements["bansync_user_limit"]:
+            if count >= USER_LIMIT:
                 continue
             if await self.kernel.database.sadd(
                 f"bansync:banlist:{list_id}:users", (str(event.user.id),)
@@ -90,10 +88,8 @@ class BanSyncService:
                 )
 
     async def on_ban_delete(self, event: hikari.BanDeleteEvent) -> None:
-        banlists = await self.kernel.database.smembers(
-            f"guild:{event.guild_id}:bansync:lists"
-        )
-        for list_id in map(bytes.decode, banlists):
+        config = await get_config(self.kernel.database, event.guild_id)
+        for list_id in config["bansync_subscribed"]:
             auto_sync = await self.kernel.database.hget(
                 f"bansync:banlist:{list_id}", "auto_sync"
             )
@@ -133,11 +129,10 @@ class BanSyncService:
                 "message": "Missing ban members permission",
             }
 
-        entitlements = await get_entitlements(self.kernel.database, guild_id)
         current_length = await self.kernel.database.scard(
             f"bansync:banlist:{banlist_id}:users"
         )
-        if current_length >= entitlements["bansync_user_limit"]:
+        if current_length >= USER_LIMIT:
             return {"ok": False, "data": None, "message": "Reached user limit of list"}
 
         total_added = 0
@@ -147,7 +142,7 @@ class BanSyncService:
                 [str(ban.user.id) for ban in users],
             )
             total_added += added
-            if current_length + total_added >= entitlements["bansync_user_limit"]:
+            if current_length + total_added >= USER_LIMIT:
                 break
 
         return {"ok": True, "data": total_added, "message": "OK"}
