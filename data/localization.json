@@ -173,7 +173,7 @@
         "report_errors_nobot": "Sorry, but that message was sent by a bot and cannot be reported.",
         "report_errors_noself": "You can't report yourself.",
         "report_errors_tooold": "Sorry, that message is too old to be reported.",
-        "report_errors_nomessage": "Something went wrong, we couldn't find the message.",
+        "report_errors_nomessage": "Something went wrong, I couldn't find the message.",
         "report_phishing_thanks": "Thank you for your report. The message has been forwarded to our team!\nPlease note that abuse of this feature is a violation of our [Terms of Service](https://cleanerbot.xyz/legal/terms) and can result in a ban and account suspension.",
         "report_phishing_errors_detected": "Thank you for your report. We have improved our phishing detection since the time the message was sent and this message has been detected in the meantime.",
         "report_phishing_errors_nolink": "Sorry, but that message does not contain a link and is therefore illegible for reporting as phishing.",

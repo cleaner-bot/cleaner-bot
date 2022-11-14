@@ -471,9 +471,8 @@ class ReportService:
             .strip("=")
         )
 
-        reason_input = typing.cast(
-            hikari.InteractionTextInput, interaction.components[0]
-        )
+        row = typing.cast(hikari.ModalActionRowComponent, interaction.components[0])
+        reason_input = typing.cast(hikari.InteractionTextInput, row.components[0])
 
         embed = (
             hikari.Embed(
@@ -817,9 +816,8 @@ class ReportService:
                 )
             }
 
-        duration_input = typing.cast(
-            hikari.InteractionTextInput, interaction.components[0]
-        )
+        row = typing.cast(hikari.ModalActionRowComponent, interaction.components[0])
+        duration_input = typing.cast(hikari.InteractionTextInput, row.components[0])
         duration = text_to_duration(duration_input.value)
         if duration is None or duration > MAX_TIMEOUT_DURATION:
             return {
