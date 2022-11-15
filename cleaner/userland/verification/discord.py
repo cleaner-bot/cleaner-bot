@@ -7,6 +7,7 @@ import typing
 from base64 import urlsafe_b64decode, urlsafe_b64encode
 
 import hikari
+from hikari.internal.time import utc_datetime
 
 from .._types import InteractionResponse, KernelType
 from ..captcha import (
@@ -48,11 +49,12 @@ class DiscordVerificationService:
         ] = self.issue_discord_verification
 
     async def issue_discord_verification(
-        self, solved: int, locale: str
+        self, member: hikari.Member, solved: int, locale: str
     ) -> InteractionResponse | None:
-        task_name = random.choice(
-            (IMAGE_LABEL_BINARY, IMAGE_LABEL_CLASSIFY, IMAGE_LABEL_TRANSCRIBE)
-        )
+        tasks = (IMAGE_LABEL_BINARY, IMAGE_LABEL_CLASSIFY, IMAGE_LABEL_TRANSCRIBE)
+        task_name = tasks[
+            int(member.id + utc_datetime().timestamp()) // 300 % len(tasks)
+        ]
 
         if task_name == IMAGE_LABEL_BINARY:
             return await self.issue_image_label_binary(solved, locale)
@@ -202,7 +204,7 @@ class DiscordVerificationService:
                     selected_int |= 1 << (3 * i + j)
 
         return await self.on_solve(
-            interaction, int(raw_solved), selected_int == secret_int
+            interaction, int(raw_solved), selected_int == secret_int, 3
         )
 
     # image label classify
@@ -278,7 +280,9 @@ class DiscordVerificationService:
         secret_index = int.from_bytes(secret, "big")
         index = int(raw_index)
 
-        return await self.on_solve(interaction, int(raw_solved), index == secret_index)
+        return await self.on_solve(
+            interaction, int(raw_solved), index == secret_index, 1
+        )
 
     # image label transcribe
     async def issue_image_label_transcribe(
@@ -459,23 +463,27 @@ class DiscordVerificationService:
         secret = bytes([x ^ otp[i] for i, x in enumerate(secret_bytes)]).decode()
 
         return await self.on_solve(
-            interaction, int(raw_solved), secret.upper() == letters
+            interaction, int(raw_solved), secret.upper() == letters, 3
         )
 
     # general stuff
     async def on_solve(
-        self, interaction: hikari.ComponentInteraction, solved: int, correct: bool
+        self,
+        interaction: hikari.ComponentInteraction,
+        solved: int,
+        correct: bool,
+        difficulty: int,
     ) -> InteractionResponse | None:
         guild = interaction.get_guild()
         assert guild is not None, "how tf"
 
         if correct:
-            solved += 1
+            solved += difficulty
         else:
             await self.kernel.database.hincrby(
                 f"guild:{interaction.guild_id}:verification",
                 str(interaction.user.id),
-                1,
+                difficulty,
             )
 
         if issue_verification := complain_if_none(

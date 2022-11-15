@@ -428,7 +428,7 @@ Bindings = typing.TypedDict(
             [hikari.ComponentInteraction], typing.Awaitable[InteractionResponse | None]
         ],
         "verification:discord:issue": typing.Callable[
-            [int, str], typing.Awaitable[InteractionResponse | None]
+            [hikari.Member, int, str], typing.Awaitable[InteractionResponse | None]
         ],
         "mfa:request": typing.Callable[
             [

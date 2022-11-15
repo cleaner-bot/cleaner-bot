@@ -266,7 +266,7 @@ class VerificationService:
         ):
             verification_level += int(level)
 
-        if verification_level >= 5:
+        if verification_level >= 15:
             force_external = True
 
         age = (utc_datetime() - interaction.user.id.created_at).total_seconds()
@@ -274,7 +274,7 @@ class VerificationService:
             verification_level += 1
         sleep_factor = 0 if age > 15552000 else (1 - age / 15552000)
 
-        if solved >= min(5, verification_level):
+        if solved >= min(15, verification_level):
             if sleep_factor:
                 await asyncio.sleep(sleep_factor * 5)
             assert interaction.member
@@ -311,7 +311,9 @@ class VerificationService:
         ):
             if (
                 response := await safe_call(
-                    issue_discord_verification(solved, interaction.locale)
+                    issue_discord_verification(
+                        interaction.member, solved, interaction.locale
+                    )
                 )
             ) is not None:
                 return response
