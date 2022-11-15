@@ -11,6 +11,7 @@ datasets: dict[str, list[Path]] = {}
 def load_dataset() -> None:
     if not origin.exists():
         return
+    datasets.clear()
     for prompt in origin.iterdir():
         if prompt.name.startswith("."):
             continue
