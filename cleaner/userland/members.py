@@ -178,5 +178,5 @@ class MembersService:
 
             else:
                 without_sleep += 1
-                if without_sleep > 1_000:
+                if without_sleep and without_sleep % 1_000 == 0:
                     await asyncio.sleep(0.1)
