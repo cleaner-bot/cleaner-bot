@@ -274,7 +274,7 @@ class VerificationService:
             verification_level += 1
         sleep_factor = 0 if age > 15552000 else (1 - age / 15552000)
 
-        if solved >= min(15, verification_level):
+        if solved >= max(3, min(15, verification_level)):
             if sleep_factor:
                 await asyncio.sleep(sleep_factor * 5)
             assert interaction.member
