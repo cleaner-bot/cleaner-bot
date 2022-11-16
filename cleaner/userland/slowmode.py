@@ -59,7 +59,7 @@ class SlowmodeService:
                 )
                 if guildchannel is not None and isinstance(
                     guildchannel, hikari.GuildTextChannel
-                ):
+                ) and guildchannel.rate_limit_per_user.seconds <= 10:
                     if track := complain_if_none(
                         self.kernel.bindings.get("track"), "track"
                     ):
@@ -103,6 +103,7 @@ class SlowmodeService:
                     channel is None
                     or not isinstance(channel, hikari.GuildTextChannel)
                     or channel.rate_limit_per_user.seconds == recommended
+                    or channel.rate_limit_per_user.seconds > 10
                 ):
                     continue
 
