@@ -561,7 +561,8 @@ class DiscordVerificationService:
                 self.kernel, interaction.locale
             )
             + (
-                Message("verification_discord_info_disclaimer").translate(
+                "\n\n"
+                + Message("verification_discord_info_disclaimer").translate(
                     self.kernel, interaction.locale
                 )
                 if disclaimer == "1"
