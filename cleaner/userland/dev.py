@@ -352,8 +352,13 @@ class DeveloperService:
                 await loop.run_in_executor(None, out.write_bytes, raw_image.content)
 
             for channel in channels.values():
-                if channel.parent_id != 1040969542626705429:
+                if channel.parent_id is None:
                     continue
+                parent_channel = channels[channel.parent_id]
+                assert parent_channel.name
+                if "captcha" not in parent_channel.name.lower():
+                    continue
+
                 assert channel.name
                 (origin / channel.name).mkdir(exist_ok=True, parents=True)
                 messages = self.kernel.bot.rest.fetch_messages(channel.id)
@@ -374,7 +379,8 @@ class DeveloperService:
 
                 if total:
                     logger.debug(f"downloading {total} for {channel.name}")
-                    new[channel.name] = total
+
+                new[channel.name] = total
 
             if tasks:
                 logger.debug(f"performing {len(tasks)} downloads")
@@ -397,6 +403,12 @@ class DeveloperService:
                 for name, count in prompts
             )
         )
+        unknown = datasets.keys() - new
+        if unknown:
+            await original_message.respond(
+                ":warning: Couldn't find the following datasets, but they "
+                "are still downloaded!\n" + ", ".join(unknown)
+            )
 
     async def members_scan(self, message: hikari.Message) -> None:
         from .helpers.binding import complain_if_none, safe_call
