@@ -133,7 +133,7 @@ class DiscordVerificationService:
         )
         (
             rows[-1]
-            .add_button(hikari.ButtonStyle.SECONDARY, f"v-chl-i-info/{solved}")
+            .add_button(hikari.ButtonStyle.SECONDARY, f"v-chl-i-info/{solved}/1")
             .set_label("?")
             .add_to_container()
         )
@@ -246,7 +246,7 @@ class DiscordVerificationService:
         rows.append(self.kernel.bot.rest.build_action_row())
         (
             rows[-1]
-            .add_button(hikari.ButtonStyle.SECONDARY, f"v-chl-i-info/{solved}")
+            .add_button(hikari.ButtonStyle.SECONDARY, f"v-chl-i-info/{solved}/1")
             .set_label("?")
             .add_to_container()
         )
@@ -358,7 +358,7 @@ class DiscordVerificationService:
         )
         (
             rows[-1]
-            .add_button(hikari.ButtonStyle.SECONDARY, f"v-chl-i-info/{solved}")
+            .add_button(hikari.ButtonStyle.SECONDARY, f"v-chl-i-info/{solved}/0")
             .set_label("?")
             .add_to_container()
         )
@@ -527,7 +527,7 @@ class DiscordVerificationService:
         return None
 
     async def btn_info(
-        self, interaction: hikari.ComponentInteraction, solved: str
+        self, interaction: hikari.ComponentInteraction, solved: str, disclaimer: str
     ) -> InteractionResponse:
         component = self.kernel.bot.rest.build_action_row()
         (
@@ -542,9 +542,30 @@ class DiscordVerificationService:
             )
             .add_to_container()
         )
+        if disclaimer == "1":
+            (
+                component.add_button(
+                    hikari.ButtonStyle.SECONDARY,
+                    f"v-chl-i-report/{interaction.message.id}",
+                )
+                .set_label(
+                    Message("verification_discord_info_disclaimer_button").translate(
+                        self.kernel, interaction.locale
+                    )
+                )
+                .add_to_container()
+            )
+
         return {
             "content": Message("verification_discord_info").translate(
                 self.kernel, interaction.locale
+            )
+            + (
+                Message("verification_discord_info_disclaimer").translate(
+                    self.kernel, interaction.locale
+                )
+                if disclaimer == "1"
+                else ""
             ),
             "component": component,
         }
