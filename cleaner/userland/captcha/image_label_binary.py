@@ -6,6 +6,7 @@ from PIL import Image  # type: ignore
 from .dataset import datasets
 
 __all__ = ["ImageLabelBinaryTask", "generate"]
+MIN_REQUIRED = 100
 
 
 class ImageLabelBinaryTask(typing.NamedTuple):
@@ -24,7 +25,9 @@ def generate(
 
     rows, columns = grid
     if prompt is None:
-        prompt = rng.choice(tuple(datasets.keys()))
+        prompt = rng.choice(
+            tuple(k for k, v in datasets.items() if len(v) > MIN_REQUIRED)
+        )
     total = rows * columns
     correct = rng.randint(
         1 if total < 3 else 2, total - 1 if total < 9 else int(total * 2 / 3)
