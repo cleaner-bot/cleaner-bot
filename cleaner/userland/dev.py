@@ -343,7 +343,7 @@ class DeveloperService:
         new: dict[str, int] = {}
         tasks = []
         async with AsyncClient(
-            http2=True, headers={"user-agent": "CleanerBot (cleanerbot.xyz, 0.1.0)"}
+            http2=True, headers={"user-agent": "CleanerBot (cleanerbot.xyz, 0.1.0)"}, timeout=30
         ) as client:
 
             async def download_image(url: str, out: Path) -> None:
