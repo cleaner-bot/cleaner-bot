@@ -352,7 +352,7 @@ class DeveloperService:
                 await loop.run_in_executor(None, out.write_bytes, raw_image.content)
 
             for channel in channels.values():
-                if channel.parent_id is None:
+                if channel.parent_id is None or channel.name not in ("cat", "dog", "rabbit", "hedgehog"):
                     continue
                 parent_channel = channels[channel.parent_id]
                 assert parent_channel.name
