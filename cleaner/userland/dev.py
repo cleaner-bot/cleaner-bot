@@ -383,19 +383,29 @@ class DeveloperService:
                     )
                     total += 1
 
+                if len(tasks) > 5000:
+                    await asyncio.gather(*tasks)
+                    logger.debug(f"performed {len(tasks)} downloads")
+                    client = AsyncClient(
+                        http2=True,
+                        headers={"user-agent": "CleanerBot (cleanerbot.xyz, 0.1.0)"},
+                        timeout=30,
+                    )
+                    tasks.clear()
+
             if total:
                 logger.debug(f"downloading {total} for {channel.name}")
 
             new[channel.name] = total
 
-            if tasks:
-                await asyncio.gather(*tasks)
-                logger.debug(f"performed {len(tasks)} downloads")
-                client = AsyncClient(
-                    http2=True,
-                    headers={"user-agent": "CleanerBot (cleanerbot.xyz, 0.1.0)"},
-                    timeout=30,
-                )
+        if tasks:
+            await asyncio.gather(*tasks)
+            logger.debug(f"performed {len(tasks)} downloads")
+            client = AsyncClient(
+                http2=True,
+                headers={"user-agent": "CleanerBot (cleanerbot.xyz, 0.1.0)"},
+                timeout=30,
+            )
 
         if tasks:
             load_dataset()
