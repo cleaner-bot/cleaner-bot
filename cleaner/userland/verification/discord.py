@@ -162,7 +162,9 @@ class DiscordVerificationService:
         for i in range(0, 3):
             for j in range(0, 3):
                 button = typing.cast(
-                    hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
+                    hikari.api.InteractiveButtonBuilder[
+                        hikari.api.MessageActionRowBuilder
+                    ],
                     components[i].components[j],
                 )
                 if button.style == hikari.ButtonStyle.SUCCESS:
@@ -430,7 +432,9 @@ class DiscordVerificationService:
         for i in range(0, 2):
             for j in range(0, 5):
                 btn = typing.cast(
-                    hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
+                    hikari.api.InteractiveButtonBuilder[
+                        hikari.api.MessageActionRowBuilder
+                    ],
                     components[i].components[j],
                 )
                 btn.set_is_disabled(False)

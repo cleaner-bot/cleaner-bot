@@ -769,11 +769,15 @@ class ReportService:
                     interaction.message.components, self.kernel.bot.rest
                 )
                 typing.cast(
-                    hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
+                    hikari.api.InteractiveButtonBuilder[
+                        hikari.api.MessageActionRowBuilder
+                    ],
                     builders[1].components[0],
                 ).set_is_disabled(True)
                 typing.cast(
-                    hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
+                    hikari.api.InteractiveButtonBuilder[
+                        hikari.api.MessageActionRowBuilder
+                    ],
                     builders[1].components[1],
                 ).set_is_disabled(True)
                 await interaction.edit_message(interaction.message, components=builders)
@@ -796,7 +800,9 @@ class ReportService:
             )
             for index in range(0, 3):
                 typing.cast(
-                    hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
+                    hikari.api.InteractiveButtonBuilder[
+                        hikari.api.MessageActionRowBuilder
+                    ],
                     builders[1].components[index],
                 ).set_is_disabled(True)
             await interaction.edit_message(interaction.message, components=builders)
@@ -898,11 +904,15 @@ class ReportService:
                     interaction.message.components, self.kernel.bot.rest
                 )
                 typing.cast(
-                    hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
+                    hikari.api.InteractiveButtonBuilder[
+                        hikari.api.MessageActionRowBuilder
+                    ],
                     builders[1].components[0],
                 ).set_is_disabled(True)
                 typing.cast(
-                    hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
+                    hikari.api.InteractiveButtonBuilder[
+                        hikari.api.MessageActionRowBuilder
+                    ],
                     builders[1].components[1],
                 ).set_is_disabled(True)
                 await interaction.edit_message(interaction.message, components=builders)
@@ -925,7 +935,9 @@ class ReportService:
             )
             for index in range(0, 3):
                 typing.cast(
-                    hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
+                    hikari.api.InteractiveButtonBuilder[
+                        hikari.api.MessageActionRowBuilder
+                    ],
                     builders[1].components[index],
                 ).set_is_disabled(True)
             await interaction.edit_message(interaction.message, components=builders)
