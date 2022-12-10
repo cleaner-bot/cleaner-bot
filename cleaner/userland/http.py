@@ -445,6 +445,7 @@ class HTTPService:
         announcement: Message,
         delete_after: float,
     ) -> None:
+        print("announcement checkpoint 1")
         danger = self.get_danger_level(channel.guild_id)
         if danger >= 2:
             logger.debug(
@@ -453,6 +454,7 @@ class HTTPService:
             )
             return
 
+        print("announcement checkpoint 2")
         my_user = self.kernel.bot.cache.get_me()
         assert my_user is not None, "I am None"
         me = self.kernel.bot.cache.get_member(channel.guild_id, my_user)
@@ -460,10 +462,12 @@ class HTTPService:
             logger.debug("cant announce, I am gone")
             return
 
+        print("announcement checkpoint 3")
         perms_channel: hikari.GuildChannel | None = channel
         if isinstance(channel, hikari.GuildThreadChannel):
             perms_channel = self.kernel.bot.cache.get_guild_channel(channel.parent_id)
 
+        print("announcement checkpoint 4")
         if perms_channel is None:
             logger.debug(
                 "cant announce, cant find parent thread channel to "
@@ -477,6 +481,7 @@ class HTTPService:
 
         perms = permissions_for(me, perms_channel)
 
+        print("announcement checkpoint 5")
         can_send = perms & hikari.Permissions.ADMINISTRATOR > 0
         if not can_send:
             required = (
@@ -489,6 +494,7 @@ class HTTPService:
             f"guild={channel.guild_id} danger={danger})"
         )
 
+        print("announcement checkpoint 6")
         if not can_send:
             if log := complain_if_none(self.kernel.bindings.get("log"), "log"):
                 await safe_call(
@@ -502,6 +508,7 @@ class HTTPService:
                 )
             return
 
+        print("announcement checkpoint 7")
         guild = channel.get_guild()
         locale = "en-US" if guild is None else guild.preferred_locale
         msg = await channel.send(
@@ -511,6 +518,8 @@ class HTTPService:
         if delete_after > 0:
             await asyncio.sleep(delete_after)
             await self.delete(msg.id, channel.id, my_user, False, None, msg)
+
+        print("announcement checkpoint 8")
 
     async def channel_ratelimit(
         self,
