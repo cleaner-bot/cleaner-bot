@@ -39,32 +39,6 @@ class InteractionsConsumerService:
     async def on_interaction_create(self, event: hikari.InteractionCreateEvent) -> None:
         interaction = event.interaction
 
-        is_modal = (
-            isinstance(interaction, hikari.CommandInteraction)
-            and interaction.command_name == "Report to server staff"
-        ) or (
-            isinstance(interaction, hikari.ComponentInteraction)
-            and (
-                interaction.custom_id.startswith("r-a-timeout")
-                or interaction.custom_id.startswith("mfa/")
-            )
-        )
-
-        if isinstance(interaction, hikari.ComponentInteraction) and not is_modal:
-            await interaction.create_initial_response(
-                hikari.ResponseType.MESSAGE_CREATE,
-                content="<a:Loading:1034775413987217439> The Cleaner is thinking...",
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-
-        elif not is_modal:
-            await self.kernel.bot.rest.create_interaction_response(
-                interaction,
-                interaction.token,
-                hikari.ResponseType.DEFERRED_MESSAGE_CREATE,
-                flags=hikari.MessageFlag.EPHEMERAL,
-            )
-
         type = ""
         response: InteractionResponse | None | typing.Literal[False] = False
         if isinstance(interaction, hikari.CommandInteraction):
@@ -120,14 +94,8 @@ class InteractionsConsumerService:
 
         if response:
             response.setdefault("attachments", None)
-            if is_modal:
-                await interaction.create_initial_response(
-                    hikari.ResponseType.MESSAGE_CREATE,
-                    flags=hikari.MessageFlag.EPHEMERAL,
-                    **response,
-                )
-            else:
-                await interaction.edit_initial_response(**response)
-
-        elif isinstance(interaction, hikari.ComponentInteraction) and not is_modal:
-            await interaction.delete_initial_response()
+            await interaction.create_initial_response(
+                hikari.ResponseType.MESSAGE_CREATE,
+                flags=hikari.MessageFlag.EPHEMERAL,
+                **response,
+            )
