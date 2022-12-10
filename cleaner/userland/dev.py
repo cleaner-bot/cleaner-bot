@@ -43,6 +43,7 @@ class DeveloperService:
             "git-pull": self.git_pull,
             "get-captcha-data": self.get_captcha_data,
             "members-scan": self.members_scan,
+            "threads-cache": self.threads_cache,
         }
 
     async def message_create(
@@ -439,3 +440,10 @@ class DeveloperService:
             await safe_call(members_timer(), True)
 
         await message.add_reaction("👍")
+
+    async def threads_cache(self, message: hikari.Message) -> None:
+        threads = self.kernel.bot.cache.get_threads_view()
+        await message.respond(
+            f"{len(threads)} threads.\n\n"
+            + "\n".join(f"`{x.id}` {x.name}" for x in threads.values())
+        )
