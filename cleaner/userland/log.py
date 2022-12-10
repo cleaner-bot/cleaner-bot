@@ -228,8 +228,8 @@ class LogService:
         referenced_message: hikari.PartialMessage | None = None,
     ) -> None:
         logger.debug(
-            f"log guild={guild} message={message} reason={reason} "
-            f"referenced_message={referenced_message}"
+            f"log guild={guild.id if isinstance(guild, hikari.Guild) else guild} "
+            f"message={message} reason={reason} refmsg={referenced_message}"
         )
         now = utc_datetime()
         if isinstance(guild, hikari.Guild):
