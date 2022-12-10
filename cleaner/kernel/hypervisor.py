@@ -99,6 +99,7 @@ def create_gateway_bot(token: str) -> hikari.GatewayBot:
         | CacheComponents.ROLES
         | CacheComponents.MEMBERS
         | CacheComponents.ME
+        | CacheComponents.GUILD_THREADS
     )
 
     return hikari.GatewayBot(
