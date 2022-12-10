@@ -507,7 +507,7 @@ class HTTPService:
 
         if delete_after > 0:
             await asyncio.sleep(delete_after)
-            await self.delete(msg.id, channel.id, my_user, False, None, msg)
+            await self.delete(msg.id, channel_id, my_user, False, None, msg)
 
     async def channel_ratelimit(
         self,
