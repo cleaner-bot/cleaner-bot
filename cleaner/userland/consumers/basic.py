@@ -236,8 +236,7 @@ class BasicConsumerService:
                 if dehoist := complain_if_none(
                     self.kernel.bindings.get("dehoist:create"), "dehoist:create"
                 ):
-                    if await safe_call(dehoist(event.member)):
-                        return
+                    await safe_call(dehoist(event.member), True)
 
         # 9. Logging
         if (
