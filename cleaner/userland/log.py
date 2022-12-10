@@ -356,57 +356,6 @@ class LogService:
                             embeds.append(hikari.Embed(color=0x2F3136))
                         embeds[0].add_field("Guild", f"{guild.name} ({guild.id})")
 
-                    if (
-                        entitlements["plan"] == 0
-                        and random.random() <= 0.05
-                        and not await self.kernel.database.exists(
-                            (f"guild:{guild_id}:logging:voting-reminder",)
-                        )
-                    ):
-                        integrations = [
-                            (
-                                "Top.gg",
-                                f"https://top.gg/bot/{me.id}/vote?guild=",
-                            ),
-                            (
-                                "Discordlist.gg",
-                                f"https://discordlist.gg/bot/{me.id}/vote?ref=",
-                            ),
-                        ]
-                        embeds.append(
-                            hikari.Embed(
-                                title=self.kernel.translate(
-                                    guild.preferred_locale, "log_vote_title"
-                                ),
-                                description=(
-                                    self.kernel.translate(
-                                        guild.preferred_locale, "log_vote_description"
-                                    )
-                                    + "\n\n"
-                                    + "\n".join(
-                                        "[`"
-                                        + self.kernel.translate(
-                                            guild.preferred_locale,
-                                            "log_vote_integration",
-                                            name=name,
-                                        )
-                                        + f"`]({url}{guild_id})"
-                                        for name, url in integrations
-                                    )
-                                ),
-                                color=0x6366F1,
-                            ).set_footer(
-                                text=self.kernel.translate(
-                                    guild.preferred_locale, "log_vote_footer"
-                                )
-                            )
-                        )
-                        await self.kernel.database.set(
-                            f"guild:{guild_id}:logging:voting-reminder",
-                            "1",
-                            ex=VOTING_REMINDER_COOLDOWN,
-                        )
-
                 futures.append(
                     self.kernel.bot.rest.create_message(
                         channel_id,
