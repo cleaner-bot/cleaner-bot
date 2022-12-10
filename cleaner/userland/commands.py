@@ -43,7 +43,7 @@ class CommandsService:
                 )
             }
 
-        config = await get_config(self.kernel.database, interaction.guild_id)
+        config = await get_config(self.kernel, interaction.guild_id)
         guild = interaction.get_guild()
         if not (
             (guild is not None and interaction.user.id == guild.owner_id)

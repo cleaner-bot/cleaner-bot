@@ -246,7 +246,7 @@ class VerificationService:
         force_external: bool = False,
     ) -> InteractionResponse | None:
         assert interaction.member
-        config = await get_config(self.kernel.database, guild.id)
+        config = await get_config(self.kernel, guild.id)
 
         if response := await self.check_circumstances(
             guild, interaction.member, interaction.locale, config

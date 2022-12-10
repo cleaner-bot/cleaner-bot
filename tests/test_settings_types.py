@@ -1,7 +1,12 @@
+import json
 import typing
+from pathlib import Path
 
 from cleaner.userland._types import ConfigType, EntitlementsType
-from cleaner.userland.helpers.settings import default_config, default_entitlements
+
+datadir = Path("data")
+default_config = json.loads((datadir / "config.json").read_text())
+default_entitlements = json.loads((datadir / "entitlements.json").read_text())
 
 
 def test_config_types() -> None:

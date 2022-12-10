@@ -62,8 +62,8 @@ class JoinGuardService:
             logger.debug(f"{user_id} tried to join a not foun ")
             return {"ok": False, "message": "Guild not found", "data": None}
 
-        config = await get_config(self.kernel.database, guild.id)
-        entitlements = await get_entitlements(self.kernel.database, guild.id)
+        config = await get_config(self.kernel, guild.id)
+        entitlements = await get_entitlements(self.kernel, guild.id)
 
         if not config["joinguard_enabled"]:
             return {"ok": False, "message": "joinguard is not enabled", "data": None}

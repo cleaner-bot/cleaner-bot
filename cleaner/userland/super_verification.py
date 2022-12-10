@@ -39,7 +39,7 @@ class SuperVerificationService:
     async def on_timer(self) -> None:
         cutoff_time = utc_datetime() - timedelta(minutes=8)
         for guild in self.kernel.bot.cache.get_guilds_view().values():
-            config = await get_config(self.kernel.database, guild.id)
+            config = await get_config(self.kernel, guild.id)
             if not config["super_verification_enabled"]:
                 continue
 
@@ -100,7 +100,7 @@ class SuperVerificationService:
         if guild is None or (me := guild.get_my_member()) is None:
             return {"ok": False, "message": "guild not found", "data": None}
 
-        config = await get_config(self.kernel.database, guild_id)
+        config = await get_config(self.kernel, guild_id)
 
         if not config["super_verification_enabled"]:
             return {

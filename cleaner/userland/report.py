@@ -328,10 +328,8 @@ class ReportService:
                 )
             }
 
-        config = await get_config(self.kernel.database, interaction.guild_id)
-        entitlements = await get_entitlements(
-            self.kernel.database, interaction.guild_id
-        )
+        config = await get_config(self.kernel, interaction.guild_id)
+        entitlements = await get_entitlements(self.kernel, interaction.guild_id)
 
         if (
             not config["report_enabled"]
@@ -408,10 +406,8 @@ class ReportService:
                 )
             }
 
-        config = await get_config(self.kernel.database, interaction.guild_id)
-        entitlements = await get_entitlements(
-            self.kernel.database, interaction.guild_id
-        )
+        config = await get_config(self.kernel, interaction.guild_id)
+        entitlements = await get_entitlements(self.kernel, interaction.guild_id)
 
         if (
             not config["report_enabled"]
@@ -789,7 +785,7 @@ class ReportService:
 
         my_top_role = me.get_top_role()
         top_role = member.get_top_role()
-        config = await get_config(self.kernel.database, guild.id)
+        config = await get_config(self.kernel, guild.id)
         if (
             my_top_role is not None
             and top_role is not None
@@ -924,7 +920,7 @@ class ReportService:
 
         my_top_role = me.get_top_role()
         top_role = member.get_top_role()
-        config = await get_config(self.kernel.database, guild.id)
+        config = await get_config(self.kernel, guild.id)
         if (
             my_top_role is not None
             and top_role is not None
@@ -1037,7 +1033,7 @@ class ReportService:
         if member is not None:
             my_top_role = me.get_top_role()
             top_role = member.get_top_role()
-            config = await get_config(self.kernel.database, guild.id)
+            config = await get_config(self.kernel, guild.id)
             if (
                 my_top_role is not None
                 and top_role is not None

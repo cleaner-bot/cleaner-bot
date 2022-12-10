@@ -137,7 +137,7 @@ class DeveloperService:
             if owner is None:
                 owner = await self.kernel.bot.rest.fetch_user(guild.owner_id)
 
-            entitlements = await get_entitlements(self.kernel.database, guild.id)
+            entitlements = await get_entitlements(self.kernel, guild.id)
 
             await message.respond(
                 "Found a matching guild and its owner.",
@@ -275,7 +275,7 @@ class DeveloperService:
 
     async def get_config(self, message: hikari.Message, field: str) -> None:
         assert message.guild_id
-        config = await get_config(self.kernel.database, message.guild_id)
+        config = await get_config(self.kernel, message.guild_id)
         await message.respond(repr(config.get(field)), reply=message)
 
     async def set_config(self, message: hikari.Message, field: str, value: str) -> None:
@@ -286,7 +286,7 @@ class DeveloperService:
 
     async def get_entitlement(self, message: hikari.Message, field: str) -> None:
         assert message.guild_id
-        config = await get_entitlements(self.kernel.database, message.guild_id)
+        config = await get_entitlements(self.kernel, message.guild_id)
         await message.respond(repr(config.get(field)), reply=message)
 
     async def set_entitlement(

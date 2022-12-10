@@ -500,3 +500,5 @@ class Data(typing.TypedDict):
     phishing_embed_thumbnails: list[str]
     phishing_content: list[str]
     discord_invite_blacklist: list[str]
+    config: ConfigType
+    entitlements: EntitlementsType

@@ -96,8 +96,8 @@ class MembersService:
         logger.debug(f"full periodic check for {len(guilds)} took {delta:.3f}s")
 
     async def check_guild(self, guild: hikari.GatewayGuild) -> None:
-        config = await get_config(self.kernel.database, guild.id)
-        entitlements = await get_entitlements(self.kernel.database, guild.id)
+        config = await get_config(self.kernel, guild.id)
+        entitlements = await get_entitlements(self.kernel, guild.id)
 
         bansync_ban = complain_if_none(
             self.kernel.bindings.get("bansync:ban"), "bansync:ban"

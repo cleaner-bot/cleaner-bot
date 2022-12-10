@@ -276,8 +276,8 @@ class LogService:
                 guilds[guild_id] = logs[log_index + 1 :]
                 message = "".join(formatted_logs)
 
-                config = await get_config(self.kernel.database, guild_id)
-                entitlements = await get_entitlements(self.kernel.database, guild_id)
+                config = await get_config(self.kernel, guild_id)
+                entitlements = await get_entitlements(self.kernel, guild_id)
                 channel_id = FALLBACK_LOGS
 
                 can_send_embed = False

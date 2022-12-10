@@ -53,8 +53,8 @@ class BasicConsumerService:
             task.cancel()
 
     async def on_message_create(self, event: hikari.GuildMessageCreateEvent) -> None:
-        config = await get_config(self.kernel.database, event.guild_id)
-        entitlements = await get_entitlements(self.kernel.database, event.guild_id)
+        config = await get_config(self.kernel, event.guild_id)
+        entitlements = await get_entitlements(self.kernel, event.guild_id)
         guild = event.get_guild()
         is_mod = is_moderator(event.member, guild, config)
 
@@ -130,13 +130,13 @@ class BasicConsumerService:
     async def on_message_update(self, event: hikari.GuildMessageUpdateEvent) -> None:
         if event.is_bot or not event.member:
             return
-        config = await get_config(self.kernel.database, event.guild_id)
+        config = await get_config(self.kernel, event.guild_id)
 
         guild = event.get_guild()
         if is_moderator(event.member, guild, config):
             return
 
-        entitlements = await get_entitlements(self.kernel.database, event.guild_id)
+        entitlements = await get_entitlements(self.kernel, event.guild_id)
 
         # 1. Auto Moderator
         if entitlements["plan"] >= entitlements["automod"]:
@@ -157,8 +157,8 @@ class BasicConsumerService:
                     return
 
     async def on_member_create(self, event: hikari.MemberCreateEvent) -> None:
-        config = await get_config(self.kernel.database, event.guild_id)
-        entitlements = await get_entitlements(self.kernel.database, event.guild_id)
+        config = await get_config(self.kernel, event.guild_id)
+        entitlements = await get_entitlements(self.kernel, event.guild_id)
 
         # 0. Remove from deduplicator
         if http_member_create := complain_if_none(
@@ -250,8 +250,8 @@ class BasicConsumerService:
                 await safe_call(log_member_create(event.member))
 
     async def on_member_update(self, event: hikari.MemberUpdateEvent) -> None:
-        config = await get_config(self.kernel.database, event.guild_id)
-        entitlements = await get_entitlements(self.kernel.database, event.guild_id)
+        config = await get_config(self.kernel, event.guild_id)
+        entitlements = await get_entitlements(self.kernel, event.guild_id)
 
         is_mod = is_moderator(event.member, event.get_guild(), config)
         if is_mod:
@@ -275,8 +275,8 @@ class BasicConsumerService:
                     return
 
     async def on_member_delete(self, event: hikari.MemberDeleteEvent) -> None:
-        config = await get_config(self.kernel.database, event.guild_id)
-        entitlements = await get_entitlements(self.kernel.database, event.guild_id)
+        config = await get_config(self.kernel, event.guild_id)
+        entitlements = await get_entitlements(self.kernel, event.guild_id)
 
         # 1. Super Verification (remove from list)
         if (
@@ -333,7 +333,7 @@ class BasicConsumerService:
             await safe_call(members_guild_available(event.guild))
 
     async def on_guild_join(self, event: hikari.GuildJoinEvent) -> None:
-        entitlements = await get_entitlements(self.kernel.database, event.guild_id)
+        entitlements = await get_entitlements(self.kernel, event.guild_id)
         # 1. Guild suspended check
         is_suspended = False
         if suspension := complain_if_none(
@@ -360,7 +360,7 @@ class BasicConsumerService:
             await safe_call(log_guild_join(event.guild, entitlements))
 
     async def on_guild_leave(self, event: hikari.GuildLeaveEvent) -> None:
-        entitlements = await get_entitlements(self.kernel.database, event.guild_id)
+        entitlements = await get_entitlements(self.kernel, event.guild_id)
         # 1. Dashboard synchronization
         # 2. Analytics (total user count)
         if members_guild_delete := complain_if_none(

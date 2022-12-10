@@ -123,7 +123,7 @@ class ExternalVerificationService:
             except hikari.NotFoundError:
                 return {"ok": False, "message": "member not found", "data": None}
 
-        config = await get_config(self.kernel.database, guild.id)
+        config = await get_config(self.kernel, guild.id)
         interaction_expired = (
             utc_datetime() - hikari.Snowflake(data["id"]).created_at
         ).total_seconds() > 840

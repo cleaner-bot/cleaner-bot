@@ -30,7 +30,7 @@ class AuthService:
     ) -> InteractionResponse:
         assert interaction.guild_id
         assert interaction.member
-        config = await get_config(self.kernel.database, interaction.guild_id)
+        config = await get_config(self.kernel, interaction.guild_id)
         guild = interaction.get_guild()
         assert guild is not None
 

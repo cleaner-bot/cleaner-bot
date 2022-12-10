@@ -80,7 +80,7 @@ class SlowmodeService:
 
     async def on_timer(self) -> None:
         for guild_id, channels in self.guilds.items():
-            config = await get_config(self.kernel.database, guild_id)
+            config = await get_config(self.kernel, guild_id)
             if not config["slowmode_enabled"]:
                 continue
             exception_channels = set(map(int, config["slowmode_exceptions"]))

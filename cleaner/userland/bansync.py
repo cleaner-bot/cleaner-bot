@@ -67,7 +67,7 @@ class BanSyncService:
         return False
 
     async def on_ban_create(self, event: hikari.BanCreateEvent) -> None:
-        config = await get_config(self.kernel.database, event.guild_id)
+        config = await get_config(self.kernel, event.guild_id)
         for list_id in config["bansync_subscribed"]:
             auto_sync = await self.kernel.database.hget(
                 f"bansync:banlist:{list_id}", "auto_sync"
@@ -88,7 +88,7 @@ class BanSyncService:
                 )
 
     async def on_ban_delete(self, event: hikari.BanDeleteEvent) -> None:
-        config = await get_config(self.kernel.database, event.guild_id)
+        config = await get_config(self.kernel, event.guild_id)
         for list_id in config["bansync_subscribed"]:
             auto_sync = await self.kernel.database.hget(
                 f"bansync:banlist:{list_id}", "auto_sync"
