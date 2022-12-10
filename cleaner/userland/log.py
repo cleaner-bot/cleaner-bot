@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import random
 import typing
 from collections import defaultdict
 from datetime import datetime
@@ -17,7 +16,7 @@ from .helpers.embedize import embedize_guild, embedize_user
 from .helpers.escape import escape_markdown
 from .helpers.localization import Message
 from .helpers.permissions import permissions_for
-from .helpers.settings import get_config, get_entitlements
+from .helpers.settings import get_config
 
 logger = logging.getLogger(__name__)
 SYSTEM_LOGS = 963076090056822784
@@ -277,7 +276,6 @@ class LogService:
                 message = "".join(formatted_logs)
 
                 config = await get_config(self.kernel, guild_id)
-                entitlements = await get_entitlements(self.kernel, guild_id)
                 channel_id = FALLBACK_LOGS
 
                 can_send_embed = False
