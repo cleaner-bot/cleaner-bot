@@ -108,7 +108,7 @@ class StatisticsService:
                         guild_statistics[guild_id][spanname][key1][key2][period] += 1
                         global_statistics[spanname][key1][key2][period] += 1
 
-        logger.debug(f"processed statistics data in {time.monotonic() - start:,}s")
+        logger.debug(f"processed statistics data in {time.monotonic() - start:.3f}s")
         return guild_statistics, global_statistics
 
     def process_event(
