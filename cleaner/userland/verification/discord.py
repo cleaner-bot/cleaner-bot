@@ -176,7 +176,11 @@ class DiscordVerificationService:
         )
         button.set_is_disabled(total_selected < 2)
 
-        await interaction.edit_message(interaction.message, components=components)
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_UPDATE,
+            interaction.message,
+            components=components,
+        )
 
         return {}
 
@@ -399,8 +403,8 @@ class DiscordVerificationService:
 
         preview = " ".join([f"`{x}`" for x in settings[2].ljust(max_length)])
 
-        await interaction.edit_message(
-            interaction.message,
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_UPDATE,
             content=Message(
                 "image_label_transcribe_task", {"input": preview}
             ).translate(self.kernel, interaction.locale),
@@ -441,8 +445,8 @@ class DiscordVerificationService:
 
         preview = " ".join([f"`{x}`" for x in settings[2].ljust(max_length)])
 
-        await interaction.edit_message(
-            interaction.message,
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_UPDATE,
             content=Message(
                 "image_label_transcribe_task", {"input": preview}
             ).translate(self.kernel, interaction.locale),
@@ -497,7 +501,9 @@ class DiscordVerificationService:
                 )
             ) is not None:
                 response.setdefault("attachments", None)
-                await interaction.edit_message(interaction.message, **response)
+                await interaction.create_initial_response(
+                    hikari.ResponseType.MESSAGE_UPDATE, **response
+                )
                 return {}
 
         return None
@@ -523,7 +529,9 @@ class DiscordVerificationService:
                 )
             ) is not None:
                 response.setdefault("attachments", None)
-                await interaction.edit_message(interaction.message, **response)
+                await interaction.create_initial_response(
+                    hikari.ResponseType.MESSAGE_UPDATE, **response
+                )
                 return {}
 
         return None
