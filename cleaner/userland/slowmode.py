@@ -57,9 +57,11 @@ class SlowmodeService:
                 guildchannel = self.kernel.bot.cache.get_guild_channel(
                     message.channel_id
                 )
-                if guildchannel is not None and isinstance(
-                    guildchannel, hikari.GuildTextChannel
-                ) and guildchannel.rate_limit_per_user.seconds <= 10:
+                if (
+                    guildchannel is not None
+                    and isinstance(guildchannel, hikari.GuildTextChannel)
+                    and guildchannel.rate_limit_per_user.seconds <= 10
+                ):
                     if track := complain_if_none(
                         self.kernel.bindings.get("track"), "track"
                     ):

@@ -66,7 +66,7 @@ class AuthService:
             f"user:{interaction.user.id}:mfa", "type"
         )
         if mfa_type is None:
-            row = self.kernel.bot.rest.build_action_row()
+            row = self.kernel.bot.rest.build_message_action_row()
             (
                 row.add_button(
                     hikari.ButtonStyle.LINK,
@@ -85,7 +85,7 @@ class AuthService:
         if len(available_roles) == 1 and False:
             return self.selected_role(interaction, available_roles[0])
 
-        row = self.kernel.bot.rest.build_action_row()
+        row = self.kernel.bot.rest.build_message_action_row()
         dropdown = row.add_select_menu("auth-select")
         for role in available_roles:
             (

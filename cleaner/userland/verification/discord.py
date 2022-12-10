@@ -105,10 +105,10 @@ class DiscordVerificationService:
 
     def image_label_binary_components(
         self, solved: int, locale: str, seed: str, secret: str
-    ) -> list[hikari.api.ActionRowBuilder]:
-        rows: list[hikari.api.ActionRowBuilder] = []
+    ) -> list[hikari.api.MessageActionRowBuilder]:
+        rows: list[hikari.api.MessageActionRowBuilder] = []
         for row in range(3):
-            rows.append(self.kernel.bot.rest.build_action_row())
+            rows.append(self.kernel.bot.rest.build_message_action_row())
             for column in range(3):
                 (
                     rows[-1]
@@ -119,7 +119,7 @@ class DiscordVerificationService:
                     .add_to_container()
                 )
 
-        rows.append(self.kernel.bot.rest.build_action_row())
+        rows.append(self.kernel.bot.rest.build_message_action_row())
         (
             rows[-1]
             .add_button(
@@ -148,7 +148,7 @@ class DiscordVerificationService:
             interaction.message.components, self.kernel.bot.rest
         )
         button = typing.cast(
-            hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+            hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
             components[row].components[column],
         )
         new_style = (
@@ -162,14 +162,14 @@ class DiscordVerificationService:
         for i in range(0, 3):
             for j in range(0, 3):
                 button = typing.cast(
-                    hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+                    hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
                     components[i].components[j],
                 )
                 if button.style == hikari.ButtonStyle.SUCCESS:
                     total_selected += 1
 
         button = typing.cast(
-            hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+            hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
             components[3].components[0],
         )
         button.set_is_disabled(total_selected < 2)
@@ -195,9 +195,7 @@ class DiscordVerificationService:
 
         selected_int = 0
         for i in range(0, 3):
-            row = typing.cast(
-                hikari.ActionRowComponent, interaction.message.components[i]
-            )
+            row = interaction.message.components[i]
             for j in range(0, 3):
                 button = typing.cast(hikari.ButtonComponent, row.components[j])
                 if button.style == hikari.ButtonStyle.SUCCESS:
@@ -226,10 +224,10 @@ class DiscordVerificationService:
             bytes([x ^ otp[i] for i, x in enumerate(raw_secret)])
         ).decode()
 
-        rows: list[hikari.api.ActionRowBuilder] = []
+        rows: list[hikari.api.MessageActionRowBuilder] = []
         for i, choice in enumerate(choices):
             if i % 5 == 0:
-                rows.append(self.kernel.bot.rest.build_action_row())
+                rows.append(self.kernel.bot.rest.build_message_action_row())
             prompt_name = Message(f"image_objects_{choice}").translate(
                 self.kernel, locale
             )
@@ -243,7 +241,7 @@ class DiscordVerificationService:
                 .add_to_container()
             )
 
-        rows.append(self.kernel.bot.rest.build_action_row())
+        rows.append(self.kernel.bot.rest.build_message_action_row())
         (
             rows[-1]
             .add_button(hikari.ButtonStyle.SECONDARY, f"v-chl-i-info/{solved}/1")
@@ -323,12 +321,12 @@ class DiscordVerificationService:
 
     def image_label_transcribe_components(
         self, solved: int, locale: str, letters: set[str], seed: str, secret: str
-    ) -> list[hikari.api.ActionRowBuilder]:
-        rows: list[hikari.api.ActionRowBuilder] = []
+    ) -> list[hikari.api.MessageActionRowBuilder]:
+        rows: list[hikari.api.MessageActionRowBuilder] = []
 
         for i, letter in enumerate(letters):
             if i % 5 == 0:
-                rows.append(self.kernel.bot.rest.build_action_row())
+                rows.append(self.kernel.bot.rest.build_message_action_row())
             (
                 rows[-1]
                 .add_button(hikari.ButtonStyle.SECONDARY, f"v-chl-ilt-select/{letter}")
@@ -336,7 +334,7 @@ class DiscordVerificationService:
                 .add_to_container()
             )
 
-        rows.append(self.kernel.bot.rest.build_action_row())
+        rows.append(self.kernel.bot.rest.build_message_action_row())
         (
             rows[-1]
             .add_button(hikari.ButtonStyle.DANGER, "v-chl-ilt-delete")
@@ -372,11 +370,11 @@ class DiscordVerificationService:
             interaction.message.components, self.kernel.bot.rest
         )
         delete = typing.cast(
-            hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+            hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
             components[2].components[0],
         )
         submit = typing.cast(
-            hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+            hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
             components[2].components[1],
         )
         settings = submit.custom_id.split("/")
@@ -391,7 +389,7 @@ class DiscordVerificationService:
                 for j in range(0, 5):
                     btn = typing.cast(
                         hikari.api.InteractiveButtonBuilder[
-                            hikari.api.ActionRowBuilder
+                            hikari.api.MessageActionRowBuilder
                         ],
                         components[i].components[j],
                     )
@@ -415,11 +413,11 @@ class DiscordVerificationService:
             interaction.message.components, self.kernel.bot.rest
         )
         delete = typing.cast(
-            hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+            hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
             components[2].components[0],
         )
         submit = typing.cast(
-            hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+            hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
             components[2].components[1],
         )
         settings = submit.custom_id.split("/")
@@ -432,7 +430,7 @@ class DiscordVerificationService:
         for i in range(0, 2):
             for j in range(0, 5):
                 btn = typing.cast(
-                    hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+                    hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
                     components[i].components[j],
                 )
                 btn.set_is_disabled(False)
@@ -529,7 +527,7 @@ class DiscordVerificationService:
     async def btn_info(
         self, interaction: hikari.ComponentInteraction, solved: str, disclaimer: str
     ) -> InteractionResponse:
-        component = self.kernel.bot.rest.build_action_row()
+        component = self.kernel.bot.rest.build_message_action_row()
         (
             component.add_button(
                 hikari.ButtonStyle.PRIMARY,

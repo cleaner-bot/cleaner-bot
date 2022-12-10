@@ -194,7 +194,7 @@ class RadarService:
         else:
             embed.add_field("Guild", f"{guild.name} ({message.guild_id})")
 
-        row = self.kernel.bot.rest.build_action_row()
+        row = self.kernel.bot.rest.build_message_action_row()
         (
             row.add_button(hikari.ButtonStyle.PRIMARY, "x-p-ban")
             .set_label("Mark as correct")
@@ -300,7 +300,7 @@ class RadarService:
 
         embeds = [embed]
         invites_blacklist = []
-        row = self.kernel.bot.rest.build_action_row()
+        row = self.kernel.bot.rest.build_message_action_row()
 
         for invite in all_invites[:5]:
             assert invite.guild is not None, "impossible"

@@ -188,7 +188,7 @@ class ReportService:
         else:
             embed.add_field("Guild", f"{guild.name} ({guild.id})")
 
-        component = interaction.app.rest.build_action_row()
+        component = interaction.app.rest.build_message_action_row()
         (
             component.add_button(hikari.ButtonStyle.SUCCESS, "x-pr-ack")
             .set_label("Acknowledge report")
@@ -236,7 +236,7 @@ class ReportService:
     ) -> InteractionResponse:
         await self.kernel.database.sadd("report:phishing:banned", (user_id,))
 
-        component = self.kernel.bot.rest.build_action_row()
+        component = self.kernel.bot.rest.build_message_action_row()
         (
             component.add_button(hikari.ButtonStyle.SECONDARY, f"x-pr-unban/{user_id}")
             .set_label("Unban reporter")
@@ -253,7 +253,7 @@ class ReportService:
     ) -> InteractionResponse:
         await self.kernel.database.srem("report:phishing:banned", (user_id,))
 
-        component = interaction.app.rest.build_action_row()
+        component = interaction.app.rest.build_message_action_row()
         (
             component.add_button(hikari.ButtonStyle.SUCCESS, "x-pr-ack")
             .set_label("Acknowledge report")
@@ -471,8 +471,8 @@ class ReportService:
             .strip("=")
         )
 
-        row = typing.cast(hikari.ModalActionRowComponent, interaction.components[0])
-        reason_input = typing.cast(hikari.InteractionTextInput, row.components[0])
+        row = interaction.components[0]
+        reason_input = row.components[0]
 
         embed = (
             hikari.Embed(
@@ -519,8 +519,8 @@ class ReportService:
         )
 
         components = [
-            self.kernel.bot.rest.build_action_row(),
-            self.kernel.bot.rest.build_action_row(),
+            self.kernel.bot.rest.build_message_action_row(),
+            self.kernel.bot.rest.build_message_action_row(),
         ]
         (
             components[0]
@@ -658,9 +658,7 @@ class ReportService:
         assert interaction.guild_locale
         message_link_button = typing.cast(
             hikari.ButtonComponent,
-            typing.cast(
-                hikari.ActionRowComponent, interaction.message.components[0]
-            ).components[0],
+            interaction.message.components[0].components[0],
         )
         assert message_link_button.url is not None
         message_link = message_link_button.url
@@ -691,11 +689,11 @@ class ReportService:
             interaction.message.components, self.kernel.bot.rest
         )
         typing.cast(
-            hikari.api.LinkButtonBuilder[hikari.api.ActionRowBuilder],
+            hikari.api.LinkButtonBuilder[hikari.api.MessageActionRowBuilder],
             builders[0].components[0],
         ).set_is_disabled(True)
         typing.cast(
-            hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+            hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
             builders[0].components[1],
         ).set_is_disabled(True)
 
@@ -746,7 +744,7 @@ class ReportService:
                 self.kernel, interaction.locale
             ),
             f"r-a-timeout/{user_id}",
-            [component],
+            component,
         )
 
         return {}
@@ -771,11 +769,11 @@ class ReportService:
                     interaction.message.components, self.kernel.bot.rest
                 )
                 typing.cast(
-                    hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+                    hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
                     builders[1].components[0],
                 ).set_is_disabled(True)
                 typing.cast(
-                    hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+                    hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
                     builders[1].components[1],
                 ).set_is_disabled(True)
                 await interaction.edit_message(interaction.message, components=builders)
@@ -798,7 +796,7 @@ class ReportService:
             )
             for index in range(0, 3):
                 typing.cast(
-                    hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+                    hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
                     builders[1].components[index],
                 ).set_is_disabled(True)
             await interaction.edit_message(interaction.message, components=builders)
@@ -824,7 +822,7 @@ class ReportService:
                 interaction.message.components, self.kernel.bot.rest
             )
             typing.cast(
-                hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+                hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
                 builders[1].components[0],
             ).set_is_disabled(True)
             return {
@@ -833,8 +831,8 @@ class ReportService:
                 )
             }
 
-        row = typing.cast(hikari.ModalActionRowComponent, interaction.components[0])
-        duration_input = typing.cast(hikari.InteractionTextInput, row.components[0])
+        row = interaction.components[0]
+        duration_input = row.components[0]
         duration = text_to_duration(duration_input.value)
         if duration is None or duration > MAX_TIMEOUT_DURATION:
             return {
@@ -900,11 +898,11 @@ class ReportService:
                     interaction.message.components, self.kernel.bot.rest
                 )
                 typing.cast(
-                    hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+                    hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
                     builders[1].components[0],
                 ).set_is_disabled(True)
                 typing.cast(
-                    hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+                    hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
                     builders[1].components[1],
                 ).set_is_disabled(True)
                 await interaction.edit_message(interaction.message, components=builders)
@@ -927,7 +925,7 @@ class ReportService:
             )
             for index in range(0, 3):
                 typing.cast(
-                    hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+                    hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
                     builders[1].components[index],
                 ).set_is_disabled(True)
             await interaction.edit_message(interaction.message, components=builders)
@@ -953,7 +951,7 @@ class ReportService:
                 interaction.message.components, self.kernel.bot.rest
             )
             typing.cast(
-                hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+                hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
                 builders[1].components[1],
             ).set_is_disabled(True)
             await interaction.edit_message(interaction.message, components=builders)
@@ -988,11 +986,11 @@ class ReportService:
             interaction.message.components, self.kernel.bot.rest
         )
         typing.cast(
-            hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+            hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
             builders[1].components[0],
         ).set_is_disabled(True)
         typing.cast(
-            hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+            hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
             builders[1].components[1],
         ).set_is_disabled(True)
 
@@ -1039,7 +1037,7 @@ class ReportService:
                 for index in range(0, 3):
                     typing.cast(
                         hikari.api.InteractiveButtonBuilder[
-                            hikari.api.ActionRowBuilder
+                            hikari.api.MessageActionRowBuilder
                         ],
                         builders[1].components[index],
                     ).set_is_disabled(True)
@@ -1066,7 +1064,7 @@ class ReportService:
                 interaction.message.components, self.kernel.bot.rest
             )
             typing.cast(
-                hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+                hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
                 builders[1].components[2],
             ).set_is_disabled(True)
             await interaction.edit_message(interaction.message, components=builders)
@@ -1105,15 +1103,13 @@ class ReportService:
         )
         for index in range(0, 3):
             typing.cast(
-                hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+                hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
                 builders[1].components[index],
             ).set_is_disabled(True)
 
         message_link_button = typing.cast(
             hikari.ButtonComponent,
-            typing.cast(
-                hikari.ActionRowComponent, interaction.message.components[0]
-            ).components[0],
+            interaction.message.components[0].components[0],
         )
         assert message_link_button.url is not None
         message_link = message_link_button.url
@@ -1121,11 +1117,11 @@ class ReportService:
 
         if (utc_datetime() - message_id.created_at).total_seconds() < 60 * 60 * 24:
             typing.cast(
-                hikari.api.LinkButtonBuilder[hikari.api.ActionRowBuilder],
+                hikari.api.LinkButtonBuilder[hikari.api.MessageActionRowBuilder],
                 builders[0].components[0],
             ).set_is_disabled(True)
             typing.cast(
-                hikari.api.InteractiveButtonBuilder[hikari.api.ActionRowBuilder],
+                hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
                 builders[0].components[1],
             ).set_is_disabled(True)
 

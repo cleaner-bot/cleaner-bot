@@ -24,7 +24,7 @@
 #         callback: str,
 #         state: str,
 #     ) -> InteractionResponse:
-#         row = self.kernel.bot.rest.build_action_row()
+#         row = self.kernel.bot.rest.build_message_action_row()
 
 #         message_content = Message("mfa_content").translate(
 #             self.kernel, interaction.locale

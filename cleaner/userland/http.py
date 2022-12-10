@@ -297,8 +297,14 @@ class HTTPService:
 
         channel = self.kernel.bot.cache.get_guild_channel(channel_id)
         if channel is None:
-            logger.debug("cant delete, channel is gone")
-            return
+            thread = self.kernel.bot.cache.get_thread(channel_id)
+            if thread is None:
+                logger.debug("cant delete, channel/thread is gone")
+                return
+            channel = self.kernel.bot.cache.get_guild_channel(thread.parent_id)
+            if channel is None:
+                logger.debug("cant delete, parent channel of thread is gone")
+                return
 
         my_user = self.kernel.bot.cache.get_me()
         assert my_user is not None, "I am None"

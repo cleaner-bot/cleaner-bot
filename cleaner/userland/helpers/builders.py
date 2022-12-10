@@ -5,13 +5,13 @@ import hikari
 
 def components_to_builder(
     components: typing.Sequence[hikari.PartialComponent], rest: hikari.api.RESTClient
-) -> list[hikari.api.ActionRowBuilder]:
-    rows: list[hikari.api.ActionRowBuilder] = []
+) -> list[hikari.api.MessageActionRowBuilder]:
+    rows: list[hikari.api.MessageActionRowBuilder] = []
     for row in typing.cast(
-        typing.Sequence[hikari.ActionRowComponent],
+        typing.Sequence[hikari.MessageActionRowComponent],
         components,
     ):
-        rows.append(rest.build_action_row())
+        rows.append(rest.build_message_action_row())
         for item in row.components:
             if isinstance(item, hikari.ButtonComponent):
                 btn = rows[-1].add_button(

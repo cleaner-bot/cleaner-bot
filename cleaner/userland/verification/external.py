@@ -84,7 +84,7 @@ class ExternalVerificationService:
             60 * 60,
         )
 
-        component = self.kernel.bot.rest.build_action_row()
+        component = self.kernel.bot.rest.build_message_action_row()
         (
             component.add_button(
                 hikari.ButtonStyle.LINK, f"https://cleanerbot.xyz/chl#{flow_id}"

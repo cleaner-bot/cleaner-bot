@@ -249,7 +249,7 @@ class LinkFilterService:
             color=0x2F3136,
         ).set_footer(text=str(message.member), icon=message.member.make_avatar_url())
 
-        components = [self.kernel.bot.rest.build_action_row() for _ in range(3)]
+        components = [self.kernel.bot.rest.build_message_action_row() for _ in range(3)]
         (
             components[0]
             .add_button(hikari.ButtonStyle.SUCCESS, f"lf-whitelist-u/{url_id}")

@@ -70,7 +70,7 @@ class VerificationService:
     async def verification_info(
         self, interaction: hikari.ComponentInteraction
     ) -> InteractionResponse:
-        component = self.kernel.bot.rest.build_action_row()
+        component = self.kernel.bot.rest.build_message_action_row()
         (
             component.add_button(
                 hikari.ButtonStyle.LINK, generate_invite(self.kernel.bot, True, True)
@@ -170,7 +170,7 @@ class VerificationService:
             logger.debug(
                 f"failed verification in {guild.id}; role has dangerous permissions"
             )
-            component = self.kernel.bot.rest.build_action_row()
+            component = self.kernel.bot.rest.build_message_action_row()
             (
                 component.add_button(
                     hikari.ButtonStyle.LINK,
@@ -202,7 +202,7 @@ class VerificationService:
             top_role := me.get_top_role()
         ) is not None and role.position >= top_role.position:
             logger.debug(f"failed verification in {guild.id}; role is higher than me")
-            component = self.kernel.bot.rest.build_action_row()
+            component = self.kernel.bot.rest.build_message_action_row()
             (
                 component.add_button(
                     hikari.ButtonStyle.LINK,
@@ -377,7 +377,7 @@ class VerificationService:
         return {"ok": True, "message": "OK", "data": None}
 
     def build_message(self) -> InteractionResponse:
-        component = self.kernel.bot.rest.build_action_row()
+        component = self.kernel.bot.rest.build_message_action_row()
         (
             component.add_button(hikari.ButtonStyle.SECONDARY, "v-verify")
             .set_label("I am not a robot")

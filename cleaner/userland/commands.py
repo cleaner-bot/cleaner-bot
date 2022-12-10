@@ -62,7 +62,7 @@ class CommandsService:
                 )
             }
 
-        component = self.kernel.bot.rest.build_action_row()
+        component = self.kernel.bot.rest.build_message_action_row()
         (
             component.add_button(
                 hikari.ButtonStyle.LINK,
@@ -86,7 +86,7 @@ class CommandsService:
     async def invite_command(
         self, interaction: hikari.CommandInteraction
     ) -> InteractionResponse:
-        component = interaction.app.rest.build_action_row()
+        component = interaction.app.rest.build_message_action_row()
         (
             component.add_button(
                 hikari.ButtonStyle.LINK, generate_invite(self.kernel.bot, True, True)
@@ -102,7 +102,7 @@ class CommandsService:
     async def login_command(
         self, interaction: hikari.CommandInteraction
     ) -> InteractionResponse:
-        component = interaction.app.rest.build_action_row()
+        component = interaction.app.rest.build_message_action_row()
         (
             component.add_button(
                 hikari.ButtonStyle.LINK, generate_invite(self.kernel.bot, False, True)

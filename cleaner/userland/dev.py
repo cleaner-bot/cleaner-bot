@@ -155,7 +155,7 @@ class DeveloperService:
                 await message.respond("No matching user or guild found.")
                 return
 
-        component = self.kernel.bot.rest.build_action_row()
+        component = self.kernel.bot.rest.build_message_action_row()
         (
             component.add_button(
                 hikari.ButtonStyle.LINK, f"discord://-/users/{user.id}"
@@ -309,7 +309,7 @@ class DeveloperService:
         await message.add_reaction("👍")
 
     async def button(self, message: hikari.Message, custom_id: str) -> None:
-        component = self.kernel.bot.rest.build_action_row()
+        component = self.kernel.bot.rest.build_message_action_row()
         (
             component.add_button(hikari.ButtonStyle.SECONDARY, custom_id)
             .set_label("?")
