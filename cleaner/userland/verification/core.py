@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import typing
 
@@ -272,18 +271,12 @@ class VerificationService:
         age = (utc_datetime() - interaction.user.id.created_at).total_seconds()
         if age < config["verification_age"]:
             verification_level += 1
-        sleep_factor = 0 if age > 15552000 else (1 - age / 15552000)
 
         if solved >= max(3, min(15, verification_level)):
-            if sleep_factor:
-                await asyncio.sleep(sleep_factor * 5)
             assert interaction.member
             return await self.verification_solved(
                 interaction.member, config, interaction.locale
             )
-
-        if sleep_factor:
-            await asyncio.sleep(sleep_factor * 2)
 
         if danger >= 100:
             return {
