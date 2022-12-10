@@ -178,7 +178,6 @@ class DiscordVerificationService:
 
         await interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_UPDATE,
-            interaction.message,
             components=components,
         )
 
