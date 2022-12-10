@@ -26,6 +26,7 @@ class AutoModService:
         entitlements: EntitlementsType,
     ) -> bool:
         assert message.member, "impossible"
+        assert message.guild_id
 
         matched_rule: str | None = None
         matched_action: int = ACTION_DISABLED
@@ -102,10 +103,12 @@ class AutoModService:
                 {"user": message.member.id},
             )
 
-            assert isinstance(message.app, hikari.CacheAware)
-            channel = message.app.cache.get_guild_channel(message.channel_id)
-            if channel is not None and isinstance(channel, hikari.TextableGuildChannel):
-                await safe_call(announcement(channel, announcement_message, 20), True)
+            await safe_call(
+                announcement(
+                    message.guild_id, message.channel_id, announcement_message, 20
+                ),
+                True,
+            )
 
         if (
             (matched_rule.startswith("phishing.") or matched_rule == "ping.broad")

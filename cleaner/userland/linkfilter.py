@@ -56,6 +56,7 @@ class LinkFilterService:
         config: ConfigType,
         entitlements: EntitlementsType,
     ) -> bool:
+        assert message.guild_id
         if not message.content:
             return False
 
@@ -159,14 +160,12 @@ class LinkFilterService:
                     {"user": message.member.id},
                 )
 
-                assert isinstance(message.app, hikari.CacheAware)
-                channel = message.app.cache.get_guild_channel(message.channel_id)
-                if channel is not None and isinstance(
-                    channel, hikari.TextableGuildChannel
-                ):
-                    await safe_call(
-                        announcement(channel, announcement_message, 20), True
-                    )
+                await safe_call(
+                    announcement(
+                        message.guild_id, message.channel_id, announcement_message, 20
+                    ),
+                    True,
+                )
 
         key = f"{message.guild_id}-{last_url}"
         if key not in self.deduplicator:

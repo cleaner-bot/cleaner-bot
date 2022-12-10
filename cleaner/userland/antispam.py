@@ -175,15 +175,15 @@ class AntispamService:
             self.kernel.bindings.get("http:announcement"),
             "http:announcement",
         ):
-            assert isinstance(message.app, hikari.CacheAware)
-            channel = message.app.cache.get_guild_channel(message.channel_id)
-            if channel is not None and isinstance(channel, hikari.TextableGuildChannel):
-                await safe_call(
-                    announcement(
-                        channel, Message("components_antispam_announcement"), 0
-                    ),
-                    True,
-                )
+            await safe_call(
+                announcement(
+                    message.guild_id,
+                    message.channel_id,
+                    Message("components_antispam_announcement"),
+                    0,
+                ),
+                True,
+            )
 
         return True
 

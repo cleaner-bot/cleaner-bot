@@ -400,7 +400,7 @@ Bindings = typing.TypedDict(
             typing.Awaitable[None],
         ],
         "http:announcement": typing.Callable[
-            [hikari.TextableGuildChannel, Message, float],
+            [int, int, Message, float],
             typing.Awaitable[None],
         ],
         "http:channel_ratelimit": typing.Callable[

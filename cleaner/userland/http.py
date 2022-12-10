@@ -441,47 +441,39 @@ class HTTPService:
 
     async def announcement(
         self,
-        channel: hikari.TextableGuildChannel,
+        guild_id: int,
+        channel_id: int,
         announcement: Message,
         delete_after: float,
     ) -> None:
-        print("announcement checkpoint 1")
-        danger = self.get_danger_level(channel.guild_id)
+        danger = self.get_danger_level(guild_id)
         if danger >= 2:
             logger.debug(
-                f"suppressed announcement due to danger (channel={channel.id} "
-                f"guild={channel.guild_id} danger={danger})"
+                f"suppressed announcement due to danger (channel={channel_id} "
+                f"guild={guild_id} danger={danger})"
             )
             return
 
-        print("announcement checkpoint 2")
         my_user = self.kernel.bot.cache.get_me()
         assert my_user is not None, "I am None"
-        me = self.kernel.bot.cache.get_member(channel.guild_id, my_user)
+        me = self.kernel.bot.cache.get_member(guild_id, my_user)
         if me is None:
             logger.debug("cant announce, I am gone")
             return
 
-        print("announcement checkpoint 3")
-        perms_channel: hikari.GuildChannel | None = channel
-        if isinstance(channel, hikari.GuildThreadChannel):
-            perms_channel = self.kernel.bot.cache.get_guild_channel(channel.parent_id)
+        channel = self.kernel.bot.cache.get_guild_channel(channel_id)
+        if channel is None:
+            thread = self.kernel.bot.cache.get_thread(channel_id)
+            if thread is None:
+                logger.debug("cant announce, channel/thread is gone")
+                return
+            channel = self.kernel.bot.cache.get_guild_channel(thread.parent_id)
+            if channel is None:
+                logger.debug("cant announce, parent channel of thread is gone")
+                return
 
-        print("announcement checkpoint 4")
-        if perms_channel is None:
-            logger.debug(
-                "cant announce, cant find parent thread channel to "
-                "compute permissions"
-            )
-            return
+        perms = permissions_for(me, channel)
 
-        assert isinstance(
-            perms_channel, hikari.PermissibleGuildChannel
-        ), "impossible threads should be handled"
-
-        perms = permissions_for(me, perms_channel)
-
-        print("announcement checkpoint 5")
         can_send = perms & hikari.Permissions.ADMINISTRATOR > 0
         if not can_send:
             required = (
@@ -494,7 +486,6 @@ class HTTPService:
             f"guild={channel.guild_id} danger={danger})"
         )
 
-        print("announcement checkpoint 6")
         if not can_send:
             if log := complain_if_none(self.kernel.bindings.get("log"), "log"):
                 await safe_call(
@@ -508,18 +499,15 @@ class HTTPService:
                 )
             return
 
-        print("announcement checkpoint 7")
         guild = channel.get_guild()
         locale = "en-US" if guild is None else guild.preferred_locale
-        msg = await channel.send(
-            announcement.translate(self.kernel, locale), user_mentions=True
+        msg = await self.kernel.bot.rest.create_message(
+            channel_id, announcement.translate(self.kernel, locale), user_mentions=True
         )
 
         if delete_after > 0:
             await asyncio.sleep(delete_after)
             await self.delete(msg.id, channel.id, my_user, False, None, msg)
-
-        print("announcement checkpoint 8")
 
     async def channel_ratelimit(
         self,
