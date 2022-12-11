@@ -63,12 +63,13 @@ class StatisticsService:
         )
 
     def save_data(self) -> None:
+        start_time = time.monotonic()
         logger.debug("saving data")
         if self.new_events:
             with self.statistics.open("ab") as fd:
                 fd.write(b"".join(self.new_events))
             self.new_events.clear()
-        logger.debug("saved data")
+        logger.debug(f"saved data in {time.monotonic() - start_time:.3f}s")
 
     def process_data(self) -> tuple[dict[int, Timespans], Timespans]:
         start = time.monotonic()
