@@ -118,7 +118,7 @@ class IntegrationService:
         logger.debug(f"publishing stats to statcord: {data}")
         try:
             res = await self.proxy.post(
-                "api.statcord.com/v3/stats", json={"id": bot, "key": token, **data}
+                "api.statcord.com/v3/stats", json={"id": str(bot), "key": token, **data}
             )
         except ReadTimeout:
             logger.debug("statcord is down again, got a ReadTimeout")
