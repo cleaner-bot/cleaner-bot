@@ -24,7 +24,6 @@ FALLBACK_LOGS = 963076110202064977  # 963043115730608188
 REQUIRED_TO_SEND: typing.Final = (
     hikari.Permissions.VIEW_CHANNEL | hikari.Permissions.SEND_MESSAGES
 )
-VOTING_REMINDER_COOLDOWN: typing.Final = 60 * 60 * 24 * 3
 
 
 class LogService:
