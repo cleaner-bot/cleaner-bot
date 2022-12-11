@@ -41,11 +41,9 @@ class StatisticsService:
         self.new_events.append(typing.cast(bytes, data))
 
     async def save(self) -> None:
-        if not self.new_events:
-            logger.debug("skipped saving/processing data because there is no new data")
-            return
         loop = asyncio.get_event_loop()
-        await safe_call(loop.run_in_executor(None, self.save_data))
+        if self.new_events:
+            await safe_call(loop.run_in_executor(None, self.save_data))
         if not self.statistics.exists():
             logger.debug(f"no statistics available yet - {self.statistics}")
             return
