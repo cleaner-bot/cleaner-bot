@@ -16,6 +16,26 @@ from .helpers.binding import safe_call
 logger = logging.getLogger(__name__)
 
 
+class LegacyDeleteEvent(typing.TypedDict):
+    name: typing.Literal["delete"]
+    rule: str
+    guild: int
+
+
+class LegacyNicknameEvent(typing.TypedDict):
+    name: typing.Literal["nickname"]
+    guild: int
+
+
+class LegacyChallengeEvent(typing.TypedDict):
+    name: typing.Literal["challenge"]
+    action: str
+    guild: int
+
+
+AllEventType = EventType | LegacyDeleteEvent | LegacyNicknameEvent | LegacyChallengeEvent
+
+
 def set_encoder(obj: typing.Any) -> typing.Any:
     if isinstance(obj, set):
         return tuple(obj)
@@ -33,7 +53,7 @@ class StatisticsService:
         self.kernel.bindings["track"] = self.track
         self.kernel.bindings["statistics:save"] = self.save
 
-    async def track(self, event: EventType) -> None:
+    async def track(self, event: AllEventType) -> None:
         logger.debug(f"{event=}")
         data = msgpack.packb(
             (int(datetime.now().timestamp()), event), default=set_encoder
@@ -111,7 +131,7 @@ class StatisticsService:
         return guild_statistics, global_statistics
 
     def process_event(
-        self, event: EventType
+        self, event: AllEventType
     ) -> tuple[
         tuple[
             typing.Literal["punishments", "rules", "traffic", "categories", "services"],
@@ -119,13 +139,17 @@ class StatisticsService:
         ],
         ...,
     ] | None:
-        if event["name"] == "antispam":
+        if event["name"] == "antispam" or (
+            event["name"] == "delete" and event["rule"].startswith("traffic.")
+        ):
             return (
                 ("traffic", event["rule"]),
                 ("categories", "antispam"),
                 ("services", "antispam"),
             )
-        elif event["name"] == "automod":
+        elif event["name"] == "automod" or (
+            event["name"] == "delete" and not event["rule"].startswith("traffic.")
+        ):
             category = "other"
             if event["rule"].startswith("phishing."):
                 category = "phishing"
@@ -136,7 +160,7 @@ class StatisticsService:
                 ("categories", category),
                 ("services", "automod"),
             )
-        elif event["name"] == "punishment":
+        elif event["name"] == "punishment" or event["name"] == "challenge":
             return (("punishments", event["action"].split("-")[0]),)
         elif event["name"] in (
             "slowmode",
