@@ -29,7 +29,7 @@ class MembersService:
         # time for some sanity checks of the member_counts dict
         member_counts = self.kernel.longterm["member_counts"]
         guilds = self.kernel.bot.cache.get_guilds_view()
-        for guild in guilds.values():
+        for guild in sorted(guilds.values(), key=lambda guild: guild.member_count or 0):
             if guild.id not in self.kernel.longterm["fetched_member_guilds"]:
                 self.kernel.longterm["fetched_member_guilds"].add(guild.id)
                 asyncio.ensure_future(safe_call(self.request_guild_members(guild)))
