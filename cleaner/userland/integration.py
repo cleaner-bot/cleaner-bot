@@ -131,7 +131,7 @@ class IntegrationService:
             logger.debug(f"response: {res.content}")
         res.raise_for_status()
 
-        logger.debug(f"published stats to statcord")
+        logger.debug("published stats to statcord")
 
     def get_bandwidth(self) -> int:
         net_io = psutil.net_io_counters()
