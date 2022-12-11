@@ -11,9 +11,11 @@ from ._types import HypervisorType
 
 logger = logging.getLogger(__name__)
 DEVELOPERS: typing.Final = {
-    633993042755452932,  # leo
+    # 633993042755452932,  # leo
     922118393178517545,  # sora
     918875640046964797,  # shiro
+    647558454491480064,  # [blank]
+    644897993216098305,  # stressed by a mountain of books
 }
 EXTENSIONS: typing.Final = (
     "cleaner.userland.data:DataService",

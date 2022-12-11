@@ -33,7 +33,7 @@ class CleanerRecovery:
         )
 
     async def on_message_create(self, event: hikari.MessageCreateEvent) -> None:
-        if event.author_id != 633993042755452932:
+        if event.author_id != 647558454491480064:
             return
 
         content = event.message.content
