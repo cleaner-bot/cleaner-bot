@@ -119,7 +119,7 @@ class StatisticsService:
                 increase = self.process_event(event)
                 if increase is None:
                     continue
-                guild_id = event.get("guild_id", event.get("guild"))
+                guild_id = typing.cast(int, event.get("guild_id", event.get("guild")))
                 for spanname, period in [  # type: ignore
                     (name, "current" if now - timestamp < cutoff else "previous")
                     for name, cutoff in all_timespans
@@ -150,6 +150,7 @@ class StatisticsService:
                 ("categories", "antispam"),
                 ("services", "antispam"),
             )
+
         elif event["name"] == "automod" or (
             event["name"] == "delete"
             and not event.get("rule", "norule").startswith("traffic.")
@@ -165,8 +166,10 @@ class StatisticsService:
                 ("categories", category),
                 ("services", "automod"),
             )
+
         elif event["name"] == "punishment" or event["name"] == "challenge":
             return (("punishments", event["action"].split("-")[0]),)
+
         elif event["name"] in (
             "slowmode",
             "antiraid",
@@ -179,6 +182,10 @@ class StatisticsService:
             "linkfilter",
         ):
             return (("services", event["name"]),)
+
+        elif event["name"] == "nickname":
+            return (("services", "dehoist"),)
+
         logger.debug(f"unknown statistics event: {event}")
         return None
 
