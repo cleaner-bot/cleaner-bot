@@ -128,7 +128,7 @@ class IntegrationService:
             logger.debug("statcord is down again, got a 502")
             return
         if res.is_error:
-            logger.debug(f"response: {res.content}")
+            logger.debug(f"response: {res.content!r}")
         res.raise_for_status()
 
         logger.debug("published stats to statcord")
