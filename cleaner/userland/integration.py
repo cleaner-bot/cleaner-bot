@@ -28,7 +28,7 @@ class IntegrationService:
         self.proxy = AsyncClient(
             base_url="https://internal-proxy.cleanerbot.xyz",
             headers={
-                "referer": f"https://internal-rules.cleanerbot.xyz/{secret}",
+                "referer": f"https://internal-firewall.cleanerbot.xyz/{secret}",
                 "user-agent": "CleanerBot (cleanerbot.xyz 0.2.0)",
             },
             timeout=30,
