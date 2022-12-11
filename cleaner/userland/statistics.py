@@ -141,21 +141,19 @@ class StatisticsService:
         ],
         ...,
     ] | None:
+        rule: str = event.get("rule", event.get("info", {}).get("rule", "norule"))  # type: ignore
         if event["name"] == "antispam" or (
-            event["name"] == "delete"
-            and event.get("rule", "norule").startswith("traffic.")
+            event["name"] == "delete" and rule.startswith("traffic.")
         ):
             return (
-                ("traffic", event.get("rule", "norule")),
+                ("traffic", rule),
                 ("categories", "antispam"),
                 ("services", "antispam"),
             )
 
         elif event["name"] == "automod" or (
-            event["name"] == "delete"
-            and not event.get("rule", "norule").startswith("traffic.")
+            event["name"] == "delete" and not rule.startswith("traffic.")
         ):
-            rule = event.get("rule", "norule")
             category = "other"
             if rule.startswith("phishing."):
                 category = "phishing"
