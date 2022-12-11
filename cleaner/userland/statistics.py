@@ -150,6 +150,7 @@ class StatisticsService:
             "linkfilter",
         ):
             return (("services", event["name"]),)
+        logger.debug(f"unknown statistics event: {event}")
         return None
 
     def on_unload(self) -> None:
