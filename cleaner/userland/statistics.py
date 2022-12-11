@@ -119,7 +119,7 @@ class StatisticsService:
                 increase = self.process_event(event)
                 if increase is None:
                     continue
-                guild_id = event["guild_id"]
+                guild_id = event.get("guild_id", event.get("guild"))
                 for spanname, period in [  # type: ignore
                     (name, "current" if now - timestamp < cutoff else "previous")
                     for name, cutoff in all_timespans
