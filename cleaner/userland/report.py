@@ -28,6 +28,7 @@ PERMS_SEND = (
     | hikari.Permissions.VIEW_CHANNEL
     | hikari.Permissions.EMBED_LINKS
 )
+REPORT_CHANNEL_ID = 1051472502926360616
 
 
 class ReportService:
@@ -167,8 +168,6 @@ class ReportService:
             f"message:{interaction.target_id}:reported", "1", ex=REPORT_MAXAGE
         )
 
-        channel_id = 968594736720019597
-
         embed = hikari.Embed(
             title="Phishing report", description=message.content, color=0xE74C3C
         )
@@ -208,7 +207,7 @@ class ReportService:
         )
 
         await interaction.app.rest.create_message(
-            channel_id, embed=embed, component=component
+            REPORT_CHANNEL_ID, embed=embed, component=component
         )
 
         return {

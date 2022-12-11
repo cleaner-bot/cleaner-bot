@@ -19,8 +19,9 @@ from .helpers.permissions import permissions_for
 from .helpers.settings import get_config
 
 logger = logging.getLogger(__name__)
-SYSTEM_LOGS = 963076090056822784
-FALLBACK_LOGS = 963076110202064977  # 963043115730608188
+SYSTEM_LOGS = 1051471405025337404
+RAID_LOGS = 1051471611498348637
+FALLBACK_LOGS = 1051471461841375232
 REQUIRED_TO_SEND: typing.Final = (
     hikari.Permissions.VIEW_CHANNEL | hikari.Permissions.SEND_MESSAGES
 )
@@ -116,8 +117,8 @@ class LogService:
             owner = await self.kernel.bot.rest.fetch_user(guild.owner_id)
 
         await self.kernel.bot.rest.create_message(
-            SYSTEM_LOGS,
-            f"Guild is being raided!\n"
+            RAID_LOGS,
+            f"Guild is being raided! (id: ||{guild_id}||)\n"
             f"Raid started at: <t:{int(start_time.timestamp())}:T>\n"
             f"Actions (so far): {bans} bans and {kicks} kicks",
             embeds=[
@@ -160,8 +161,8 @@ class LogService:
             owner = await self.kernel.bot.rest.fetch_user(guild.owner_id)
 
         await self.kernel.bot.rest.create_message(
-            SYSTEM_LOGS,
-            f"Guild was raided!\n"
+            RAID_LOGS,
+            f"Guild was raided! (id: ||{guild_id}||)\n"
             f"Raid started at: <t:{int(start_time.timestamp())}:T>\n"
             f"Raid stopped at: <t:{int(end_time.timestamp())}:T>\n"
             f"Actions: {bans} bans and {kicks} kicks",
