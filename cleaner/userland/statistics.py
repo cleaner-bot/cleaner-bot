@@ -33,7 +33,9 @@ class LegacyChallengeEvent(typing.TypedDict):
     guild: int
 
 
-AllEventType = EventType | LegacyDeleteEvent | LegacyNicknameEvent | LegacyChallengeEvent
+AllEventType = (
+    EventType | LegacyDeleteEvent | LegacyNicknameEvent | LegacyChallengeEvent
+)
 
 
 def set_encoder(obj: typing.Any) -> typing.Any:
@@ -140,23 +142,26 @@ class StatisticsService:
         ...,
     ] | None:
         if event["name"] == "antispam" or (
-            event["name"] == "delete" and event["rule"].startswith("traffic.")
+            event["name"] == "delete"
+            and event.get("rule", "norule").startswith("traffic.")
         ):
             return (
-                ("traffic", event["rule"]),
+                ("traffic", event.get("rule", "norule")),
                 ("categories", "antispam"),
                 ("services", "antispam"),
             )
         elif event["name"] == "automod" or (
-            event["name"] == "delete" and not event["rule"].startswith("traffic.")
+            event["name"] == "delete"
+            and not event.get("rule", "norule").startswith("traffic.")
         ):
+            rule = event.get("rule", "norule")
             category = "other"
-            if event["rule"].startswith("phishing."):
+            if rule.startswith("phishing."):
                 category = "phishing"
-            elif event["rule"].startswith("advertisement."):
+            elif rule.startswith("advertisement."):
                 category = "advertisement"
             return (
-                ("rules", event["rule"]),
+                ("rules", rule),
                 ("categories", category),
                 ("services", "automod"),
             )
