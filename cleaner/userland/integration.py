@@ -115,6 +115,7 @@ class IntegrationService:
         if not token:
             return
 
+        logger.debug(f"publishing stats to statcord: {data}")
         try:
             res = await self.proxy.post(
                 "api.statcord.com/v3/stats", json={"id": bot, "key": token, **data}
@@ -126,9 +127,11 @@ class IntegrationService:
         if res.status_code == 502:
             logger.debug("statcord is down again, got a 502")
             return
+        if res.is_error:
+            logger.debug(f"response: {res.content}")
         res.raise_for_status()
 
-        logger.debug(f"published stats to statcord: {data}")
+        logger.debug(f"published stats to statcord")
 
     def get_bandwidth(self) -> int:
         net_io = psutil.net_io_counters()
