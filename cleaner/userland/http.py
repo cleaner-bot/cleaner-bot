@@ -424,9 +424,9 @@ class HTTPService:
                             {
                                 "user": str(member.id),
                                 "name": escape_markdown(str(member.user)),
-                                "new_name": escape_markdown(nickname)
-                                if nickname
-                                else nickname,
+                                "new_name": (
+                                    escape_markdown(nickname) if nickname else nickname
+                                ),
                             },
                         ),
                         reason,
