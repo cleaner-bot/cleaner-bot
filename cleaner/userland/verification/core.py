@@ -92,13 +92,14 @@ class VerificationService:
             )
             .add_to_container()
         )
-        await interaction.execute(
-            Message("verification_info").translate(self.kernel, interaction.locale),
-            flags=hikari.MessageFlag.EPHEMERAL | hikari.MessageFlag.SUPPRESS_EMBEDS,
-            component=component,
-        )
 
-        return {}
+        return {
+            "content": Message("verification_info").translate(
+                self.kernel, interaction.locale
+            ),
+            "flags": hikari.MessageFlag.EPHEMERAL | hikari.MessageFlag.SUPPRESS_EMBEDS,
+            "component": component,
+        }
 
     async def check_circumstances(
         self,

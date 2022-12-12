@@ -94,8 +94,7 @@ class InteractionsConsumerService:
 
         if response:
             response.setdefault("attachments", None)
+            response.setdefault("flags", hikari.MessageFlag.EPHEMERAL)
             await interaction.create_initial_response(
-                hikari.ResponseType.MESSAGE_CREATE,
-                flags=hikari.MessageFlag.EPHEMERAL,
-                **response,
+                hikari.ResponseType.MESSAGE_CREATE, **response
             )
