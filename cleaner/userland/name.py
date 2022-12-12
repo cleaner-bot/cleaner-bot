@@ -92,6 +92,8 @@ class NameService:
 
     def is_name_blacklisted(self, name: str) -> bool:
         parts = set(parse(name).split())
+        if not parts:
+            return False
         blacklisted = set(self.kernel.data["discord_impersonation_names"])
         return not bool(parts - blacklisted)
 
