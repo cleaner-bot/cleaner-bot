@@ -397,8 +397,10 @@ class HTTPService:
         if can_nickname:
             current = self.member_edits.get(member.guild_id, 0)
             self.member_edits[member.guild_id] = current + 1
-            can_nickname = current < 8
-            logger.debug(f"nickname uses: {current} can_nickname={can_nickname}")
+            logger.debug(f"nickname uses: {current}/8")
+            while current < 8:
+                current = self.member_edits.get(member.guild_id, 0)
+                await asyncio.sleep(10)
 
         coro: typing.Awaitable[typing.Any] | None = None
         name = "failure"
