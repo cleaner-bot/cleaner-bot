@@ -396,11 +396,11 @@ class HTTPService:
         can_nickname = above_in_role_hierarchy and (has_admin or has_nickname)
         if can_nickname:
             current = self.member_edits.get(member.guild_id, 0)
-            self.member_edits[member.guild_id] = current + 1
             logger.debug(f"nickname uses: {current}/8")
             while current >= 8:
                 await asyncio.sleep(10)
                 current = self.member_edits.get(member.guild_id, 0)
+            self.member_edits[member.guild_id] = current + 1
 
         coro: typing.Awaitable[typing.Any] | None = None
         name = "failure"
