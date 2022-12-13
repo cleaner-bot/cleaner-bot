@@ -141,7 +141,9 @@ class StatisticsService:
         ],
         ...,
     ] | None:
-        rule: str = event.get("rule", event.get("info", {}).get("rule", "norule"))  # type: ignore
+        rule: str = event.get(
+            "rule", event.get("info", {}).get("rule", "norule")  # type: ignore
+        )
         if event["name"] == "antispam" or (
             event["name"] == "delete" and rule.startswith("traffic.")
         ):
