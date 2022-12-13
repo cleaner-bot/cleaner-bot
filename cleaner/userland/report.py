@@ -219,10 +219,10 @@ class ReportService:
     async def acknowldge_phishing_report(
         self, interaction: hikari.ComponentInteraction
     ) -> InteractionResponse:
-        await interaction.edit_message(
-            interaction.message, "Report acknowledged.", components=[]
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_UPDATE, "Report acknowledged.", components=[]
         )
-        return {"content": ":+1:"}
+        return {}
 
     async def invalid_phishing_report(
         self, interaction: hikari.ComponentInteraction
@@ -242,10 +242,10 @@ class ReportService:
             .add_to_container()
         )
 
-        await interaction.edit_message(
-            interaction.message, "Reporter banned.", component=component
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_UPDATE, "Reporter banned.", component=component
         )
-        return {"content": ":+1:"}
+        return {}
 
     async def unban_user_from_phishing_reports(
         self, interaction: hikari.ComponentInteraction, user_id: str
@@ -271,10 +271,12 @@ class ReportService:
             .add_to_container()
         )
 
-        await interaction.edit_message(
-            interaction.message, "Reporter unbanned.", component=component
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_UPDATE,
+            "Reporter unbanned.",
+            component=component,
         )
-        return {"content": ":+1:"}
+        return {}
 
     # Message reports
 
@@ -706,11 +708,15 @@ class ReportService:
             ).translate(self.kernel, interaction.guild_locale)
         )
 
-        await interaction.edit_message(
-            interaction.message, "\n".join(reasons), components=builders
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_UPDATE, "\n".join(reasons), components=builders
         )
 
-        return {"content": Message(result).translate(self.kernel, interaction.locale)}
+        await interaction.execute(
+            Message(result).translate(self.kernel, interaction.locale),
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return {}
 
     async def timeout_reported_person(
         self, interaction: hikari.ComponentInteraction, user_id: str
@@ -775,12 +781,16 @@ class ReportService:
                     ],
                     builders[1].components[1],
                 ).set_is_disabled(True)
-                await interaction.edit_message(interaction.message, components=builders)
-                return {
-                    "content": Message("report_action_errors_notfound").translate(
+                await interaction.create_initial_response(
+                    hikari.ResponseType.MESSAGE_UPDATE, components=builders
+                )
+                await interaction.execute(
+                    Message("report_action_errors_notfound").translate(
                         self.kernel, interaction.locale
-                    )
-                }
+                    ),
+                    flags=hikari.MessageFlag.EPHEMERAL,
+                )
+                return {}
 
         my_top_role = me.get_top_role()
         top_role = member.get_top_role()
@@ -800,12 +810,17 @@ class ReportService:
                     ],
                     builders[1].components[index],
                 ).set_is_disabled(True)
-            await interaction.edit_message(interaction.message, components=builders)
-            return {
-                "content": Message("report_action_errors_noperms").translate(
+
+            await interaction.create_initial_response(
+                hikari.ResponseType.MESSAGE_UPDATE, components=builders
+            )
+            await interaction.execute(
+                Message("report_action_errors_noperms").translate(
                     self.kernel, interaction.locale
-                )
-            }
+                ),
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+            return {}
         elif is_moderator(member, guild, config):
             return {
                 "content": Message("report_message_errors_nostaff").translate(
@@ -867,17 +882,21 @@ class ReportService:
             ).translate(self.kernel, interaction.guild_locale)
         )
 
-        await interaction.edit_message(interaction.message, "\n".join(reasons))
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_UPDATE, "\n".join(reasons)
+        )
 
-        return {
-            "content": Message(
+        await interaction.execute(
+            Message(
                 "report_action_timeout_success",
                 {
                     "duration": duration_to_text(duration),
                     "timestamp": int(timed_out_until.timestamp()),
                 },
-            ).translate(self.kernel, interaction.locale)
-        }
+            ).translate(self.kernel, interaction.locale),
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return {}
 
     async def kick_reported_person(
         self, interaction: hikari.ComponentInteraction, user_id: str
@@ -910,12 +929,16 @@ class ReportService:
                     ],
                     builders[1].components[1],
                 ).set_is_disabled(True)
-                await interaction.edit_message(interaction.message, components=builders)
-                return {
-                    "content": Message("report_action_errors_notfound").translate(
+                await interaction.create_initial_response(
+                    hikari.ResponseType.MESSAGE_UPDATE, components=builders
+                )
+                await interaction.execute(
+                    Message("report_action_errors_notfound").translate(
                         self.kernel, interaction.locale
-                    )
-                }
+                    ),
+                    flags=hikari.MessageFlag.EPHEMERAL,
+                )
+                return {}
 
         my_top_role = me.get_top_role()
         top_role = member.get_top_role()
@@ -935,12 +958,16 @@ class ReportService:
                     ],
                     builders[1].components[index],
                 ).set_is_disabled(True)
-            await interaction.edit_message(interaction.message, components=builders)
-            return {
-                "content": Message("report_action_errors_noperms").translate(
+            await interaction.create_initial_response(
+                hikari.ResponseType.MESSAGE_UPDATE, components=builders
+            )
+            await interaction.execute(
+                Message("report_action_errors_noperms").translate(
                     self.kernel, interaction.locale
-                )
-            }
+                ),
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+            return {}
         elif is_moderator(member, guild, config):
             return {
                 "content": Message("report_message_errors_nostaff").translate(
@@ -961,12 +988,16 @@ class ReportService:
                 hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
                 builders[1].components[1],
             ).set_is_disabled(True)
-            await interaction.edit_message(interaction.message, components=builders)
-            return {
-                "content": Message("report_action_errors_noperms").translate(
+            await interaction.create_initial_response(
+                hikari.ResponseType.MESSAGE_UPDATE, components=builders
+            )
+            await interaction.execute(
+                Message("report_action_errors_noperms").translate(
                     self.kernel, interaction.locale
-                )
-            }
+                ),
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+            return {}
 
         await member.kick(
             reason=Message(
@@ -1001,15 +1032,17 @@ class ReportService:
             builders[1].components[1],
         ).set_is_disabled(True)
 
-        await interaction.edit_message(
-            interaction.message, "\n".join(reasons), components=builders
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_UPDATE, "\n".join(reasons), components=builders
         )
 
-        return {
-            "content": Message("report_action_kick_success").translate(
+        await interaction.execute(
+            Message("report_action_kick_success").translate(
                 self.kernel, interaction.locale
-            )
-        }
+            ),
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return {}
 
     async def ban_reported_person(
         self, interaction: hikari.ComponentInteraction, user_id: str
@@ -1048,12 +1081,16 @@ class ReportService:
                         ],
                         builders[1].components[index],
                     ).set_is_disabled(True)
-                await interaction.edit_message(interaction.message, components=builders)
-                return {
-                    "content": Message("report_action_errors_noperms").translate(
+                await interaction.create_initial_response(
+                    hikari.ResponseType.MESSAGE_UPDATE, components=builders
+                )
+                await interaction.execute(
+                    Message("report_action_errors_noperms").translate(
                         self.kernel, interaction.locale
-                    )
-                }
+                    ),
+                    flags=hikari.MessageFlag.EPHEMERAL,
+                )
+                return {}
             elif is_moderator(member, guild, config):
                 return {
                     "content": Message("report_message_errors_nostaff").translate(
@@ -1074,12 +1111,16 @@ class ReportService:
                 hikari.api.InteractiveButtonBuilder[hikari.api.MessageActionRowBuilder],
                 builders[1].components[2],
             ).set_is_disabled(True)
-            await interaction.edit_message(interaction.message, components=builders)
-            return {
-                "content": Message("report_action_errors_noperms").translate(
+            await interaction.create_initial_response(
+                hikari.ResponseType.MESSAGE_UPDATE, components=builders
+            )
+            await interaction.execute(
+                Message("report_action_errors_noperms").translate(
                     self.kernel, interaction.locale
-                )
-            }
+                ),
+                flags=hikari.MessageFlag.EPHEMERAL,
+            )
+            return {}
 
         await self.kernel.bot.rest.ban_user(
             guild.id,
@@ -1132,8 +1173,8 @@ class ReportService:
                 builders[0].components[1],
             ).set_is_disabled(True)
 
-        await interaction.edit_message(
-            interaction.message, "\n".join(reasons), components=builders
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_UPDATE, "\n".join(reasons), components=builders
         )
 
         return {
