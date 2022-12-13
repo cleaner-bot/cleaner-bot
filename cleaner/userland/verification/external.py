@@ -143,7 +143,7 @@ class ExternalVerificationService:
                         await self.kernel.bot.rest.edit_interaction_response(
                             int(data["application_id"]),
                             data["token"],
-                            **response,
+                            **response,  # type: ignore
                         )
                     except hikari.NotFoundError:
                         pass  # message: dismissed
@@ -153,7 +153,7 @@ class ExternalVerificationService:
                             int(data["application_id"]),
                             data["token"],
                             int(data["message_id"]),
-                            **response,
+                            **response,  # type: ignore
                         )
                     except hikari.NotFoundError:
                         pass  # message: dismissed
@@ -181,7 +181,7 @@ class ExternalVerificationService:
                     await self.kernel.bot.rest.edit_interaction_response(
                         int(data["application_id"]),
                         data["token"],
-                        **response,
+                        **response,  # type: ignore
                     )
                 except hikari.NotFoundError:
                     pass  # message dismissed
@@ -192,7 +192,7 @@ class ExternalVerificationService:
                         int(data["application_id"]),
                         data["token"],
                         int(data["message_id"]),
-                        **response,
+                        **response,  # type: ignore
                     )
                 except hikari.NotFoundError:
                     pass  # message dismissed
