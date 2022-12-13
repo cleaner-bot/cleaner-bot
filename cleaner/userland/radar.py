@@ -380,8 +380,10 @@ class RadarService:
         if data_changed is not None:
             data_changed("phishing_domain_blacklist")
 
-        await interaction.edit_message(interaction.message, components=[])
-        return {"content": ":+1:"}
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_UPDATE, components=[]
+        )
+        return {}
 
     async def btn_phishing_whitelist(
         self, interaction: hikari.ComponentInteraction
@@ -404,8 +406,10 @@ class RadarService:
             data_changed("phishing_domain_whitelist")
             data_changed("phishing_domain_blacklist")
 
-        await interaction.edit_message(interaction.message, components=[])
-        return {"content": ":+1:"}
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_UPDATE, components=[]
+        )
+        return {}
 
     async def btn_invite_ban(
         self, interaction: hikari.ComponentInteraction, invite: str
@@ -423,7 +427,9 @@ class RadarService:
     async def btn_dismiss(
         self, interaction: hikari.ComponentInteraction
     ) -> InteractionResponse:
-        await interaction.edit_message(interaction.message, components=[])
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_UPDATE, components=[]
+        )
         return {}
 
 
