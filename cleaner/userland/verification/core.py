@@ -83,7 +83,7 @@ class VerificationService:
         )
         (
             component.add_button(
-                hikari.ButtonStyle.LINK, "https://cleanerbot.xyz/legal/"
+                hikari.ButtonStyle.LINK, "https://docs.cleanerbot.xyz/legal/impressum/"
             )
             .set_label(
                 Message("verification_info_legal").translate(
