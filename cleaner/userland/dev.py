@@ -11,6 +11,7 @@ from hikari.internal.time import utc_datetime
 
 from ._types import ConfigType, EntitlementsType, KernelType
 from .helpers.embedize import embedize_guild, embedize_user
+from .helpers.escape import escape_markdown
 from .helpers.settings import get_config, get_entitlements, set_config, set_entitlements
 
 logger = logging.getLogger(__name__)
@@ -183,7 +184,9 @@ class DeveloperService:
         await message.respond(
             "Top 20 largest guilds:\n"
             + "\n".join(
-                "`" + f"{y:,}".rjust(largest_len) + f"` - {x.name} ({x.id})"
+                "`"
+                + f"{y:,}".rjust(largest_len)
+                + f"` - {escape_markdown(x.name)} ({x.id})"
                 for x, y in guilds
             )
         )
