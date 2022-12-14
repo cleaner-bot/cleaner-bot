@@ -517,7 +517,6 @@ class DiscordVerificationService:
         await self.kernel.database.hincrby(
             f"guild:{guild.id}:verification", str(interaction.member.id), 1
         )
-        await interaction.delete_message(int(raw_message_id))
 
         if issue_verification := complain_if_none(
             self.kernel.bindings.get("verification:issue"), "verification:issue"
@@ -531,6 +530,7 @@ class DiscordVerificationService:
                 await interaction.create_initial_response(
                     hikari.ResponseType.MESSAGE_UPDATE, **response
                 )
+                await interaction.delete_message(int(raw_message_id))
                 return {}
 
         return None
