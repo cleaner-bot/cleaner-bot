@@ -102,14 +102,12 @@ class ExternalVerificationService:
             .add_to_container()
         )
 
-        await interaction.create_initial_response(
-            hikari.ResponseType.MESSAGE_UPDATE,
-            Message("verification_external_content").translate(
+        return {
+            "content": Message("verification_external_content").translate(
                 self.kernel, interaction.locale
             ),
-            component=component,
-        )
-        return {}
+            "component": component,
+        }
 
     async def on_external_solve(
         self, user_id: int, guild_id: int, data: InteractionDatabaseType
