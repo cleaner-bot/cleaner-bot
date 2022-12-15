@@ -115,7 +115,11 @@ class BasicConsumerService:
                             return
 
                 # 6. Dehoist
-                if event.member is not None and config["name_dehoisting_enabled"]:
+                if (
+                    event.member is not None
+                    and event.message.type == hikari.MessageType.DEFAULT
+                    and config["name_dehoisting_enabled"]
+                ):
                     if dehoist := complain_if_none(
                         self.kernel.bindings.get("dehoist:create"), "dehoist:create"
                     ):
