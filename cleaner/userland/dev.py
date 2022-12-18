@@ -321,7 +321,7 @@ class DeveloperService:
             reverse=True,
         )
 
-        largest_len = len(f"{guilds_members[0][1]:,}")
+        largest_len = len(f"{guilds_members[0][1]:,}") if guilds_members else 0
         await message.respond(
             f"Top 20 largest guilds using the config setting (total: {len(guilds)}):\n"
             + "\n".join(
