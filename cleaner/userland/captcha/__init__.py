@@ -1,12 +1,12 @@
 import numpy as np
 from PIL import Image  # type: ignore
 
-from . import image_label_binary, image_label_classify, image_label_transcribe
+from . import image_label_binary, image_label_classify, image_transcribe
 
 __all__ = [
     "image_label_binary",
     "image_label_classify",
-    "image_label_transcribe",
+    "image_transcribe",
     "mask_image",
 ]
 

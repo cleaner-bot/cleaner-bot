@@ -13,7 +13,7 @@ from .._types import InteractionResponse, KernelType
 from ..captcha import (
     image_label_binary,
     image_label_classify,
-    image_label_transcribe,
+    image_transcribe,
     mask_image,
 )
 from ..helpers.binding import complain_if_none, safe_call
@@ -22,7 +22,7 @@ from ..helpers.localization import Message
 
 IMAGE_LABEL_BINARY = "image_label_binary"
 IMAGE_LABEL_CLASSIFY = "image_label_classify"
-IMAGE_LABEL_TRANSCRIBE = "image_label_transcribe"
+IMAGE_LABEL_TRANSCRIBE = "image_transcribe"
 
 
 class DiscordVerificationService:
@@ -35,9 +35,9 @@ class DiscordVerificationService:
             "v-chl-ilb-select": self.btn_image_label_binary_select,
             "v-chl-ilb-submit": self.btn_image_label_binary_submit,
             "v-chl-ilc-select": self.btn_image_label_classify_select,
-            "v-chl-ilt-select": self.btn_image_label_transcribe_select,
-            "v-chl-ilt-delete": self.btn_image_label_transcribe_delete,
-            "v-chl-ilt-submit": self.btn_image_label_transcribe_submit,
+            "v-chl-it-select": self.btn_image_transcribe_select,
+            "v-chl-it-delete": self.btn_image_transcribe_delete,
+            "v-chl-it-submit": self.btn_image_transcribe_submit,
             "v-chl-i-different": self.btn_different_captcha,
             "v-chl-i-info": self.btn_info,
         }
@@ -292,7 +292,7 @@ class DiscordVerificationService:
         self, solved: int, locale: str
     ) -> InteractionResponse:
         loop = asyncio.get_running_loop()
-        task = await loop.run_in_executor(None, image_label_transcribe.generate)
+        task = await loop.run_in_executor(None, image_transcribe.generate)
 
         mask_image(task.image, random.randint(60, 100))
         data = io.BytesIO()
@@ -334,7 +334,7 @@ class DiscordVerificationService:
                 rows.append(self.kernel.bot.rest.build_message_action_row())
             (
                 rows[-1]
-                .add_button(hikari.ButtonStyle.SECONDARY, f"v-chl-ilt-select/{letter}")
+                .add_button(hikari.ButtonStyle.SECONDARY, f"v-chl-it-select/{letter}")
                 .set_label(letter)
                 .add_to_container()
             )
@@ -342,7 +342,7 @@ class DiscordVerificationService:
         rows.append(self.kernel.bot.rest.build_message_action_row())
         (
             rows[-1]
-            .add_button(hikari.ButtonStyle.DANGER, "v-chl-ilt-delete")
+            .add_button(hikari.ButtonStyle.DANGER, "v-chl-it-delete")
             .set_label("↩️")
             .set_is_disabled(True)
             .add_to_container()
@@ -351,7 +351,7 @@ class DiscordVerificationService:
             rows[-1]
             .add_button(
                 hikari.ButtonStyle.PRIMARY,
-                f"v-chl-ilt-submit/{solved}//{seed}/{secret}",
+                f"v-chl-it-submit/{solved}//{seed}/{secret}",
             )
             .set_label(
                 Message("image_label_transcribe_submit").translate(self.kernel, locale)
@@ -368,7 +368,7 @@ class DiscordVerificationService:
 
         return rows
 
-    async def btn_image_label_transcribe_select(
+    async def btn_image_transcribe_select(
         self, interaction: hikari.ComponentInteraction, letter: str
     ) -> InteractionResponse:
         components = components_to_builder(
@@ -411,7 +411,7 @@ class DiscordVerificationService:
         )
         return {}
 
-    async def btn_image_label_transcribe_delete(
+    async def btn_image_transcribe_delete(
         self, interaction: hikari.ComponentInteraction
     ) -> InteractionResponse:
         components = components_to_builder(
@@ -453,7 +453,7 @@ class DiscordVerificationService:
         )
         return {}
 
-    async def btn_image_label_transcribe_submit(
+    async def btn_image_transcribe_submit(
         self,
         interaction: hikari.ComponentInteraction,
         raw_solved: str,
