@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import sys
 import typing
@@ -34,10 +35,12 @@ class DeveloperService:
             "register-slash": lambda x: self.register_slash_commands(x, False),
             "register-slash-global": lambda x: self.register_slash_commands(x, True),
             "reset-slash": self.reset_slash_commands,
-            "get-config": self.get_config,
-            "set-config": self.set_config,
-            "get-entitlement": self.get_entitlement,
-            "set-entitlement": self.set_entitlement,
+            # disabled due to security reasons
+            # "get-config": self.get_config,
+            # "set-config": self.set_config,
+            # "get-entitlement": self.get_entitlement,
+            # "set-entitlement": self.set_entitlement,
+            "get-config-used": self.get_config_used,
             "load-data": self.load_data,
             "save-data": self.save_data,
             "button": self.button,
@@ -187,7 +190,7 @@ class DeveloperService:
                 "`"
                 + f"{y:,}".rjust(largest_len)
                 + f"` - {escape_markdown(x.name)} ({x.id})"
-                for x, y in guilds
+                for x, y in guilds[:20]
             )
         )
 
@@ -283,7 +286,7 @@ class DeveloperService:
 
     async def set_config(self, message: hikari.Message, field: str, value: str) -> None:
         assert message.guild_id
-        raw_value = eval(value)
+        raw_value = json.loads(value)
         await set_config(self.kernel.database, message.guild_id, {field: raw_value})
         await message.add_reaction("👍")
 
@@ -301,6 +304,33 @@ class DeveloperService:
             self.kernel.database, message.guild_id, {field: raw_value}
         )
         await message.add_reaction("👍")
+
+    async def get_config_used(
+        self, message: hikari.Message, field: str, value: str
+    ) -> None:
+        raw_value = json.loads(value)
+        guilds: list[hikari.GatewayGuild] = []
+        for guild in self.kernel.bot.cache.get_guilds_view().values():
+            config = await get_config(self.kernel, guild.id)
+            if config.get(field, None) == raw_value:
+                guilds.append(guild)
+
+        guilds_members = sorted(
+            ((x, x.member_count) for x in guilds if x.member_count is not None),
+            key=lambda x: x[1],
+            reverse=True,
+        )
+
+        largest_len = len(f"{guilds_members[0][1]:,}")
+        await message.respond(
+            f"Top 20 largest guilds using the config setting (total: {len(guilds)}):\n"
+            + "\n".join(
+                "`"
+                + f"{y:,}".rjust(largest_len)
+                + f"` - {escape_markdown(x.name)} ({x.id})"
+                for x, y in guilds_members[:20]
+            )
+        )
 
     async def load_data(self, message: hikari.Message, name: str | None = None) -> None:
         load_data = self.kernel.bindings["data:load"]
