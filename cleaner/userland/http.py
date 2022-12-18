@@ -318,7 +318,7 @@ class HTTPService:
         message_args = {
             "channel": channel_id,
             "user": user.id if isinstance(user, hikari.User) else user,
-            "name": (
+            "name": escape_markdown(
                 str(user)
                 if isinstance(user, hikari.User)
                 else str(self.kernel.bot.cache.get_user(user))
