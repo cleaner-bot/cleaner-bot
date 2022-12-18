@@ -220,6 +220,7 @@ class HTTPService:
                 communication_disabled_until=communication_disabled_until,
                 reason=reason.translate(self.kernel, locale),
             )
+            
         elif challenge == "role":
             self.member_edits[member.guild_id] = (
                 self.member_edits.get(member.guild_id, 0) + 1
@@ -232,8 +233,10 @@ class HTTPService:
             await self.kernel.database.hincrby(
                 f"guild:{member.guild_id}:verification", str(member.id), 1
             )
+
         elif challenge == "kick":
             coro = member.kick(reason=reason.translate(self.kernel, locale))
+
         elif challenge == "ban":
             coro = member.ban(
                 reason=reason.translate(self.kernel, locale), delete_message_days=1
