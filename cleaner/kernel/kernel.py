@@ -34,6 +34,7 @@ EXTENSIONS: typing.Final = (
     "cleaner.userland.linkfilter:LinkFilterService",
     "cleaner.userland.name:NameService",
     "cleaner.userland.super_verification:SuperVerificationService",
+    "cleaner.userland.timelimit:TimeLimitService",
     "cleaner.userland.bansync:BanSyncService",
     "cleaner.userland.dehoist:DehoistService",
     "cleaner.userland.log:LogService",

@@ -89,6 +89,8 @@ class ConfigType(typing.TypedDict):
     super_verification_enabled: bool
     super_verification_captcha: bool
     super_verification_role: str
+    verification_timelimit_enabled: bool
+    verification_timelimit: int
     logging_enabled: bool
     logging_channel: str
     logging_option_join: bool
@@ -143,6 +145,7 @@ class EntitlementsType(typing.TypedDict):
     report: int
     verification: int
     super_verification: int
+    verification_timelimit: int
     bansync_subscription_limit: int
     auth: int
     linkfilter: int
@@ -195,8 +198,8 @@ class NameTriggeredEvent(typing.TypedDict):
     id: int
 
 
-class SuperVerificationTriggeredEvent(typing.TypedDict):
-    name: typing.Literal["super_verification"]
+class TimeLimitTriggeredEvent(typing.TypedDict):
+    name: typing.Literal["timelimit"]
     guild_id: int
 
 
@@ -240,7 +243,7 @@ EventType = (
     | JoinGuardTriggeredEvent
     | AntiRaidTriggeredEvent
     | NameTriggeredEvent
-    | SuperVerificationTriggeredEvent
+    | TimeLimitTriggeredEvent
     | DehoistTriggeredEvent
     | BanSyncTriggeredEvent
     | RaidDetectedEvent
@@ -311,13 +314,11 @@ Bindings = typing.TypedDict(
             [hikari.MemberUpdateEvent, ConfigType, EntitlementsType],
             typing.Awaitable[bool],
         ],
-        "super-verification:create": typing.Callable[
-            [hikari.Member], typing.Awaitable[None]
-        ],
-        "super-verification:delete": typing.Callable[
+        "timelimit:create": typing.Callable[[hikari.Member], typing.Awaitable[None]],
+        "timelimit:delete": typing.Callable[
             [hikari.Snowflake, hikari.Snowflake], typing.Awaitable[None]
         ],
-        "super-verification:timer": typing.Callable[[], typing.Awaitable[None]],
+        "timelimit:timer": typing.Callable[[], typing.Awaitable[None]],
         "log": typing.Callable[
             [
                 hikari.SnowflakeishOr[hikari.Guild],

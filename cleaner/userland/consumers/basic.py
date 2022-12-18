@@ -224,16 +224,16 @@ class BasicConsumerService:
                     if await safe_call(name_create(event.member, config, entitlements)):
                         return
 
-            # 7. Super Verification (add to list)
+            # 7. Timelimit (add to list)
             if (
-                config["super_verification_enabled"]
-                and entitlements["plan"] >= entitlements["super_verification"]
+                config["verification_timelimit_enabled"]
+                and entitlements["plan"] >= entitlements["verification_timelimit"]
             ):
-                if super_verification_create := complain_if_none(
-                    self.kernel.bindings.get("super-verification:create"),
-                    "super-verification:create",
+                if timelimit_create := complain_if_none(
+                    self.kernel.bindings.get("timelimit:create"),
+                    "timelimit:create",
                 ):
-                    await safe_call(super_verification_create(event.member))
+                    await safe_call(timelimit_create(event.member))
 
             # 8. Dehoist
             if config["name_dehoisting_enabled"]:
@@ -282,19 +282,17 @@ class BasicConsumerService:
         config = await get_config(self.kernel, event.guild_id)
         entitlements = await get_entitlements(self.kernel, event.guild_id)
 
-        # 1. Super Verification (remove from list)
+        # 1. Timelimit (remove from list)
         if (
             not event.user.is_bot
-            and config["super_verification_enabled"]
-            and entitlements["plan"] >= entitlements["super_verification"]
+            and config["verification_timelimit_enabled"]
+            and entitlements["plan"] >= entitlements["verification_timelimit"]
         ):
-            if super_verification_delete := complain_if_none(
-                self.kernel.bindings.get("super-verification:delete"),
-                "super-verification:delete",
+            if timelimit_delete := complain_if_none(
+                self.kernel.bindings.get("timelimit:delete"),
+                "timelimit:delete",
             ):
-                await safe_call(
-                    super_verification_delete(event.guild_id, event.user_id)
-                )
+                await safe_call(timelimit_delete(event.guild_id, event.user_id))
 
         # 2. Logging
         if (
@@ -391,11 +389,11 @@ class BasicConsumerService:
                 await safe_call(slowmode_timer(), True)
 
             # 2. Verification
-            if verification_timer := complain_if_none(
-                self.kernel.bindings.get("super-verification:timer"),
-                "super-verification:timer",
+            if timelimit_timer := complain_if_none(
+                self.kernel.bindings.get("timelimit:timer"),
+                "timelimit:timer",
             ):
-                await safe_call(verification_timer(), True)
+                await safe_call(timelimit_timer(), True)
 
             # 3. Raid detection ("radar")
             if radar_timer := complain_if_none(

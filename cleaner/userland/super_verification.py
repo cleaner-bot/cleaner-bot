@@ -1,10 +1,8 @@
 import logging
-from datetime import datetime, timedelta
 
 import hikari
-from hikari.internal.time import utc_datetime
 
-from ._types import KernelType, RPCResponse, SuperVerificationTriggeredEvent
+from ._types import KernelType, RPCResponse
 from .helpers.binding import complain_if_none, safe_call
 from .helpers.escape import escape_markdown
 from .helpers.localization import Message
@@ -17,81 +15,11 @@ logger = logging.getLogger(__name__)
 class SuperVerificationService:
     def __init__(self, kernel: KernelType) -> None:
         self.kernel = kernel
-
-        self.kernel.bindings["super-verification:create"] = self.member_create
-        self.kernel.bindings["super-verification:delete"] = self.member_delete
-        self.kernel.bindings["super-verification:timer"] = self.on_timer
         self.kernel.rpc["super-verification"] = self.rpc_verify
-
-    async def member_create(self, member: hikari.Member) -> None:
-        await self.kernel.database.hset(
-            f"guild:{member.guild_id}:super-verification",
-            {str(member.id): member.joined_at.isoformat()},
-        )
-
-    async def member_delete(
-        self, guild_id: hikari.Snowflake, user_id: hikari.Snowflake
-    ) -> None:
-        await self.kernel.database.hdel(
-            f"guild:{guild_id}:super-verification", (str(user_id),)
-        )
-
-    async def on_timer(self) -> None:
-        cutoff_time = utc_datetime() - timedelta(minutes=8)
-        for guild in self.kernel.bot.cache.get_guilds_view().values():
-            config = await get_config(self.kernel, guild.id)
-            if not config["super_verification_enabled"]:
-                continue
-
-            members = await self.kernel.database.hgetall(
-                f"guild:{guild.id}:super-verification"
-            )
-            members_to_kick = set(
-                member_id
-                for member_id, join in members.items()
-                if datetime.fromisoformat(join.decode()) <= cutoff_time
-            )
-            if not members_to_kick:
-                continue
-
-            await self.kernel.database.hdel(
-                f"guild:{guild.id}:super-verification", members_to_kick
-            )
-            for member_id in map(int, members_to_kick):
-                member = guild.get_member(member_id)
-                if member is None:
-                    logger.debug(
-                        f"ignoring verification timeout for {member_id=}"
-                        f" {guild.id=} because not in cached"
-                    )
-                    continue
-                elif member.role_ids:  # member was verified in some other way
-                    continue
-
-                if track := complain_if_none(
-                    self.kernel.bindings.get("track"), "track"
-                ):
-                    info: SuperVerificationTriggeredEvent = {
-                        "name": "super_verification",
-                        "guild_id": guild.id,
-                    }
-                    await safe_call(track(info), True)
-
-                logger.debug(f"verification timeout for {member_id} in {guild.id}")
-                if challenge := complain_if_none(
-                    self.kernel.bindings.get("http:challenge"),
-                    "http:challenge",
-                ):
-                    reason = Message(
-                        "log_superverification_timeout",
-                        {"user": member_id, "name": escape_markdown(str(member.user))},
-                    )
-
-                    await safe_call(challenge(member, config, False, reason, 2), True)
 
     async def rpc_verify(self, guild_id: int, user_id: int) -> RPCResponse:
         deleted = await self.kernel.database.hdel(
-            f"guild:{guild_id}:super-verification", (str(user_id),)
+            f"guild:{guild_id}:timelimit", (str(user_id),)
         )
         if not deleted:
             return {"ok": False, "message": "already verified", "data": None}

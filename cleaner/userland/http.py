@@ -220,7 +220,7 @@ class HTTPService:
                 communication_disabled_until=communication_disabled_until,
                 reason=reason.translate(self.kernel, locale),
             )
-            
+
         elif challenge == "role":
             self.member_edits[member.guild_id] = (
                 self.member_edits.get(member.guild_id, 0) + 1

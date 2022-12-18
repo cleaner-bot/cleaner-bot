@@ -55,6 +55,8 @@
     "super_verification_enabled": false,
     "super_verification_captcha": false,
     "super_verification_role": "0",
+    "verification_timelimit_enabled": false,
+    "verification_timelimit": 480,
     "logging_enabled": false,
     "logging_channel": "0",
     "logging_option_join": false,

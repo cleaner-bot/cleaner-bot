@@ -25,7 +25,7 @@
         "log_user_timeout": "<@{mod}> put <@{user}> ({name}) in timeout.",
         "log_suspension_user": "User is suspended from all servers using The Cleaner.",
         "log_joinguard_bypass": "Tried bypassing Join Guard by using an invite.",
-        "log_superverification_timeout": "Failed to verify in time.",
+        "log_verification_timelimit": "Exceeded time limit ({timelimit}).",
         "log_dehoist": "Automatic dehoisting",
         "log_verified": "<@{user}> ({name}) verified.",
         "log_raid_ongoing": "Raid detected! Raid started at <t:{start}:T>. (bans={bans}, kicks={kicks})",
