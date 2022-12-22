@@ -108,23 +108,11 @@ class LogService:
             )
             await safe_call(log(guild_id, message, None, None))
 
-        guild = self.kernel.bot.cache.get_guild(guild_id)
-        if guild is None:
-            return
-
-        owner = self.kernel.bot.cache.get_user(guild.owner_id)
-        if owner is None:
-            owner = await self.kernel.bot.rest.fetch_user(guild.owner_id)
-
         await self.kernel.bot.rest.create_message(
             RAID_LOGS,
             f"Guild is being raided! (id: ||{guild_id}||)\n"
             f"Raid started at: <t:{int(start_time.timestamp())}:T>\n"
             f"Actions (so far): {bans} bans and {kicks} kicks",
-            embeds=[
-                await embedize_guild(guild, self.kernel.bot, None, owner),
-                embedize_user(owner),
-            ],
         )
 
     async def raid_complete(
@@ -152,24 +140,12 @@ class LogService:
             )
             await safe_call(log(guild_id, message, None, None))
 
-        guild = self.kernel.bot.cache.get_guild(guild_id)
-        if guild is None:
-            return
-
-        owner = self.kernel.bot.cache.get_user(guild.owner_id)
-        if owner is None:
-            owner = await self.kernel.bot.rest.fetch_user(guild.owner_id)
-
         await self.kernel.bot.rest.create_message(
             RAID_LOGS,
             f"Guild was raided! (id: ||{guild_id}||)\n"
             f"Raid started at: <t:{int(start_time.timestamp())}:T>\n"
             f"Raid stopped at: <t:{int(end_time.timestamp())}:T>\n"
             f"Actions: {bans} bans and {kicks} kicks",
-            embeds=[
-                await embedize_guild(guild, self.kernel.bot, None, owner),
-                embedize_user(owner),
-            ],
         )
 
     async def guild_join(
