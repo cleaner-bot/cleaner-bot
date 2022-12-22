@@ -228,6 +228,9 @@ class BasicConsumerService:
             if (
                 config["verification_timelimit_enabled"]
                 and entitlements["plan"] >= entitlements["verification_timelimit"]
+            ) or (
+                config["super_verification_enabled"]
+                and entitlements["plan"] >= entitlements["super_verification"]
             ):
                 if timelimit_create := complain_if_none(
                     self.kernel.bindings.get("timelimit:create"),
@@ -283,10 +286,15 @@ class BasicConsumerService:
         entitlements = await get_entitlements(self.kernel, event.guild_id)
 
         # 1. Timelimit (remove from list)
-        if (
-            not event.user.is_bot
-            and config["verification_timelimit_enabled"]
-            and entitlements["plan"] >= entitlements["verification_timelimit"]
+        if not event.user.is_bot and (
+            (
+                config["verification_timelimit_enabled"]
+                and entitlements["plan"] >= entitlements["verification_timelimit"]
+            )
+            or (
+                config["super_verification_enabled"]
+                and entitlements["plan"] >= entitlements["super_verification"]
+            )
         ):
             if timelimit_delete := complain_if_none(
                 self.kernel.bindings.get("timelimit:delete"),
