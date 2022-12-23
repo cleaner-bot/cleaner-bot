@@ -2,7 +2,7 @@ import logging
 
 import hikari
 
-from ._types import KernelType, RPCResponse, InteractionResponse
+from ._types import InteractionResponse, KernelType, RPCResponse
 from .helpers.binding import complain_if_none, safe_call
 from .helpers.escape import escape_markdown
 from .helpers.invite import generate_invite
@@ -122,16 +122,29 @@ class SuperVerificationService:
         return {"ok": True, "message": "OK", "data": None}
 
     def build_message(self, guild_id: int) -> InteractionResponse:
-        component = self.kernel.bot.rest.build_message_action_row()
-        (
-            component.add_button(hikari.ButtonStyle.LINK, generate_invite(self.kernel.bot, False, True, f"verify#{guild_id}"))
-            .set_label("Verify")
-            .set_emoji("🕵️")
-            .add_to_container()
+        embed = hikari.Embed(
+            title=":detective: Click to verify you are human",
+            url=generate_invite(self.kernel.bot, False, True, f"verify#{guild_id}"),
+        ).set_author(
+            name="Need help?",
+            url="https://docs.cleanerbot.xyz/help/super-verification/",
         )
-        (
-            component.add_button(hikari.ButtonStyle.LINK, "https://docs.cleanerbot.xyz/help/super-verification/")
-            .set_label("?")
-            .add_to_container()
-        )
-        return {"content": "", "embeds": [], "component": component}
+        # component = self.kernel.bot.rest.build_message_action_row()
+        # (
+        #     component.add_button(
+        #         hikari.ButtonStyle.LINK,
+        #         generate_invite(self.kernel.bot, False, True, f"verify#{guild_id}"),
+        #     )
+        #     .set_label("Verify")
+        #     .set_emoji("🕵️")
+        #     .add_to_container()
+        # )
+        # (
+        #     component.add_button(
+        #         hikari.ButtonStyle.LINK,
+        #         "https://docs.cleanerbot.xyz/help/super-verification/",
+        #     )
+        #     .set_label("?")
+        #     .add_to_container()
+        # )
+        return {"content": "", "embeds": [embed]}
