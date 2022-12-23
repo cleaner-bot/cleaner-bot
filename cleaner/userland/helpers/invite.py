@@ -4,25 +4,26 @@ from urllib.parse import urlencode
 from hikari import GatewayBot, OAuth2Scope, Permissions
 from hikari.urls import BASE_URL
 
+INVITE_PERMISSIONS = (
+    Permissions.BAN_MEMBERS
+    | Permissions.KICK_MEMBERS
+    | Permissions.SEND_MESSAGES
+    | Permissions.VIEW_CHANNEL
+    | Permissions.EMBED_LINKS
+    | Permissions.MANAGE_MESSAGES
+    | Permissions.MANAGE_GUILD
+    | Permissions.MANAGE_CHANNELS
+    | Permissions.MANAGE_ROLES
+    | Permissions.MANAGE_NICKNAMES
+    | Permissions.MANAGE_WEBHOOKS
+    | Permissions.MODERATE_MEMBERS
+)
+
 
 def generate_invite(
     bot: GatewayBot, with_bot: bool, with_dashboard: bool, state: str = ""
 ) -> str:
     base = "/oauth2/authorize"
-    permissions = (
-        Permissions.BAN_MEMBERS
-        | Permissions.KICK_MEMBERS
-        | Permissions.SEND_MESSAGES
-        | Permissions.VIEW_CHANNEL
-        | Permissions.EMBED_LINKS
-        | Permissions.MANAGE_MESSAGES
-        | Permissions.MANAGE_GUILD
-        | Permissions.MANAGE_CHANNELS
-        | Permissions.MANAGE_ROLES
-        | Permissions.MANAGE_NICKNAMES
-        | Permissions.MANAGE_WEBHOOKS
-        | Permissions.MODERATE_MEMBERS
-    )
     client_id = os.getenv("DISCORD_CLIENT_ID")
     if client_id is None:
         # no client id override, so just assume bot id == client id
@@ -55,7 +56,7 @@ def generate_invite(
     }
 
     if with_bot:
-        query["permissions"] = str(int(permissions))
+        query["permissions"] = str(int(INVITE_PERMISSIONS))
 
     if with_dashboard:
         query["redirect_uri"] = "https://cleanerbot.xyz/oauth-comeback"
