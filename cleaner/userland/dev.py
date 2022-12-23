@@ -36,9 +36,9 @@ class DeveloperService:
             "register-slash-global": lambda x: self.register_slash_commands(x, True),
             "reset-slash": self.reset_slash_commands,
             # disabled due to security reasons
-            # "get-config": self.get_config,
+            "get-config": self.get_config,
             # "set-config": self.set_config,
-            # "get-entitlement": self.get_entitlement,
+            "get-entitlement": self.get_entitlement,
             # "set-entitlement": self.set_entitlement,
             "get-config-used": self.get_config_used,
             "load-data": self.load_data,
