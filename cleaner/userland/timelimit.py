@@ -62,8 +62,13 @@ class TimeLimitService:
                     continue
 
                 roles = list(member.role_ids)
-                if config["verification_take_role"] and (
-                    (role_id := hikari.Snowflake(config["verification_role"])) in roles
+                if (
+                    config["verification_enabled"]
+                    and config["verification_take_role"]
+                    and (
+                        (role_id := hikari.Snowflake(config["verification_role"]))
+                        in roles
+                    )
                 ):
                     roles.remove(role_id)
 
