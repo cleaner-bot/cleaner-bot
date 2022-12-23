@@ -71,8 +71,15 @@ class TimeLimitService:
                     )
                 ):
                     roles.remove(role_id)
+                
+                if guild.id in roles:
+                    roles.remove(guild.id)
 
                 if roles:  # verified somehow
+                    logger.debug(
+                        f"ignoring verification timelimit for {member_id=}"
+                        f" {guild.id=} because already verified: {roles}"
+                    )
                     continue
 
                 if track := complain_if_none(
