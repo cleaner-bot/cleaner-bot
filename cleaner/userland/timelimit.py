@@ -71,7 +71,7 @@ class TimeLimitService:
                     )
                 ):
                     roles.remove(role_id)
-                
+
                 if guild.id in roles:
                     roles.remove(guild.id)
 

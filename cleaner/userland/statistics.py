@@ -27,6 +27,11 @@ class LegacyNicknameEvent(typing.TypedDict):
     guild: int
 
 
+class LegacySuperVerificationEvent(typing.TypedDict):
+    name: typing.Literal["super_verification"]
+    guild_id: int
+
+
 class LegacyChallengeEvent(typing.TypedDict):
     name: typing.Literal["challenge"]
     action: str
@@ -34,7 +39,11 @@ class LegacyChallengeEvent(typing.TypedDict):
 
 
 AllEventType = (
-    EventType | LegacyDeleteEvent | LegacyNicknameEvent | LegacyChallengeEvent
+    EventType
+    | LegacyDeleteEvent
+    | LegacyNicknameEvent
+    | LegacyChallengeEvent
+    | LegacySuperVerificationEvent
 )
 
 
@@ -174,7 +183,7 @@ class StatisticsService:
             "slowmode",
             "antiraid",
             "joinguard",
-            "super_verification",
+            "timelimit",
             "name",
             "dehoist",
             "bansync",
@@ -182,6 +191,9 @@ class StatisticsService:
             "linkfilter",
         ):
             return (("services", event["name"]),)
+
+        elif event["name"] == "super_verification":
+            return (("services", "timelimit"),)
 
         elif event["name"] == "nickname":
             return (("services", "dehoist"),)
