@@ -2,20 +2,27 @@ import logging
 
 import hikari
 
-from ._types import KernelType, RPCResponse
+from ._types import KernelType, RPCResponse, InteractionResponse
 from .helpers.binding import complain_if_none, safe_call
 from .helpers.escape import escape_markdown
+from .helpers.invite import generate_invite
 from .helpers.localization import Message
-from .helpers.permissions import DANGEROUS_PERMISSIONS
+from .helpers.permissions import DANGEROUS_PERMISSIONS, permissions_for
 from .helpers.settings import get_config
 
 logger = logging.getLogger(__name__)
+REQUIRED_TO_SEND = (
+    hikari.Permissions.VIEW_CHANNEL
+    | hikari.Permissions.SEND_MESSAGES
+    | hikari.Permissions.EMBED_LINKS
+)
 
 
 class SuperVerificationService:
     def __init__(self, kernel: KernelType) -> None:
         self.kernel = kernel
-        self.kernel.rpc["super-verification"] = self.rpc_verify
+        self.kernel.rpc["super-verification:verify"] = self.rpc_verify
+        self.kernel.rpc["super-verification:post-message"] = self.rpc_post_message
 
     async def rpc_verify(self, guild_id: int, user_id: int) -> RPCResponse:
         deleted = await self.kernel.database.hdel(
@@ -85,3 +92,46 @@ class SuperVerificationService:
                 await safe_call(log(guild_id, message, None, None), True)
 
         return {"ok": True, "message": "OK", "data": None}
+
+    async def rpc_post_message(self, guild_id: int, channel_id: int) -> RPCResponse:
+        logger.debug(f"posting message {guild_id=} {channel_id=}")
+        channel = self.kernel.bot.cache.get_guild_channel(channel_id)
+        if (
+            channel is None
+            or channel.guild_id != guild_id
+            or not isinstance(channel, hikari.TextableGuildChannel)
+        ):
+            return {"ok": False, "message": "Channel not found", "data": None}
+
+        guild = self.kernel.bot.cache.get_guild(guild_id)
+        if guild is None or (me := guild.get_my_member()) is None:
+            return {"ok": False, "message": "cache issues", "data": None}
+
+        perms = permissions_for(me, channel)
+        if (
+            perms & hikari.Permissions.ADMINISTRATOR == 0
+            and perms & REQUIRED_TO_SEND != REQUIRED_TO_SEND
+        ) or me.communication_disabled_until() is not None:
+            return {
+                "ok": False,
+                "message": "no permissions to post in channel",
+                "data": None,
+            }
+
+        await channel.send(**self.build_message(guild_id))  # type: ignore
+        return {"ok": True, "message": "OK", "data": None}
+
+    def build_message(self, guild_id: int) -> InteractionResponse:
+        component = self.kernel.bot.rest.build_message_action_row()
+        (
+            component.add_button(hikari.ButtonStyle.LINK, generate_invite(self.kernel.bot, False, True, f"verify#{guild_id}"))
+            .set_label("Verify")
+            .set_emoji("🕵️")
+            .add_to_container()
+        )
+        (
+            component.add_button(hikari.ButtonStyle.LINK, "https://docs.cleanerbot.xyz/help/super-verification/")
+            .set_label("?")
+            .add_to_container()
+        )
+        return {"content": "", "embeds": [], "component": component}

@@ -471,7 +471,10 @@ RPC = typing.TypedDict(
         "verification:external:verify": typing.Callable[
             [int, int, InteractionDatabaseType], typing.Awaitable[RPCResponse]
         ],
-        "super-verification": typing.Callable[
+        "super-verification:verify": typing.Callable[
+            [int, int], typing.Awaitable[RPCResponse]
+        ],
+        "super-verification:post-message": typing.Callable[
             [int, int], typing.Awaitable[RPCResponse]
         ],
         "joinguard": typing.Callable[[int, int, str], typing.Awaitable[RPCResponse]],
