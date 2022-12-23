@@ -60,7 +60,14 @@ class TimeLimitService:
                         f" {guild.id=} because not cached"
                     )
                     continue
-                elif member.role_ids:  # member was verified in some other way
+
+                roles = list(member.role_ids)
+                if config["verification_take_role"] and (
+                    (role_id := hikari.Snowflake(config["verification_role"])) in roles
+                ):
+                    roles.remove(role_id)
+
+                if roles:  # verified somehow
                     continue
 
                 if track := complain_if_none(
