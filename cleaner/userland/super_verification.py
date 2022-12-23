@@ -122,12 +122,12 @@ class SuperVerificationService:
         return {"ok": True, "message": "OK", "data": None}
 
     def build_message(self, guild_id: int) -> InteractionResponse:
+        link = "https://docs.cleanerbot.xyz/help/super-verification/"
         embed = hikari.Embed(
             title=":detective: Click to verify you are human",
+            description=f"If you need help, [click here]({link}).",
             url=generate_invite(self.kernel.bot, False, True, f"verify#{guild_id}"),
-        ).set_author(
-            name="Need help?",
-            url="https://docs.cleanerbot.xyz/help/super-verification/",
+            color=0x2F3136,
         )
         # component = self.kernel.bot.rest.build_message_action_row()
         # (
