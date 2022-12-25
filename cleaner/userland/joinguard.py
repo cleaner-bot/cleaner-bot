@@ -48,7 +48,7 @@ class JoinGuardService:
             self.kernel.bindings.get("http:challenge"), "http:challenge"
         ):
             await safe_call(
-                challenge(member, config, True, Message("log_joinguard_bypass"), 2),
+                challenge(member, config, False, Message("log_joinguard_bypass"), 2),
                 True,
             )
 

@@ -41,7 +41,7 @@ class SuspensionService:
             self.kernel.bindings.get("http:challenge"), "http:challenge"
         ):
             log_reason = Message("log_suspension_user")
-            await safe_call(challenge(member, config, True, log_reason, 2), True)
+            await safe_call(challenge(member, config, False, log_reason, 2), True)
 
         return True
 

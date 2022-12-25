@@ -72,7 +72,7 @@ class AntiRaidService:
                     and f"{member.guild_id}-{user_id}" not in self.member_kicks
                 ):
                     await safe_call(
-                        challenge(member_to_kick, config, True, reason, 1),
+                        challenge(member_to_kick, config, False, reason, 1),
                         True,
                     )
 
