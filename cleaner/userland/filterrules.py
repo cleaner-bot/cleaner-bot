@@ -100,7 +100,7 @@ class FilterRulesService:
         matched_rule = self.run_rules(phase, rules, vars)
         if matched_rule is None or matched_rule.action in ("disabled", "skip"):
             return False
-        elif matched_rule.action not in ("kick", "ban", "auto"):
+        elif matched_rule.action not in actions:
             return False  # invalid action
 
         if challenge := complain_if_none(
