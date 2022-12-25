@@ -31,6 +31,7 @@ EXTENSIONS: typing.Final = (
     "cleaner.userland.slowmode:SlowmodeService",
     "cleaner.userland.http:HTTPService",
     "cleaner.userland.joinguard:JoinGuardService",
+    "cleaner.userland.filterrules:FilterRulesService",
     "cleaner.userland.linkfilter:LinkFilterService",
     "cleaner.userland.name:NameService",
     "cleaner.userland.super_verification:SuperVerificationService",

@@ -119,6 +119,7 @@ class ConfigType(typing.TypedDict):
     linkfilter_enabled: bool
     linkfilter_channel: str
     linkfilter_blockunknown: bool
+    filterrules_enabled: bool
 
 
 class EntitlementsType(typing.TypedDict):
@@ -149,6 +150,7 @@ class EntitlementsType(typing.TypedDict):
     bansync_subscription_limit: int
     auth: int
     linkfilter: int
+    filterrules: int
 
 
 class AntiSpamTriggeredEvent(typing.TypedDict):
@@ -235,6 +237,13 @@ class LinkFilteredEvent(typing.TypedDict):
     url: str
 
 
+class FilterRuleTriggeredEvent(typing.TypedDict):
+    name: typing.Literal["filterrule"]
+    guild_id: int
+    phase: str
+    action: str
+
+
 EventType = (
     AntiSpamTriggeredEvent
     | AutoModTriggeredEvent
@@ -249,6 +258,7 @@ EventType = (
     | RaidDetectedEvent
     | PunishmentEvent
     | LinkFilteredEvent
+    | FilterRuleTriggeredEvent
 )
 
 
@@ -343,6 +353,12 @@ Bindings = typing.TypedDict(
         ],
         "log:raid:ongoing": typing.Callable[
             [int, datetime, int, int], typing.Awaitable[None]
+        ],
+        "filterrule:member": typing.Callable[
+            [hikari.Member, ConfigType, str], typing.Awaitable[bool]
+        ],
+        "filterrule:message": typing.Callable[
+            [hikari.PartialMessage, ConfigType, str], typing.Awaitable[bool]
         ],
         "dehoist:create": typing.Callable[[hikari.Member], typing.Awaitable[bool]],
         "dehoist:update": typing.Callable[

@@ -25,5 +25,6 @@
     "verification_timelimit": 0,
     "bansync_subscription_limit": 10,
     "auth": 1,
-    "linkfilter": 0
+    "linkfilter": 0,
+    "filterrules": 1
 }

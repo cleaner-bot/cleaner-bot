@@ -101,7 +101,21 @@ class BasicConsumerService:
                         ):
                             return
 
-                # 5. Link Filter
+                # 5. Filter rules
+                if (
+                    config["filterrules_enabled"]
+                    and entitlements["plan"] >= entitlements["filterrules"]
+                ):
+                    if message_phase := complain_if_none(
+                        self.kernel.bindings.get("filterrule:message"),
+                        "filterrule:message",
+                    ):
+                        if await safe_call(
+                            message_phase(event.message, config, "message_create")
+                        ):
+                            return
+
+                # 6. Link Filter
                 if (
                     entitlements["plan"] >= entitlements["linkfilter"]
                     and config["linkfilter_enabled"]
@@ -137,7 +151,21 @@ class BasicConsumerService:
             ):
                 await safe_call(automod(event.message, config, entitlements))
 
-        # 2. Link Filter
+        # 2. Filter rules
+        if (
+            config["filterrules_enabled"]
+            and entitlements["plan"] >= entitlements["filterrules"]
+        ):
+            if message_phase := complain_if_none(
+                self.kernel.bindings.get("filterrule:message"),
+                "filterrule:message",
+            ):
+                if await safe_call(
+                    message_phase(event.message, config, "message_update")
+                ):
+                    return
+
+        # 3. Link Filter
         if (
             entitlements["plan"] >= entitlements["linkfilter"]
             and config["linkfilter_enabled"]
@@ -212,7 +240,21 @@ class BasicConsumerService:
                     if await safe_call(name_create(event.member, config, entitlements)):
                         return
 
-            # 7. Timelimit (add to list)
+            # 7. Filter rules
+            if (
+                config["filterrules_enabled"]
+                and entitlements["plan"] >= entitlements["filterrules"]
+            ):
+                if member_phase := complain_if_none(
+                    self.kernel.bindings.get("filterrule:member"),
+                    "filterrule:member",
+                ):
+                    if await safe_call(
+                        member_phase(event.member, config, "member_create")
+                    ):
+                        return
+
+            # 8. Timelimit (add to list)
             if (
                 config["verification_timelimit_enabled"]
                 and entitlements["plan"] >= entitlements["verification_timelimit"]
@@ -226,14 +268,14 @@ class BasicConsumerService:
                 ):
                     await safe_call(timelimit_create(event.member))
 
-            # 8. Dehoist
+            # 9. Dehoist
             if config["name_dehoisting_enabled"]:
                 if dehoist := complain_if_none(
                     self.kernel.bindings.get("dehoist:create"), "dehoist:create"
                 ):
                     await safe_call(dehoist(event.member), True)
 
-        # 9. Logging
+        # 10. Logging
         if (
             config["logging_enabled"]
             and config["logging_option_join"]
@@ -260,7 +302,19 @@ class BasicConsumerService:
                 if await safe_call(name_update(event, config, entitlements)):
                     return
 
-        # 3. Dehoisting
+        # 3. Filter rules
+        if (
+            config["filterrules_enabled"]
+            and entitlements["plan"] >= entitlements["filterrules"]
+        ):
+            if member_phase := complain_if_none(
+                self.kernel.bindings.get("filterrule:member"),
+                "filterrule:member",
+            ):
+                if await safe_call(member_phase(event.member, config, "member_update")):
+                    return
+
+        # 4. Dehoisting
         # if entitlements["plan"] >= entitlements["dehoist"]:
         if config["name_dehoisting_enabled"]:
             if dehoist := complain_if_none(

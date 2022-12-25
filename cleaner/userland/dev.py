@@ -48,6 +48,10 @@ class DeveloperService:
             "get-captcha-data": self.get_captcha_data,
             "members-scan": self.members_scan,
             "threads-cache": self.threads_cache,
+            "list-rules": self.list_rules,
+            "add-rule": self.add_rule,
+            "get-rule": self.get_rule,
+            "remove-rule": self.remove_rule,
         }
 
     async def message_create(
@@ -480,3 +484,56 @@ class DeveloperService:
             f"{len(threads)} threads.\n\n"
             + "\n".join(f"`{x.id}` {x.name}" for x in threads.values())
         )
+
+    async def list_rules(self, message: hikari.Message, phase: str) -> None:
+        import msgpack  # type: ignore
+
+        raw_rules = await self.kernel.database.lrange(
+            f"guild:{message.guild_id}:filterrules:{phase}", 0, -1
+        )
+        rules = []
+        for i, rule in enumerate(raw_rules):
+            action, name, _ = msgpack.unpackb(rule, use_list=False)
+            rules.append(f"- {i}. `{action}`: {name}")
+
+        await message.respond("Rules:\n" + "\n".join(rules))
+
+    async def add_rule(
+        self,
+        message: hikari.Message,
+        phase: str,
+        action: str,
+        name: str,
+        *raw_code: str,
+    ) -> None:
+        import msgpack
+
+        code = " ".join(raw_code)
+        rule = msgpack.packb((action, name, code.encode()))
+        await self.kernel.database.rpush(
+            f"guild:{message.guild_id}:filterrules:{phase}", (typing.cast(bytes, rule),)
+        )
+
+        await message.add_reaction("👍")
+
+    async def get_rule(self, message: hikari.Message, phase: str, index: str) -> None:
+        import msgpack
+
+        rule = await self.kernel.database.lindex(
+            f"guild:{message.guild_id}:filterrules:{phase}", int(index)
+        )
+        action, name, code = msgpack.unpackb(rule, use_list=False)
+
+        await message.respond(f"Name: `{name}`\nAction: `{action}`\n\n```\n{code}\n```")
+
+    async def remove_rule(
+        self, message: hikari.Message, phase: str, index: str
+    ) -> None:
+        await self.kernel.database.lset(
+            f"guild:{message.guild_id}:filterrules:{phase}", int(index), "deleteme"
+        )
+        await self.kernel.database.lrem(
+            f"guild:{message.guild_id}:filterrules:{phase}", 1, "deleteme"
+        )
+
+        await message.add_reaction("👍")

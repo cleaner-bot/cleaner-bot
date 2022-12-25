@@ -10,5 +10,7 @@ decancer-py==0.1.0
 pillow>=9.3,<9.4
 numpy>=1.23,<1.24
 hikari==2.0.0.dev113
+rust-regex==0.1.0a1
+filterrules@git+https://github.com/cleaner-bot/filterrules.git
 captcha-rs@git+https://github.com/Shinobou/captcha-rs.git
 expirepy@git+https://github.com/cleaner-bot/expirepy.git
