@@ -211,7 +211,7 @@ class FilterRulesService:
                 challenge(
                     message.member,
                     config,
-                    matched_rule.action != "delete",
+                    matched_rule.action == "delete",
                     reason,
                     actions.get(matched_rule.action, 0),
                 ),
