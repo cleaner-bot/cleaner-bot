@@ -114,18 +114,6 @@ class BasicConsumerService:
                         ):
                             return
 
-                # 6. Dehoist
-                if (
-                    event.member is not None
-                    and event.message.type == hikari.MessageType.DEFAULT
-                    and config["name_dehoisting_enabled"]
-                ):
-                    if dehoist := complain_if_none(
-                        self.kernel.bindings.get("dehoist:create"), "dehoist:create"
-                    ):
-                        if await safe_call(dehoist(event.member)):
-                            return
-
         # 6. Dev commands
         if self.kernel.is_developer(event.author_id):
             if dev := complain_if_none(self.kernel.bindings.get("dev"), "dev"):
