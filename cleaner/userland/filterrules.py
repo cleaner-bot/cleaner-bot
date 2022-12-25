@@ -24,6 +24,7 @@ functions: dict[str, typing.Callable[..., typing.Any]] = {
     "lower": str.lower,
     "upper": str.upper,
     "starts_with": str.startswith,
+    "contains": lambda a, b: b in a,
     "ends_with": str.endswith,
     "to_string": str,
 }
@@ -51,6 +52,16 @@ def var_member(member: hikari.Member) -> dict[str, str | int | bool]:
     return {
         "member.nickname": member.nickname or "",
         "member.joined_at": int(member.joined_at.timestamp()),
+    }
+
+
+def var_message(message: hikari.PartialMessage) -> dict[str, str | int | bool]:
+    return {
+        "message.content": message.content or "",
+        "message.has_embeds": bool(message.embeds),
+        "message.has_attachments": bool(message.attachments),
+        "message.type": message.type if message.type is not hikari.UNDEFINED else -1,
+        "message.flags": message.flags if message.flags is not hikari.UNDEFINED else -1,
     }
 
 
@@ -133,6 +144,7 @@ class FilterRulesService:
         vars: dict[str, str | int | bool] = {
             **var_user(message.member),
             **var_member(message.member),
+            **var_message(message),
             "guild.id": int(message.guild_id),
         }
 
