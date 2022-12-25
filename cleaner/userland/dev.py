@@ -524,7 +524,9 @@ class DeveloperService:
         )
         action, name, code = msgpack.unpackb(rule, use_list=False)
 
-        await message.respond(f"Name: `{name}`\nAction: `{action}`\n\n```\n{code}\n```")
+        await message.respond(
+            f"Name: `{name}`\nAction: `{action}`\n\n```\n{code.decode()}\n```"
+        )
 
     async def remove_rule(
         self, message: hikari.Message, phase: str, index: str

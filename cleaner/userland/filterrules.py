@@ -18,15 +18,17 @@ class ConfigurationRule(typing.NamedTuple):
     code: bytes
 
 
-functions: dict[str, typing.Callable[..., typing.Any]] = {
-    "regex_match": lambda a, b: bool(rust_regex.compile(a).findall(b)),  # type: ignore
+functions: dict[str, typing.Callable[..., bytes | int | bool]] = {
+    "regex_match": lambda a, b: bool(
+        rust_regex.compile(a.decode()).findall(b.decode())  # type: ignore
+    ),
     "len": len,
-    "lower": str.lower,
-    "upper": str.upper,
-    "starts_with": str.startswith,
+    "lower": bytes.lower,
+    "upper": bytes.upper,
+    "starts_with": bytes.startswith,
     "contains": lambda a, b: b in a,
-    "ends_with": str.endswith,
-    "to_string": str,
+    "ends_with": bytes.endswith,
+    "to_string": lambda a: str(a).encode(),
 }
 actions = {
     "challenge": 0,
@@ -36,28 +38,28 @@ actions = {
 }
 
 
-def var_user(user: hikari.User) -> dict[str, str | int | bool]:
+def var_user(user: hikari.User) -> dict[str, bytes | int | bool]:
     return {
         "user.id": int(user.id),
-        "user.username": user.username,
-        "user.discriminator": user.discriminator,
+        "user.username": user.username.encode(),
+        "user.discriminator": user.discriminator.encode(),
         "user.created_at": int(user.id.created_at.timestamp()),
         "user.has_avatar": user.avatar_hash is not None,
-        "user.avatar_hash": user.avatar_hash or "",
+        "user.avatar_hash": user.avatar_hash.encode() if user.avatar_hash else b"",
         "user.flags": user.flags,
     }
 
 
-def var_member(member: hikari.Member) -> dict[str, str | int | bool]:
+def var_member(member: hikari.Member) -> dict[str, bytes | int | bool]:
     return {
-        "member.nickname": member.nickname or "",
+        "member.nickname": member.nickname.encode() if member.nickname else b"",
         "member.joined_at": int(member.joined_at.timestamp()),
     }
 
 
-def var_message(message: hikari.PartialMessage) -> dict[str, str | int | bool]:
+def var_message(message: hikari.PartialMessage) -> dict[str, bytes | int | bool]:
     return {
-        "message.content": message.content or "",
+        "message.content": message.content.encode() if message.content else b"",
         "message.has_embeds": bool(message.embeds),
         "message.has_attachments": bool(message.attachments),
         "message.type": message.type if message.type is not hikari.UNDEFINED else -1,
@@ -89,7 +91,7 @@ class FilterRulesService:
         elif all(rule.action in ("disabled", "skip") for rule in rules):
             return False
 
-        vars: dict[str, str | int | bool] = {
+        vars: dict[str, bytes | int | bool] = {
             **var_user(member),
             **var_member(member),
             "guild.id": int(member.guild_id),
@@ -141,7 +143,7 @@ class FilterRulesService:
         elif all(rule.action in ("disabled", "skip") for rule in rules):
             return False
 
-        vars: dict[str, str | int | bool] = {
+        vars: dict[str, bytes | int | bool] = {
             **var_user(message.member),
             **var_member(message.member),
             **var_message(message),
@@ -222,9 +224,9 @@ class FilterRulesService:
         self,
         phase: str,
         rules: list[ConfigurationRule],
-        vars: dict[str, str | int | bool],
+        vars: dict[str, bytes | int | bool],
     ) -> ConfigurationRule | None:
-        vars.update({"current.time": int(time.time()), "current.phase": phase})
+        vars.update({"current.time": int(time.time()), "current.phase": phase.encode()})
         for rule in rules:
             if rule.action == "skip":
                 continue
