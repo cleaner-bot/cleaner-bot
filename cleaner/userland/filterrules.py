@@ -25,7 +25,7 @@ def regex_compile(pattern: str) -> typing.Any:
 
 functions: dict[str, typing.Callable[..., bytes | int | bool]] = {
     "regex_match": lambda a, b: bool(
-        regex_compile(a.decode()).findall(b.decode())  # type: ignore
+        regex_compile(a.decode()).findall(b.decode())
     ),
     "len": len,
     "lower": bytes.lower,
@@ -76,8 +76,8 @@ class FilterRulesService:
     def __init__(self, kernel: KernelType) -> None:
         self.kernel = kernel
 
-        self.kernel.bindings["filterrule:member"] = self.member_phase
-        self.kernel.bindings["filterrule:message"] = self.message_phase
+        self.kernel.bindings["filterrule:member"] = self.member_event
+        self.kernel.bindings["filterrule:message"] = self.message_event
 
     async def get_rules(self, guild_id: int, name: str) -> list[ConfigurationRule]:
         raw_rules = await self.kernel.database.lrange(
@@ -87,10 +87,10 @@ class FilterRulesService:
             ConfigurationRule(*msgpack.unpackb(x, use_list=False)) for x in raw_rules
         ]
 
-    async def member_phase(
-        self, member: hikari.Member, config: ConfigType, phase: str
+    async def member_event(
+        self, member: hikari.Member, config: ConfigType, event: str
     ) -> bool:
-        rules = await self.get_rules(member.guild_id, phase)
+        rules = await self.get_rules(member.guild_id, event)
         if not rules:
             return False
         elif all(rule.action in ("disabled", "skip") for rule in rules):
@@ -102,7 +102,7 @@ class FilterRulesService:
             "guild.id": int(member.guild_id),
         }
 
-        matched_rule = self.run_rules(phase, rules, vars)
+        matched_rule = self.run_rules(event, rules, vars)
         if matched_rule is None or matched_rule.action in ("disabled", "skip"):
             return False
         elif matched_rule.action not in actions:
@@ -115,7 +115,7 @@ class FilterRulesService:
                 info: FilterRuleTriggeredEvent = {
                     "name": "filterrule",
                     "guild_id": member.guild_id,
-                    "phase": phase,
+                    "event": event,
                     "action": matched_rule.action,
                 }
                 await safe_call(track(info), True)
@@ -123,7 +123,7 @@ class FilterRulesService:
             reason = Message(
                 "log_filterrule",
                 {
-                    "phase": phase,
+                    "event": event,
                     "name": matched_rule.name,
                     "action": matched_rule.action,
                 },
@@ -137,12 +137,12 @@ class FilterRulesService:
 
         return True
 
-    async def message_phase(
-        self, message: hikari.PartialMessage, config: ConfigType, phase: str
+    async def message_event(
+        self, message: hikari.PartialMessage, config: ConfigType, event: str
     ) -> bool:
         assert message.member
         assert message.guild_id
-        rules = await self.get_rules(message.guild_id, phase)
+        rules = await self.get_rules(message.guild_id, event)
         if not rules:
             return False
         elif all(rule.action in ("disabled", "skip") for rule in rules):
@@ -155,14 +155,14 @@ class FilterRulesService:
             "guild.id": int(message.guild_id),
         }
 
-        matched_rule = self.run_rules(phase, rules, vars)
+        matched_rule = self.run_rules(event, rules, vars)
         if matched_rule is None or matched_rule.action in ("disabled", "skip"):
             return False
 
         reason = Message(
             "log_filterrule",
             {
-                "phase": phase,
+                "event": event,
                 "name": matched_rule.name,
                 "action": matched_rule.action,
             },
@@ -207,7 +207,7 @@ class FilterRulesService:
                 info: FilterRuleTriggeredEvent = {
                     "name": "filterrule",
                     "guild_id": message.guild_id,
-                    "phase": phase,
+                    "event": event,
                     "action": matched_rule.action,
                 }
                 await safe_call(track(info), True)
@@ -227,14 +227,14 @@ class FilterRulesService:
 
     def run_rules(
         self,
-        phase: str,
+        event: str,
         rules: list[ConfigurationRule],
         vars: dict[str, bytes | int | bool],
     ) -> ConfigurationRule | None:
         vars.update(
             {
                 "current.time": int(time.time()),
-                "current.phase": phase.encode(),
+                "current.event": event.encode(),
                 "true": True,
                 "false": False,
             }

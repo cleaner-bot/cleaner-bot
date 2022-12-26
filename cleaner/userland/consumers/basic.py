@@ -106,12 +106,12 @@ class BasicConsumerService:
                     config["filterrules_enabled"]
                     and entitlements["plan"] >= entitlements["filterrules"]
                 ):
-                    if message_phase := complain_if_none(
+                    if message_event := complain_if_none(
                         self.kernel.bindings.get("filterrule:message"),
                         "filterrule:message",
                     ):
                         if await safe_call(
-                            message_phase(event.message, config, "message_create")
+                            message_event(event.message, config, "message_create")
                         ):
                             return
 
@@ -156,12 +156,12 @@ class BasicConsumerService:
             config["filterrules_enabled"]
             and entitlements["plan"] >= entitlements["filterrules"]
         ):
-            if message_phase := complain_if_none(
+            if message_event := complain_if_none(
                 self.kernel.bindings.get("filterrule:message"),
                 "filterrule:message",
             ):
                 if await safe_call(
-                    message_phase(event.message, config, "message_update")
+                    message_event(event.message, config, "message_update")
                 ):
                     return
 
@@ -256,12 +256,12 @@ class BasicConsumerService:
                 config["filterrules_enabled"]
                 and entitlements["plan"] >= entitlements["filterrules"]
             ):
-                if member_phase := complain_if_none(
+                if member_event := complain_if_none(
                     self.kernel.bindings.get("filterrule:member"),
                     "filterrule:member",
                 ):
                     if await safe_call(
-                        member_phase(event.member, config, "member_create")
+                        member_event(event.member, config, "member_create")
                     ):
                         return
 
@@ -307,11 +307,11 @@ class BasicConsumerService:
             config["filterrules_enabled"]
             and entitlements["plan"] >= entitlements["filterrules"]
         ):
-            if member_phase := complain_if_none(
+            if member_event := complain_if_none(
                 self.kernel.bindings.get("filterrule:member"),
                 "filterrule:member",
             ):
-                if await safe_call(member_phase(event.member, config, "member_update")):
+                if await safe_call(member_event(event.member, config, "member_update")):
                     return
 
         # 4. Dehoisting

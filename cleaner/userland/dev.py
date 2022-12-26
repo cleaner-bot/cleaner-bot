@@ -485,11 +485,11 @@ class DeveloperService:
             + "\n".join(f"`{x.id}` {x.name}" for x in threads.values())
         )
 
-    async def list_rules(self, message: hikari.Message, phase: str) -> None:
+    async def list_rules(self, message: hikari.Message, event: str) -> None:
         import msgpack  # type: ignore
 
         raw_rules = await self.kernel.database.lrange(
-            f"guild:{message.guild_id}:filterrules:{phase}", 0, -1
+            f"guild:{message.guild_id}:filterrules:{event}", 0, -1
         )
         rules = []
         for i, rule in enumerate(raw_rules):
@@ -501,7 +501,7 @@ class DeveloperService:
     async def add_rule(
         self,
         message: hikari.Message,
-        phase: str,
+        event: str,
         action: str,
         name: str,
         *raw_code: str,
@@ -511,16 +511,16 @@ class DeveloperService:
         code = " ".join(raw_code)
         rule = msgpack.packb((action, name, code.encode()))
         await self.kernel.database.rpush(
-            f"guild:{message.guild_id}:filterrules:{phase}", (typing.cast(bytes, rule),)
+            f"guild:{message.guild_id}:filterrules:{event}", (typing.cast(bytes, rule),)
         )
 
         await message.add_reaction("👍")
 
-    async def get_rule(self, message: hikari.Message, phase: str, index: str) -> None:
+    async def get_rule(self, message: hikari.Message, event: str, index: str) -> None:
         import msgpack
 
         rule = await self.kernel.database.lindex(
-            f"guild:{message.guild_id}:filterrules:{phase}", int(index)
+            f"guild:{message.guild_id}:filterrules:{event}", int(index)
         )
         action, name, code = msgpack.unpackb(rule, use_list=False)
 
@@ -529,13 +529,13 @@ class DeveloperService:
         )
 
     async def remove_rule(
-        self, message: hikari.Message, phase: str, index: str
+        self, message: hikari.Message, event: str, index: str
     ) -> None:
         await self.kernel.database.lset(
-            f"guild:{message.guild_id}:filterrules:{phase}", int(index), "deleteme"
+            f"guild:{message.guild_id}:filterrules:{event}", int(index), "deleteme"
         )
         await self.kernel.database.lrem(
-            f"guild:{message.guild_id}:filterrules:{phase}", 1, "deleteme"
+            f"guild:{message.guild_id}:filterrules:{event}", 1, "deleteme"
         )
 
         await message.add_reaction("👍")

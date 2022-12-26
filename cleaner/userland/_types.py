@@ -240,7 +240,7 @@ class LinkFilteredEvent(typing.TypedDict):
 class FilterRuleTriggeredEvent(typing.TypedDict):
     name: typing.Literal["filterrule"]
     guild_id: int
-    phase: str
+    event: str
     action: str
 
 
