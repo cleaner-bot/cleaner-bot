@@ -18,9 +18,14 @@ class ConfigurationRule(typing.NamedTuple):
     code: bytes
 
 
+@lru_cache
+def regex_compile(pattern: str) -> typing.Any:
+    return rust_regex.compile(pattern)  # type: ignore
+
+
 functions: dict[str, typing.Callable[..., bytes | int | bool]] = {
     "regex_match": lambda a, b: bool(
-        rust_regex.compile(a.decode()).findall(b.decode())  # type: ignore
+        regex_compile(a.decode()).findall(b.decode())  # type: ignore
     ),
     "len": len,
     "lower": bytes.lower,
