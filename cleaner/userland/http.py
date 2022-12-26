@@ -47,6 +47,7 @@ class HTTPService:
         self.kernel.bindings["http:announcement"] = self.announcement
         self.kernel.bindings["http:channel_ratelimit"] = self.channel_ratelimit
         self.kernel.bindings["http:danger_level"] = self.get_danger_level
+        self.kernel.bindings["http:challenged"] = self.challenged
         self.kernel.bindings["http:member:create"] = self.on_member_create
 
         self.tasks = [
@@ -579,6 +580,9 @@ class HTTPService:
             return max(user_strikes // 3, guild_strikes // 12 - 1)
         return max(user_strikes // 3, guild_strikes // 12)
 
+    def challenged(self, guild_id: int, user_id: int) -> bool:
+        return f"{guild_id}-{user_id}" in self.challenged_members
+
     async def delete_task(self) -> None:
         channels: dict[int, list[int]] = defaultdict(list)
         while True:
@@ -623,7 +627,7 @@ async def ignore_not_found(coro: typing.Awaitable[typing.Any]) -> None:
     except hikari.NotFoundError:
         pass
     except Exception as e:
-        logger.exception("exception occured", exc_info=e)
+        logger.exception("exception occurred", exc_info=e)
 
 
 class DeleteJob(typing.NamedTuple):

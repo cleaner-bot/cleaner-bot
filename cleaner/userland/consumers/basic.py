@@ -194,7 +194,18 @@ class BasicConsumerService:
         ):
             await safe_call(members_member_create(event.guild_id))
 
-        # 2. User in banlist
+        # 2. Logging
+        if (
+            config["logging_enabled"]
+            and config["logging_option_join"]
+            and entitlements["plan"] >= entitlements["logging"]
+        ):
+            if log_member_create := complain_if_none(
+                self.kernel.bindings.get("log:member:create"), "log:member:create"
+            ):
+                await safe_call(log_member_create(event.member))
+
+        # 3. User in banlist
         if bansync := complain_if_none(
             self.kernel.bindings.get("bansync:member:create"), "bansync:member:create"
         ):
@@ -202,14 +213,14 @@ class BasicConsumerService:
                 return
 
         if not event.user.is_bot:
-            # 3. User suspended check
+            # 4. User suspended check
             if suspension := complain_if_none(
                 self.kernel.bindings.get("suspension:user"), "suspension:user"
             ):
                 if await safe_call(suspension(event.member, config, entitlements)):
                     return
 
-            # 4. Join Guard
+            # 5. Join Guard
             if (
                 config["joinguard_captcha"]
                 and entitlements["plan"] >= entitlements["joinguard"]
@@ -220,7 +231,7 @@ class BasicConsumerService:
                     if await safe_call(joinguard(event.member, config, entitlements)):
                         return
 
-            # 5. Anti-Raid
+            # 6. Anti-Raid
             if (
                 config["antiraid_enabled"]
                 and entitlements["plan"] >= entitlements["antiraid"]
@@ -231,7 +242,7 @@ class BasicConsumerService:
                     if await safe_call(antiraid(event.member, config, entitlements)):
                         return
 
-            # 6. Name Checker
+            # 7. Name Checker
             if config["name_discord_enabled"] or config["name_advanced_enabled"]:
                 if name_create := complain_if_none(
                     self.kernel.bindings.get("name:create"),
@@ -240,7 +251,7 @@ class BasicConsumerService:
                     if await safe_call(name_create(event.member, config, entitlements)):
                         return
 
-            # 7. Filter rules
+            # 8. Filter rules
             if (
                 config["filterrules_enabled"]
                 and entitlements["plan"] >= entitlements["filterrules"]
@@ -254,7 +265,7 @@ class BasicConsumerService:
                     ):
                         return
 
-            # 8. Timelimit (add to list)
+            # 9. Timelimit (add to list)
             if (
                 config["verification_timelimit_enabled"]
                 and entitlements["plan"] >= entitlements["verification_timelimit"]
@@ -268,23 +279,12 @@ class BasicConsumerService:
                 ):
                     await safe_call(timelimit_create(event.member))
 
-            # 9. Dehoist
+            # 10. Dehoist
             if config["name_dehoisting_enabled"]:
                 if dehoist := complain_if_none(
                     self.kernel.bindings.get("dehoist:create"), "dehoist:create"
                 ):
                     await safe_call(dehoist(event.member), True)
-
-        # 10. Logging
-        if (
-            config["logging_enabled"]
-            and config["logging_option_join"]
-            and entitlements["plan"] >= entitlements["logging"]
-        ):
-            if log_member_create := complain_if_none(
-                self.kernel.bindings.get("log:member:create"), "log:member:create"
-            ):
-                await safe_call(log_member_create(event.member))
 
     async def on_member_update(self, event: hikari.MemberUpdateEvent) -> None:
         config = await get_config(self.kernel, event.guild_id)

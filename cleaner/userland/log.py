@@ -67,7 +67,17 @@ class LogService:
             await safe_call(log(member.guild_id, message, None, None))
 
     async def member_delete(self, guild_id: int, user_id: int) -> None:
-        logger.debug(f"user {user_id} left {guild_id}")
+        suppressed = False
+        if http_challenged := complain_if_none(
+            self.kernel.bindings.get("http:challenged"), "http:challenged"
+        ):
+            if http_challenged(guild_id, user_id):
+                suppressed = True
+
+        logger.debug(f"user {user_id} left {guild_id} {suppressed=}")
+        if suppressed:
+            return
+
         if log := complain_if_none(self.kernel.bindings.get("log"), "log"):
             user = self.kernel.bot.cache.get_user(user_id)
             if user is None:

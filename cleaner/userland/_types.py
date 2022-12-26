@@ -425,6 +425,7 @@ Bindings = typing.TypedDict(
             [hikari.GuildTextChannel, int], typing.Awaitable[None]
         ],
         "http:danger_level": typing.Callable[[int], int],
+        "http:challenged": typing.Callable[[int, int], bool],
         "http:member:create": typing.Callable[[hikari.Member], typing.Awaitable[None]],
         "verification:issue": typing.Callable[
             [
