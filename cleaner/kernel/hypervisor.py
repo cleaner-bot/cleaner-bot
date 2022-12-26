@@ -38,7 +38,7 @@ class CleanerHypervisor:
         try:
             self._kernel = self._try_load(self._kernel_name)
         except Exception as e:
-            logger.exception("Exception occured loading kernel", exc_info=e)
+            logger.exception("Exception occurred loading kernel", exc_info=e)
             return False
         return True
 
@@ -49,7 +49,7 @@ class CleanerHypervisor:
         try:
             self._recovery = self._try_load(self._recovery_name)
         except Exception as e:
-            logger.exception("Exception occured loading recovery", exc_info=e)
+            logger.exception("Exception occurred loading recovery", exc_info=e)
             return False
         return True
 

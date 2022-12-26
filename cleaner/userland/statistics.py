@@ -80,7 +80,7 @@ class StatisticsService:
             return
         data = await safe_call(loop.run_in_executor(None, self.process_data))
         if data is None:
-            return  # error occured
+            return  # error occurred
 
         guild_statistics, global_statistics = data
         for guild_id, guild_data in guild_statistics.items():

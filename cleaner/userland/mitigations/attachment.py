@@ -25,15 +25,17 @@ def detection(
 
     slowmode_exceptions = set(map(int, config["slowmode_exceptions"]))
 
-    attachs = 0.0
-    attachs_sizes = {k.size for k in message.attachments}
+    attachments = 0.0
+    attachment_sizes = {k.size for k in message.attachments}
     for old_message in messages:
-        if all(attach.size not in attachs_sizes for attach in old_message.attachments):
+        if all(
+            attach.size not in attachment_sizes for attach in old_message.attachments
+        ):
             continue
         is_exception = old_message.channel_id in slowmode_exceptions
         value = 0.2 if is_exception else 1
-        attachs += value
+        attachments += value
 
-    if attachs >= THRESHOLD:
-        return AttachmentMitigation(attachs_sizes)
+    if attachments >= THRESHOLD:
+        return AttachmentMitigation(attachment_sizes)
     return None

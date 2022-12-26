@@ -284,10 +284,12 @@ class LogService:
                     else:
                         if my is None:
                             logger.info(
-                                f"cant send log in {guild_id}, cant find myself"
+                                f"can't send log in {guild_id}, can't find myself"
                             )
                         elif my.communication_disabled_until():
-                            logger.info(f"cant send log in {guild_id}, I am in timeout")
+                            logger.info(
+                                f"can't send log in {guild_id}, I am in timeout"
+                            )
 
                 if channel_id == FALLBACK_LOGS:
                     can_send_embed = True

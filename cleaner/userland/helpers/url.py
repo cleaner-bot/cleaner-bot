@@ -36,7 +36,7 @@ def get_urls(content: str) -> typing.Generator[str, None, None]:
         else:
             url = url.rstrip("]")
 
-        # protocol://\test.com embeds but doesnt appear clickable,
+        # protocol://\test.com embeds but doesn't appear clickable,
         # but lets still parse that correctly
         if url.startswith("\\"):
             url = url.lstrip("\\/")

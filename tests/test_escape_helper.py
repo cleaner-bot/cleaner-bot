@@ -7,8 +7,8 @@ from cleaner.userland.helpers.escape import escape_markdown
     "text,expected",
     (
         ("test", "test"),
-        ("te*st", "te\\*st"),
-        ("te_st_", "te\\_st\\_"),
+        ("tea*st", "tea\\*st"),
+        ("tea_st_", "tea\\_st\\_"),
         ("~~test~~", "\\~\\~test\\~\\~"),
         ("`test`", "\\`test\\`"),
     ),

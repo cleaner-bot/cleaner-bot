@@ -759,7 +759,7 @@ class ReportService:
         assert guild is not None
         me = guild.get_my_member()
         if me is None:
-            logger.warning(f"cant find myself in guild {interaction.guild_id}")
+            logger.warning(f"can't find myself in guild {interaction.guild_id}")
             return None  # this will just say "internal error"
         member = guild.get_member(int(user_id))
         if member is None:
@@ -907,7 +907,7 @@ class ReportService:
         assert guild is not None
         me = guild.get_my_member()
         if me is None:
-            logger.warning(f"cant find myself in guild {interaction.guild_id}")
+            logger.warning(f"can't find myself in guild {interaction.guild_id}")
             return None  # this will just say "internal error"
         member = guild.get_member(int(user_id))
         if member is None:
@@ -1053,7 +1053,7 @@ class ReportService:
         assert guild is not None
         me = guild.get_my_member()
         if me is None:
-            logger.warning(f"cant find myself in guild {interaction.guild_id}")
+            logger.warning(f"can't find myself in guild {interaction.guild_id}")
             return None  # this will just say "internal error"
         member = guild.get_member(int(user_id))
         if member is None:

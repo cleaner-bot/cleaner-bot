@@ -52,7 +52,9 @@ class AuthService:
                     available_role_ids.append(role_id)
 
         available_roles: list[hikari.Role] = [
-            role for role_id in available_roles if (role := guild.get_role(role_id))
+            role
+            for role_id in available_role_ids
+            if (role := guild.get_role(int(role_id)))
         ]
 
         if not available_roles:
@@ -126,7 +128,7 @@ class AuthService:
         }
 
     async def auth_enter_totp(
-        self, interation: hikari.ComponentInteraction, role_id: str
+        self, interaction: hikari.ComponentInteraction, role_id: str
     ) -> InteractionResponse | None:
         pass
 

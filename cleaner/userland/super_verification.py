@@ -53,7 +53,7 @@ class SuperVerificationService:
         ):
             return {
                 "ok": False,
-                "message": "cant or wont give role",
+                "message": "can't or won't give role",
                 "data": None,
             }
 

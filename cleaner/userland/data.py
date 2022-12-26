@@ -31,7 +31,7 @@ class DataService:
 
         file = self.path / f"{name}.json"
         if not file.exists() or not file.is_file():
-            logger.warning(f"trying to load data {name!r}, but it doesnt exist")
+            logger.warning(f"trying to load data {name!r}, but it doesn't exist")
             return False
 
         content = file.read_text()

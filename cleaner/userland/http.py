@@ -303,18 +303,18 @@ class HTTPService:
         if channel is None:
             thread = self.kernel.bot.cache.get_thread(channel_id)
             if thread is None:
-                logger.debug("cant delete, channel/thread is gone")
+                logger.debug("can't delete, channel/thread is gone")
                 return
             channel = self.kernel.bot.cache.get_guild_channel(thread.parent_id)
             if channel is None:
-                logger.debug("cant delete, parent channel of thread is gone")
+                logger.debug("can't delete, parent channel of thread is gone")
                 return
 
         my_user = self.kernel.bot.cache.get_me()
         assert my_user is not None, "I am None"
         me = self.kernel.bot.cache.get_member(channel.guild_id, my_user)
         if me is None:
-            logger.debug("cant delete, I am gone")
+            logger.debug("can't delete, I am gone")
             return
 
         perms = permissions_for(me, channel)
@@ -357,7 +357,7 @@ class HTTPService:
         if can_delete:
             tasks.append(self._delete_queue.put(DeleteJob(message_id, channel_id)))
         else:
-            logger.debug("cant delete, no perms")
+            logger.debug("can't delete, no perms")
 
         if tasks:
             await asyncio.gather(*tasks)
@@ -464,18 +464,18 @@ class HTTPService:
         assert my_user is not None, "I am None"
         me = self.kernel.bot.cache.get_member(guild_id, my_user)
         if me is None:
-            logger.debug("cant announce, I am gone")
+            logger.debug("can't announce, I am gone")
             return
 
         channel = self.kernel.bot.cache.get_guild_channel(channel_id)
         if channel is None:
             thread = self.kernel.bot.cache.get_thread(channel_id)
             if thread is None:
-                logger.debug("cant announce, channel/thread is gone")
+                logger.debug("can't announce, channel/thread is gone")
                 return
             channel = self.kernel.bot.cache.get_guild_channel(thread.parent_id)
             if channel is None:
-                logger.debug("cant announce, parent channel of thread is gone")
+                logger.debug("can't announce, parent channel of thread is gone")
                 return
 
         perms = permissions_for(me, channel)
@@ -522,11 +522,11 @@ class HTTPService:
     ) -> None:
         guild = channel.get_guild()
         if guild is None:
-            logger.debug("cant change ratelimit, guild is gone")
+            logger.debug("can't change ratelimit, guild is gone")
             return
         me = guild.get_my_member()
         if me is None:
-            logger.debug("cant change ratelimit, I am gone")
+            logger.debug("can't change ratelimit, I am gone")
             return
 
         perms = permissions_for(me, channel)
