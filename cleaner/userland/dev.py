@@ -46,12 +46,12 @@ class DeveloperService:
             "button": self.button,
             "git-pull": self.git_pull,
             "get-captcha-data": self.get_captcha_data,
-            "members-scan": self.members_scan,
+            # "members-scan": self.members_scan,
             "threads-cache": self.threads_cache,
-            "list-rules": self.list_rules,
-            "add-rule": self.add_rule,
-            "get-rule": self.get_rule,
-            "remove-rule": self.remove_rule,
+            # "list-rules": self.list_rules,
+            # "add-rule": self.add_rule,
+            # "get-rule": self.get_rule,
+            # "remove-rule": self.remove_rule,
         }
 
     async def message_create(
@@ -303,7 +303,7 @@ class DeveloperService:
         self, message: hikari.Message, field: str, value: str
     ) -> None:
         assert message.guild_id
-        raw_value = eval(value)
+        raw_value = json.loads(value)
         await set_entitlements(
             self.kernel.database, message.guild_id, {field: raw_value}
         )
