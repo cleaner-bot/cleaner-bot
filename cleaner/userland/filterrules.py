@@ -226,7 +226,14 @@ class FilterRulesService:
         rules: list[ConfigurationRule],
         vars: dict[str, bytes | int | bool],
     ) -> ConfigurationRule | None:
-        vars.update({"current.time": int(time.time()), "current.phase": phase.encode()})
+        vars.update(
+            {
+                "current.time": int(time.time()),
+                "current.phase": phase.encode(),
+                "true": True,
+                "false": False,
+            }
+        )
         for rule in rules:
             if rule.action == "skip":
                 continue
