@@ -189,7 +189,7 @@ class StatisticsService:
             "bansync",
             "raid",
             "linkfilter",
-            "filterrules",
+            "filterrule",
         ):
             return (("services", event["name"]),)
 
