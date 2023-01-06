@@ -264,9 +264,14 @@ class RadarService:
             if (
                 inv
                 and inv.guild is not None
-                and hikari.GuildFeature.VERIFIED not in inv.guild.features
-                and hikari.GuildFeature.PARTNERED not in inv.guild.features
-                and (inv.approximate_member_count or 0) > 50
+                and (
+                    (
+                        hikari.GuildFeature.VERIFIED not in inv.guild.features
+                        and hikari.GuildFeature.PARTNERED not in inv.guild.features
+                        and (inv.approximate_member_count or 0) > 50
+                    )
+                    or inv.guild_id == 718293911235198977
+                )
             ):
                 all_invites.append(inv)
 
