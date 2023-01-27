@@ -224,7 +224,7 @@ class LogService:
         else:
             new_guild = self.kernel.bot.cache.get_guild(guild)
             if new_guild is None:
-                logger.debug(f"ignored delete for unknown guild: {guild}")
+                logger.debug(f"ignored log for unknown guild: {guild}")
                 return
             await self._log_queue.put(
                 LogJob(new_guild, message, reason, referenced_message, now)
