@@ -11,7 +11,7 @@ from pathlib import Path
 import msgpack  # type: ignore
 
 from ._types import EventType, KernelType
-from .helpers.binding import safe_call
+from .helpers.binding import complain_if_none, safe_call
 
 logger = logging.getLogger(__name__)
 
@@ -64,12 +64,22 @@ class StatisticsService:
         self.kernel.bindings["track"] = self.track
         self.kernel.bindings["statistics:save"] = self.save
 
-    async def track(self, event: AllEventType) -> None:
+    async def track(self, event: EventType) -> None:
         logger.debug(f"{event=}")
         data = msgpack.packb(
             (int(datetime.now().timestamp()), event), default=set_encoder
         )
         self.new_events.append(typing.cast(bytes, data))
+
+        if clickhouse_track := complain_if_none(
+            self.kernel.bindings.get("clickhouse:track:event"), "clickhouse:track:event"
+        ):
+            name = event["name"]
+            if "rule" in event:
+                name += ":" + event["rule"]  # type: ignore
+            elif "action" in event:
+                name += ":" + event["action"]  # type: ignore
+            await safe_call(clickhouse_track(name, event["guild_id"]), True)
 
     async def save(self) -> None:
         loop = asyncio.get_event_loop()

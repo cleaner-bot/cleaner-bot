@@ -452,6 +452,11 @@ class BasicConsumerService:
                 await safe_call(radar_timer(), True)
 
             # 4. Publish stats to radar and statistics
+            if clickhouse_timer := complain_if_none(
+                self.kernel.bindings.get("clickhouse:timer"), "clickhouse:timer"
+            ):
+                await safe_call(clickhouse_timer(), True)
+
             if sequence % (5 * 6) == 0:  # only run every 5mins
                 if statistics_save := complain_if_none(
                     self.kernel.bindings.get("statistics:save"), "statistics:save"

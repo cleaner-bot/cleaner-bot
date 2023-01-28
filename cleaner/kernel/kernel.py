@@ -49,6 +49,7 @@ EXTENSIONS: typing.Final = (
     "cleaner.userland.dashboard:DashboardService",
     "cleaner.userland.report:ReportService",
     "cleaner.userland.statistics:StatisticsService",
+    "cleaner.userland.clickhouse:ClickHouseService",
     "cleaner.userland.dev:DeveloperService",
 )
 

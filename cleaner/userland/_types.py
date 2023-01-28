@@ -398,6 +398,8 @@ Bindings = typing.TypedDict(
         "data:load": typing.Callable[[str | None], bool | None],
         "data:save": typing.Callable[[str | None], bool | None],
         "data:changed": typing.Callable[[str], None],
+        "clickhouse:timer": typing.Callable[[], typing.Awaitable[None]],
+        "clickhouse:track:event": typing.Callable[[str, int], typing.Awaitable[None]],
         "http:challenge": typing.Callable[
             [hikari.Member, ConfigType, bool, Message, int],
             typing.Awaitable[None],
