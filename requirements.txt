@@ -9,7 +9,7 @@ psutil>=5.9,<5.10
 decancer-py==0.1.0
 pillow>=9.3,<9.4
 numpy>=1.23,<1.24
-hikari==2.0.0.dev113
+hikari==2.0.0.dev115
 rust-regex==0.1.0a1
 aiochclient>=2.2,<2.3
 filterrules@git+https://github.com/cleaner-bot/filterrules.git
