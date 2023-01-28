@@ -24,9 +24,7 @@ def regex_compile(pattern: str) -> typing.Any:
 
 
 functions: dict[str, typing.Callable[..., bytes | int | bool]] = {
-    "regex_match": lambda a, b: bool(
-        regex_compile(a.decode()).findall(b.decode())
-    ),
+    "regex_match": lambda a, b: bool(regex_compile(a.decode()).findall(b.decode())),
     "len": len,
     "lower": bytes.lower,
     "upper": bytes.upper,
