@@ -5,6 +5,7 @@ import typing
 from collections import defaultdict
 
 from aiochclient.client import ChClient  # type: ignore
+from httpx import AsyncClient
 
 from ._types import KernelType
 
@@ -20,11 +21,12 @@ class ClickHouseService:
         self.kernel.bindings["clickhouse:timer"] = self.on_timer
         self.kernel.bindings["clickhouse:track:event"] = self.track_event
 
+        self.tables = defaultdict(list)
         url = os.getenv("CLICKHOUSE_URL")
         if url:
-            self.client = ChClient(url)
+            client = AsyncClient()
+            self.client = ChClient(client, url)
 
-        self.tables = defaultdict(list)
         self._inited = False
 
     def track(self, table: str, *data: typing.Any) -> None:
