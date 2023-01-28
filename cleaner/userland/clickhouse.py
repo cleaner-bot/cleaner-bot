@@ -25,6 +25,7 @@ class ClickHouseService:
         url = os.getenv("CLICKHOUSE_URL")
         if url:
             client = AsyncClient()
+            logger.info(f"clickhouse url: {url}")
             self.client = ChClient(client, url)
 
         self._inited = False
