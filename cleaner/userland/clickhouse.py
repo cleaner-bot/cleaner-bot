@@ -36,7 +36,7 @@ class ClickHouseService:
 
     async def track_event(self, name: str, guild_id: int) -> None:
         timestamp = int(time.time())
-        self.track("cleanerbot.events", name, timestamp, guild_id)
+        self.track("cleanerbot.events", name, timestamp, int(guild_id))
 
     async def on_init(self) -> bool:
         if not self.client or not await self.client.is_alive():
