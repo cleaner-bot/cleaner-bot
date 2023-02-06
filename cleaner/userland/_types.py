@@ -400,6 +400,7 @@ Bindings = typing.TypedDict(
         "data:changed": typing.Callable[[str], None],
         "clickhouse:timer": typing.Callable[[], typing.Awaitable[None]],
         "clickhouse:track:event": typing.Callable[[str, int], typing.Awaitable[None]],
+        "clickhouse:track:stats": typing.Callable[[int, int], typing.Awaitable[None]],
         "http:challenge": typing.Callable[
             [hikari.Member, ConfigType, bool, Message, int],
             typing.Awaitable[None],

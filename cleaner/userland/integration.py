@@ -7,7 +7,7 @@ import psutil  # type: ignore
 from httpx import AsyncClient, ReadTimeout
 
 from ._types import KernelType
-from .helpers.binding import safe_call
+from .helpers.binding import complain_if_none, safe_call
 
 logger = logging.getLogger(__name__)
 
@@ -61,9 +61,16 @@ class IntegrationService:
             logger.warning("unable to get bot id - cannot update!!")
             return
 
+        await safe_call(self.update_clickhouse(guild_count, user_count))
         await safe_call(self.update_dlistgg(bot.id, guild_count))
         await safe_call(self.update_topgg(bot.id, guild_count))
         await safe_call(self.update_statcord(bot.id, guild_count, user_count))
+
+    async def update_clickhouse(self, guild_count: int, user_count: int) -> None:
+        if clickhouse_track := complain_if_none(
+            self.kernel.bindings.get("clickhouse:track:stats"), "clickhouse:track:stats"
+        ):
+            await safe_call(clickhouse_track(guild_count, user_count), True)
 
     async def update_dlistgg(self, bot: int, guild_count: int) -> None:
         token = os.getenv("DLIST_API_TOKEN")
