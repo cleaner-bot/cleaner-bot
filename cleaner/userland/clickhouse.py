@@ -80,5 +80,5 @@ class ClickHouseService:
         self.tables.clear()
         for table, data in table_copy:
             logger.debug(f"pushing {len(data)} events to {table}")
-            await self.client.execute("INSERT INTO cleanerbot.events VALUES", *data)
+            await self.client.execute(f"INSERT INTO {table} VALUES", *data)
             logger.debug(f"pushed {len(data)} events to {table}")
