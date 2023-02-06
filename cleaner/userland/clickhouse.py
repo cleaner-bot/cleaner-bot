@@ -20,6 +20,7 @@ class ClickHouseService:
         self.kernel = kernel
         self.kernel.bindings["clickhouse:timer"] = self.on_timer
         self.kernel.bindings["clickhouse:track:event"] = self.track_event
+        self.kernel.bindings["clickhouse:track:stats"] = self.track_stats
 
         self.tables = defaultdict(list)
         url = os.getenv("CLICKHOUSE_URL")
