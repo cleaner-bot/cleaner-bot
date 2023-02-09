@@ -5,7 +5,7 @@ python-dotenv>=0.19,<0.21
 sentry_sdk>=1.5,<1.10
 janus>=1.0,<1.1
 msgpack>=1,<1.1
-aiofiles>=0.8,<0.9
+aiofiles>=0.8,<23.2
 httpx>=0.16,<0.24
 psutil>=5.9,<5.10
 lupa@git+https://github.com/le0developer/lupa.git@feat/max-memory
