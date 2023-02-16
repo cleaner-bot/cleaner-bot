@@ -30,6 +30,7 @@ class DeveloperService:
             "ping": self.ping_command,
             "reload": self.reload_command,
             "lookup": self.lookup_command,
+            "mutuals": self.mutuals_command,
             "guilds": self.guilds_command,
             "info": self.info_command,
             "register-slash": lambda x: self.register_slash_commands(x, False),
@@ -153,6 +154,7 @@ class DeveloperService:
                     await embedize_guild(guild, self.kernel.bot, entitlements, owner),
                     embedize_user(owner),
                 ],
+                reply=message,
             )
             return
 
@@ -173,7 +175,10 @@ class DeveloperService:
             .add_to_container()
         )
         await message.respond(
-            "Found a matching user.", embed=embedize_user(user), component=component
+            "Found a matching user.",
+            embed=embedize_user(user),
+            component=component,
+            reply=message,
         )
 
     async def guilds_command(self, message: hikari.Message) -> None:
@@ -195,7 +200,8 @@ class DeveloperService:
                 + f"{y:,}".rjust(largest_len)
                 + f"` - {escape_markdown(x.name)} ({x.id})"
                 for x, y in guilds[:20]
-            )
+            ),
+            reply=message,
         )
 
     async def info_command(self, message: hikari.Message) -> None:
@@ -230,6 +236,22 @@ class DeveloperService:
             ),
             reply=message,
         )
+
+    async def mutuals_command(self, message: hikari.Message, raw_user_id: str) -> None:
+        user_id = int(raw_user_id)
+        guilds = [
+            guild
+            for guild in self.kernel.bot.cache.get_guilds_view().values()
+            if self.kernel.bot.cache.get_member(guild.id, user_id)
+        ]
+        if guilds:
+            await message.respond(
+                f"Mutual servers: {len(guilds)}\n"
+                + "\n".join(f"- {guild.name} ({guild.id})" for guild in guilds),
+                reply=message,
+            )
+        else:
+            await message.respond("No mutual servers.", reply=message)
 
     async def register_slash_commands(
         self, message: hikari.Message, is_global: bool
