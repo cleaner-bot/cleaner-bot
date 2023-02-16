@@ -2,6 +2,9 @@ import typing
 
 import hikari
 
+# need to import these explicitly because someone forgot to add them to __all__
+from hikari.components import ChannelSelectMenuComponent, TextSelectMenuComponent
+
 
 def components_to_builder(
     components: typing.Sequence[hikari.PartialComponent], rest: hikari.api.RESTClient
@@ -33,17 +36,17 @@ def components_to_builder(
                 btn.add_to_container()
 
             elif isinstance(item, hikari.SelectMenuComponent):
-                menu = rows[-1].add_select_menu(item.custom_id)
+                menu = rows[-1].add_select_menu(item.type, item.custom_id)
                 menu.set_min_values(item.min_values)
                 menu.set_max_values(item.max_values)
                 menu.set_is_disabled(item.is_disabled)
-                for option in item.options:
-                    opt = menu.add_option(option.label, option.value)
-                    if option.description:
-                        opt.set_description(option.description)
-                    if option.emoji:
-                        opt.set_emoji(option.emoji)
-                    opt.set_is_default(option.is_default)
+                if isinstance(item, TextSelectMenuComponent):
+                    assert isinstance(menu, TextSelectMenuComponent)
+                    menu.options = item.options
+                elif isinstance(item, ChannelSelectMenuComponent):
+                    assert isinstance(menu, ChannelSelectMenuComponent)
+                    menu.channel_types = item.channel_types
+
                 menu.add_to_container()
 
     return rows
