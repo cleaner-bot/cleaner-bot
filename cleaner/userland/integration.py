@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import time
+import typing
 
 import psutil  # type: ignore
 from httpx import AsyncClient, ReadTimeout
@@ -36,7 +37,9 @@ class IntegrationService:
 
         # setup bandwidth counters
         net_io = psutil.net_io_counters()
-        self.last_bandwidth_value = net_io.bytes_recv + net_io.bytes_sent
+        self.last_bandwidth_value = typing.cast(
+            int, net_io.bytes_recv + net_io.bytes_sent
+        )
         self.last_bandwidth_time = time.monotonic()
 
     async def on_timer(self) -> None:
@@ -143,7 +146,7 @@ class IntegrationService:
     def get_bandwidth(self) -> int:
         net_io = psutil.net_io_counters()
 
-        total_bandwidth = net_io.bytes_sent + net_io.bytes_recv
+        total_bandwidth = typing.cast(int, net_io.bytes_sent + net_io.bytes_recv)
         used_bandwidth_since_last = total_bandwidth - self.last_bandwidth_value
         now = time.monotonic()
         time_diff = now - self.last_bandwidth_time

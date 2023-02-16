@@ -12,7 +12,7 @@ from .helpers.settings import get_config
 
 logger = logging.getLogger(__name__)
 EMERGENCY_INCREASE: typing.Final = 100
-SLOWMODE: typing.Final = [round(x**1.3 / 15) for x in range(60)]
+SLOWMODE: typing.Final[list[int]] = [round(x**1.3 / 15) for x in range(60)]
 
 
 class SlowmodeService:
