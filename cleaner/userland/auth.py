@@ -3,10 +3,10 @@ import typing
 import hikari
 
 from ._types import ConfigType, InteractionResponse, KernelType
-from .helpers.binding import complain_if_none, safe_call
 from .helpers.invite import generate_invite
 from .helpers.localization import Message
 from .helpers.settings import get_config
+from .helpers.task import complain_if_none, safe_call
 
 ACCESS_NOBODY, ACCESS_ADMINS, ACCESS_MANAGERS = range(3)
 

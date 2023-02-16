@@ -4,8 +4,8 @@ import hikari
 from hikari.internal.time import utc_datetime
 
 from ._types import DehoistTriggeredEvent, KernelType
-from .helpers.binding import complain_if_none, safe_call
 from .helpers.localization import Message
+from .helpers.task import complain_if_none, safe_background_call
 
 DEHOIST_CHARS = string.whitespace + string.punctuation
 
@@ -38,10 +38,10 @@ class DehoistService:
                     "name": "dehoist",
                     "guild_id": member.guild_id,
                 }
-                await safe_call(track(info), True)
+                await safe_background_call(track(info))
 
             reason = Message("log_dehoist")
-            await safe_call(nickname(member, new_nickname, reason), True)
+            await safe_background_call(nickname(member, new_nickname, reason))
 
         return True
 

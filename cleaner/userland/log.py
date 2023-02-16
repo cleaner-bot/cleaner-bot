@@ -10,13 +10,13 @@ import hikari
 from hikari.internal.time import utc_datetime
 
 from ._types import EntitlementsType, KernelType
-from .helpers.binding import complain_if_none, safe_call
 from .helpers.duration import duration_to_text
 from .helpers.embedize import embedize_guild, embedize_user
 from .helpers.escape import escape_markdown
 from .helpers.localization import Message
 from .helpers.permissions import permissions_for
 from .helpers.settings import get_config
+from .helpers.task import AsyncioTaskRunnerMixin, complain_if_none, safe_background_call
 
 logger = logging.getLogger(__name__)
 SYSTEM_LOGS = 1051471405025337404
@@ -27,10 +27,11 @@ REQUIRED_TO_SEND: typing.Final = (
 )
 
 
-class LogService:
+class LogService(AsyncioTaskRunnerMixin):
     _log_queue: asyncio.Queue[LogJob]
 
     def __init__(self, kernel: KernelType) -> None:
+        super().__init__()
         self.kernel = kernel
 
         self.kernel.bindings["log"] = self.log
@@ -42,13 +43,8 @@ class LogService:
         self.kernel.bindings["log:raid:complete"] = self.raid_complete
 
         self._log_queue = asyncio.Queue()
-        self.tasks = [
-            asyncio.create_task(self.logging_task(), name="logging"),
-        ]
 
-    def on_unload(self) -> None:
-        for task in self.tasks:
-            task.cancel()
+        self.run(self.logging_task)
 
     async def member_create(self, member: hikari.Member) -> None:
         logger.debug(f"user {member!s} ({member.id}) joined {member.guild_id}")
@@ -64,7 +60,7 @@ class LogService:
                     else f"{age.days}d",
                 },
             )
-            await safe_call(log(member.guild_id, message, None, None))
+            await safe_background_call(log(member.guild_id, message, None, None))
 
     async def member_delete(self, guild_id: int, user_id: int) -> None:
         suppressed = False
@@ -93,7 +89,7 @@ class LogService:
                     "name": escape_markdown(str(user)) if user is not None else "?",
                 },
             )
-            await safe_call(log(guild_id, message, None, None))
+            await safe_background_call(log(guild_id, message, None, None))
 
     async def raid_ongoing(
         self,
@@ -116,7 +112,7 @@ class LogService:
                     "bans": bans,
                 },
             )
-            await safe_call(log(guild_id, message, None, None))
+            await safe_background_call(log(guild_id, message, None, None))
 
         await self.kernel.bot.rest.create_message(
             RAID_LOGS,
@@ -148,7 +144,7 @@ class LogService:
                     "bans": bans,
                 },
             )
-            await safe_call(log(guild_id, message, None, None))
+            await safe_background_call(log(guild_id, message, None, None))
 
         await self.kernel.bot.rest.create_message(
             RAID_LOGS,

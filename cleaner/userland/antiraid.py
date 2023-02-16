@@ -6,8 +6,8 @@ import hikari
 from expirepy import ExpiringSet
 
 from ._types import AntiRaidTriggeredEvent, ConfigType, EntitlementsType, KernelType
-from .helpers.binding import complain_if_none, safe_call
 from .helpers.localization import Message
+from .helpers.task import complain_if_none, safe_background_call
 
 logger = logging.getLogger(__name__)
 DAY: typing.Final = 24 * 3600
@@ -71,9 +71,8 @@ class AntiRaidService:
                     member_to_kick is not None
                     and f"{member.guild_id}-{user_id}" not in self.member_kicks
                 ):
-                    await safe_call(
-                        challenge(member_to_kick, config, False, reason, 1),
-                        True,
+                    await safe_background_call(
+                        challenge(member_to_kick, config, False, reason, 1)
                     )
 
                     if track:
@@ -83,6 +82,6 @@ class AntiRaidService:
                             "limit": config["antiraid_limit"],
                             "id": member_to_kick.id,
                         }
-                        await safe_call(track(info), True)
+                        await safe_background_call(track(info))
 
         return True

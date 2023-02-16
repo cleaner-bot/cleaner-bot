@@ -9,9 +9,9 @@ from ._types import (
     KernelType,
     RPCResponse,
 )
-from .helpers.binding import complain_if_none, safe_call
 from .helpers.localization import Message
 from .helpers.settings import get_config
+from .helpers.task import complain_if_none, safe_background_call
 
 logger = logging.getLogger(__name__)
 USER_LIMIT = 50_000
@@ -40,7 +40,7 @@ class BanSyncService:
                     "guild_id": member.guild_id,
                     "list_id": int(list_id),
                 }
-                await safe_call(track(info), True)
+                await safe_background_call(track(info))
 
             reason = Message(
                 "components_bansync_reason",
@@ -49,10 +49,7 @@ class BanSyncService:
                     "name": name.decode() if name is not None else "Unnamed",
                 },
             )
-            await safe_call(
-                challenge(member, config, False, reason, 3),
-                True,
-            )
+            await safe_background_call(challenge(member, config, False, reason, 3))
 
     async def on_member_create(
         self, member: hikari.Member, config: ConfigType, entitlements: EntitlementsType

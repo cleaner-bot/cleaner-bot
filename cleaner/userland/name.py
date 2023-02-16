@@ -6,9 +6,9 @@ from decancer_py import contains, parse
 from hikari.internal.time import utc_datetime
 
 from ._types import ConfigType, EntitlementsType, KernelType, NameTriggeredEvent
-from .helpers.binding import complain_if_none, safe_call
 from .helpers.escape import escape_markdown
 from .helpers.localization import Message
+from .helpers.task import complain_if_none, safe_background_call
 
 logger = logging.getLogger(__name__)
 
@@ -81,12 +81,12 @@ class NameService:
                 "detection": detection,
                 "id": member.id,
             }
-            await safe_call(track(info), True)
+            await safe_background_call(track(info))
 
         if challenge := complain_if_none(
             self.kernel.bindings.get("http:challenge"), "http:challenge"
         ):
-            await safe_call(challenge(member, config, False, reason, 1), True)
+            await safe_background_call(challenge(member, config, False, reason, 1))
 
         return True
 

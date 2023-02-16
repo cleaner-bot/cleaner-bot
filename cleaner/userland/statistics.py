@@ -11,7 +11,7 @@ from pathlib import Path
 import msgpack  # type: ignore
 
 from ._types import EventType, KernelType
-from .helpers.binding import complain_if_none, safe_call
+from .helpers.task import complain_if_none, safe_background_call, safe_call
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ class StatisticsService:
                 name += ":" + event["rule"]  # type: ignore
             elif "action" in event:
                 name += ":" + event["action"]  # type: ignore
-            await safe_call(clickhouse_track(name, event["guild_id"]), True)
+            await safe_background_call(clickhouse_track(name, event["guild_id"]))
 
     async def save(self) -> None:
         loop = asyncio.get_event_loop()

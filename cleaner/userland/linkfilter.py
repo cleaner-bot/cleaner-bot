@@ -15,9 +15,9 @@ from ._types import (
     KernelType,
     LinkFilteredEvent,
 )
-from .helpers.binding import complain_if_none, safe_call
 from .helpers.localization import Message
 from .helpers.permissions import permissions_for
+from .helpers.task import complain_if_none, safe_background_call
 from .helpers.url import get_urls, has_url
 
 logger = logging.getLogger(__name__)
@@ -120,12 +120,12 @@ class LinkFilterService:
                     "guild_id": message.member.guild_id,
                     "url": last_url,
                 }
-                await safe_call(track(info), True)
+                await safe_background_call(track(info))
 
             if delete := complain_if_none(
                 self.kernel.bindings.get("http:delete"), "http:delete"
             ):
-                await safe_call(
+                await safe_background_call(
                     delete(
                         message.id,
                         message.channel_id,
@@ -134,13 +134,12 @@ class LinkFilterService:
                         reason,
                         message,
                     ),
-                    True,
                 )
 
             if challenge := complain_if_none(
                 self.kernel.bindings.get("http:challenge"), "http:challenge"
             ):
-                await safe_call(
+                await safe_background_call(
                     challenge(
                         message.member,
                         config,
@@ -148,7 +147,6 @@ class LinkFilterService:
                         reason,
                         0,
                     ),
-                    True,
                 )
 
             if announcement := complain_if_none(
@@ -160,11 +158,10 @@ class LinkFilterService:
                     {"user": message.member.id},
                 )
 
-                await safe_call(
+                await safe_background_call(
                     announcement(
                         message.guild_id, message.channel_id, announcement_message, 20
                     ),
-                    True,
                 )
 
         key = f"{message.guild_id}-{last_url}"
@@ -293,7 +290,7 @@ class LinkFilterService:
 
     async def _error(self, guild_id: int, message: Message) -> None:
         if log := complain_if_none(self.kernel.bindings.get("log"), "log"):
-            await safe_call(log(guild_id, message, None, None), True)
+            await safe_background_call(log(guild_id, message, None, None))
 
     async def btn_whitelist_url(
         self, interaction: hikari.ComponentInteraction, url_id: str

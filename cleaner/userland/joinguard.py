@@ -10,9 +10,9 @@ from ._types import (
     KernelType,
     RPCResponse,
 )
-from .helpers.binding import complain_if_none, safe_call
 from .helpers.localization import Message
 from .helpers.settings import get_config, get_entitlements
+from .helpers.task import complain_if_none, safe_background_call
 
 logger = logging.getLogger(__name__)
 
@@ -42,14 +42,13 @@ class JoinGuardService:
                 "name": "joinguard",
                 "guild_id": member.guild_id,
             }
-            await safe_call(track(info), True)
+            await safe_background_call(track(info))
 
         if challenge := complain_if_none(
             self.kernel.bindings.get("http:challenge"), "http:challenge"
         ):
-            await safe_call(
-                challenge(member, config, False, Message("log_joinguard_bypass"), 2),
-                True,
+            await safe_background_call(
+                challenge(member, config, False, Message("log_joinguard_bypass"), 2)
             )
 
         return True

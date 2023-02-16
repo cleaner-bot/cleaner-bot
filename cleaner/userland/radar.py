@@ -16,9 +16,9 @@ from ._types import (
     KernelType,
     RaidDetectedEvent,
 )
-from .helpers.binding import complain_if_none, safe_call
 from .helpers.embedize import embedize_guild
 from .helpers.regex import DISCORD_INVITE
+from .helpers.task import complain_if_none, safe_background_call
 from .helpers.tokenizer import tokenize
 from .helpers.url import domain_in_list, get_urls, remove_urls
 
@@ -102,7 +102,7 @@ class RadarService:
                             self.kernel.bindings.get("log:raid:ongoing"),
                             "log:raid:ongoing",
                         ):
-                            await safe_call(
+                            await safe_background_call(
                                 raid_ongoing(
                                     guild_id,
                                     guild["start"],
@@ -119,7 +119,7 @@ class RadarService:
                 if raid_complete := complain_if_none(
                     self.kernel.bindings.get("log:raid:complete"), "log:raid:complete"
                 ):
-                    await safe_call(
+                    await safe_background_call(
                         raid_complete(
                             guild_id,
                             guild["start"],
@@ -140,7 +140,7 @@ class RadarService:
                         "kicks": guild["kicks"],
                         "bans": guild["bans"],
                     }
-                    await safe_call(track(info), True)
+                    await safe_background_call(track(info))
 
             del self.guilds[guild_id]
 

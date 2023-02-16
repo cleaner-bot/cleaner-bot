@@ -4,18 +4,15 @@ import typing
 import msgpack  # type: ignore
 
 from .._types import KernelType
-from ..helpers.binding import complain_if_none, safe_call
+from ..helpers.task import AsyncioTaskRunnerMixin, complain_if_none, safe_call
 
 
-class RPCConsumerService:
+class RPCConsumerService(AsyncioTaskRunnerMixin):
     def __init__(self, kernel: KernelType) -> None:
+        super().__init__()
         self.kernel = kernel
 
-        self.tasks = [asyncio.create_task(self.runner_task(), name="consumer.rpc")]
-
-    def on_unload(self) -> None:
-        for task in self.tasks:
-            task.cancel()
+        self.run(self.runner_task)
 
     async def runner_task(self) -> None:
         pubsub = self.kernel.database.pubsub(ignore_subscribe_messages=True)

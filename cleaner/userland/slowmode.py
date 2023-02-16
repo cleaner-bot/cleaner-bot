@@ -7,8 +7,8 @@ from collections import defaultdict
 import hikari
 
 from ._types import ConfigType, EntitlementsType, KernelType, SlowmodeTriggeredEvent
-from .helpers.binding import complain_if_none, safe_call
 from .helpers.settings import get_config
+from .helpers.task import complain_if_none, safe_background_call
 
 logger = logging.getLogger(__name__)
 EMERGENCY_INCREASE: typing.Final = 100
@@ -71,12 +71,12 @@ class SlowmodeService:
                             "emergency": True,
                             "rate_limit_per_user": 10,
                         }
-                        await safe_call(track(info), True)
+                        await safe_background_call(track(info))
 
                     logger.debug(
                         f"emergency slowmode in {message.channel_id}@{message.guild_id}"
                     )
-                    await safe_call(channel_ratelimit(guildchannel, 10), True)
+                    await safe_background_call(channel_ratelimit(guildchannel, 10))
 
     async def on_timer(self) -> None:
         for guild_id, channels in self.guilds.items():
@@ -123,13 +123,13 @@ class SlowmodeService:
                         "emergency": False,
                         "rate_limit_per_user": recommended,
                     }
-                    await safe_call(track(info), True)
+                    await safe_background_call(track(info))
 
                 if channel_ratelimit := complain_if_none(
                     self.kernel.bindings.get("http:channel_ratelimit"),
                     "http:channel_ratelimit",
                 ):
-                    await safe_call(channel_ratelimit(channel, recommended), True)
+                    await safe_background_call(channel_ratelimit(channel, recommended))
 
     def get_recommendation(
         self, default: int, current: int | None, counts: list[int]

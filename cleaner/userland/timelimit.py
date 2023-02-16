@@ -5,10 +5,10 @@ import hikari
 from hikari.internal.time import utc_datetime
 
 from ._types import KernelType, TimeLimitTriggeredEvent
-from .helpers.binding import complain_if_none, safe_call
 from .helpers.duration import duration_to_text
 from .helpers.localization import Message
 from .helpers.settings import get_config
+from .helpers.task import complain_if_none, safe_background_call
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ class TimeLimitService:
                         "name": "timelimit",
                         "guild_id": guild.id,
                     }
-                    await safe_call(track(info), True)
+                    await safe_background_call(track(info))
 
                 logger.debug(f"verification timelimit for {member_id} in {guild.id}")
                 if challenge := complain_if_none(
@@ -105,4 +105,6 @@ class TimeLimitService:
                         },
                     )
 
-                    await safe_call(challenge(member, config, False, reason, 2), True)
+                    await safe_background_call(
+                        challenge(member, config, False, reason, 2)
+                    )

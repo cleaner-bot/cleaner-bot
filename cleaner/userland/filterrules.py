@@ -8,8 +8,8 @@ import msgpack  # type: ignore
 import rust_regex
 
 from ._types import ConfigType, FilterRuleTriggeredEvent, KernelType
-from .helpers.binding import complain_if_none, safe_call
 from .helpers.localization import Message
+from .helpers.task import complain_if_none, safe_background_call
 
 
 class ConfigurationRule(typing.NamedTuple):
@@ -116,7 +116,7 @@ class FilterRulesService:
                     "event": event,
                     "action": matched_rule.action,
                 }
-                await safe_call(track(info), True)
+                await safe_background_call(track(info))
 
             reason = Message(
                 "log_filterrule",
@@ -126,11 +126,10 @@ class FilterRulesService:
                     "action": matched_rule.action,
                 },
             )
-            await safe_call(
+            await safe_background_call(
                 challenge(
                     member, config, False, reason, actions.get(matched_rule.action, 1)
-                ),
-                True,
+                )
             )
 
         return True
@@ -168,7 +167,7 @@ class FilterRulesService:
         if delete := complain_if_none(
             self.kernel.bindings.get("http:delete"), "http:delete"
         ):
-            await safe_call(
+            await safe_background_call(
                 delete(
                     message.id,
                     message.channel_id,
@@ -176,8 +175,7 @@ class FilterRulesService:
                     True,
                     reason,
                     message,
-                ),
-                True,
+                )
             )
 
         if (
@@ -191,11 +189,10 @@ class FilterRulesService:
                 {"user": message.member.id},
             )
 
-            await safe_call(
+            await safe_background_call(
                 announcement(
                     message.guild_id, message.channel_id, announcement_message, 20
-                ),
-                True,
+                )
             )
 
         if challenge := complain_if_none(
@@ -208,17 +205,16 @@ class FilterRulesService:
                     "event": event,
                     "action": matched_rule.action,
                 }
-                await safe_call(track(info), True)
+                await safe_background_call(track(info))
 
-            await safe_call(
+            await safe_background_call(
                 challenge(
                     message.member,
                     config,
                     matched_rule.action == "delete",
                     reason,
                     actions.get(matched_rule.action, 0),
-                ),
-                True,
+                )
             )
 
         return True

@@ -5,12 +5,12 @@ import hikari
 from hikari.internal.time import utc_datetime
 
 from .._types import ConfigType, InteractionResponse, KernelType, RPCResponse
-from ..helpers.binding import complain_if_none, safe_call
 from ..helpers.escape import escape_markdown
 from ..helpers.invite import generate_invite
 from ..helpers.localization import Message
 from ..helpers.permissions import DANGEROUS_PERMISSIONS, permissions_for
 from ..helpers.settings import get_config
+from ..helpers.task import complain_if_none, safe_call
 
 logger = logging.getLogger(__name__)
 REQUIRED_TO_SEND = (

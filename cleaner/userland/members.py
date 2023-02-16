@@ -5,9 +5,9 @@ import time
 import hikari
 
 from ._types import KernelType
-from .helpers.binding import complain_if_none, safe_call
 from .helpers.permissions import is_moderator
 from .helpers.settings import get_config, get_entitlements
+from .helpers.task import complain_if_none, safe_background_call, safe_call
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class MembersService:
             self.kernel.longterm["member_counts"][guild.id] = guild.member_count
         if guild.id not in self.kernel.longterm["fetched_member_guilds"]:
             self.kernel.longterm["fetched_member_guilds"].add(guild.id)
-            await safe_call(self.request_guild_members(guild), True)
+            await safe_background_call(self.request_guild_members(guild))
 
     async def guild_delete(self, guild_id: int) -> None:
         if guild_id in self.kernel.longterm["member_counts"]:
@@ -159,7 +159,7 @@ class MembersService:
                     index = 0  # shrug
 
                 list_id = config["bansync_subscribed"][index]
-                await safe_call(bansync_ban(member, config, list_id), True)
+                await safe_background_call(bansync_ban(member, config, list_id))
                 without_sleep = 0
 
             elif (

@@ -3,8 +3,8 @@ import logging
 import hikari
 
 from ._types import ConfigType, EntitlementsType, KernelType, SuspendedActionEvent
-from .helpers.binding import complain_if_none, safe_call
 from .helpers.localization import Message
+from .helpers.task import complain_if_none, safe_background_call
 
 logger = logging.getLogger(__name__)
 
@@ -35,13 +35,13 @@ class SuspensionService:
                 "type": "user",
                 "reason": reason,
             }
-            await safe_call(track(info), True)
+            await safe_background_call(track(info))
 
         if challenge := complain_if_none(
             self.kernel.bindings.get("http:challenge"), "http:challenge"
         ):
             log_reason = Message("log_suspension_user")
-            await safe_call(challenge(member, config, False, log_reason, 2), True)
+            await safe_background_call(challenge(member, config, False, log_reason, 2))
 
         return True
 
@@ -51,5 +51,5 @@ class SuspensionService:
         if not entitlements["suspended"]:
             return False
 
-        await safe_call(self.kernel.bot.rest.leave_guild(guild), True)
+        await safe_background_call(self.kernel.bot.rest.leave_guild(guild))
         return True

@@ -11,15 +11,20 @@ from expirepy import ExpiringDict, ExpiringSet
 from hikari.internal.time import utc_datetime
 
 from ._types import ConfigType, KernelType, PunishmentEvent
-from .helpers.binding import complain_if_none, safe_call
 from .helpers.escape import escape_markdown
 from .helpers.localization import Message
 from .helpers.permissions import DANGEROUS_PERMISSIONS, permissions_for
+from .helpers.task import (
+    AsyncioTaskRunnerMixin,
+    complain_if_none,
+    safe_background_call,
+    safe_call,
+)
 
 logger = logging.getLogger(__name__)
 
 
-class HTTPService:
+class HTTPService(AsyncioTaskRunnerMixin):
     _delete_queue: asyncio.Queue[DeleteJob]
 
     challenged_members: ExpiringSet[str]
@@ -30,6 +35,7 @@ class HTTPService:
     bulk_delete_ratelimits: ExpiringSet[int]
 
     def __init__(self, kernel: KernelType) -> None:
+        super().__init__()
         self.kernel = kernel
 
         self._delete_queue = asyncio.Queue()
@@ -50,13 +56,7 @@ class HTTPService:
         self.kernel.bindings["http:challenged"] = self.challenged
         self.kernel.bindings["http:member:create"] = self.on_member_create
 
-        self.tasks = [
-            asyncio.create_task(self.delete_task(), name="delete"),
-        ]
-
-    def on_unload(self) -> None:
-        for task in self.tasks:
-            task.cancel()
+        self.run(self.delete_task)
 
     async def on_member_create(self, member: hikari.Member) -> None:
         bound_member_id = f"{member.guild_id}-{member.id}"
@@ -246,7 +246,7 @@ class HTTPService:
         self.challenged_members.add(bound_member_id)
 
         assert coro is not None, "this should never happen"
-        tasks = [coro]
+        tasks: typing.List[typing.Awaitable[typing.Any]] = [coro]
 
         if log := complain_if_none(self.kernel.bindings.get("log"), "log"):
             tasks.append(
@@ -272,7 +272,9 @@ class HTTPService:
             if raid_submit := complain_if_none(
                 self.kernel.bindings.get("radar:raid:submit"), "radar:raid:submit"
             ):
-                tasks.append(safe_call(raid_submit(member, submit_challenge), True))
+                tasks.append(
+                    safe_background_call(raid_submit(member, submit_challenge))
+                )
 
         if track := complain_if_none(self.kernel.bindings.get("track"), "track"):
             info: PunishmentEvent = {
@@ -280,7 +282,7 @@ class HTTPService:
                 "guild_id": member.guild_id,
                 "action": challenge,
             }
-            tasks.append(safe_call(track(info), True))
+            tasks.append(safe_background_call(track(info)))
 
         await asyncio.gather(*tasks)
 
@@ -494,14 +496,13 @@ class HTTPService:
 
         if not can_send:
             if log := complain_if_none(self.kernel.bindings.get("log"), "log"):
-                await safe_call(
+                await safe_background_call(
                     log(
                         channel.guild_id,
                         Message("log_announcement_failure", {"channel": channel.id}),
                         None,
                         None,
-                    ),
-                    True,
+                    )
                 )
             return
 

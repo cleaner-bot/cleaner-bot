@@ -8,8 +8,8 @@ import typing
 import hikari
 
 from .._types import InteractionResponse, KernelType
-from ..helpers.binding import safe_call
 from ..helpers.localization import Message
+from ..helpers.task import safe_call
 
 logger = logging.getLogger(__name__)
 

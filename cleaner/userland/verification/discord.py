@@ -16,9 +16,9 @@ from ..captcha import (
     image_transcribe,
     mask_image,
 )
-from ..helpers.binding import complain_if_none, safe_call
 from ..helpers.builders import components_to_builder
 from ..helpers.localization import Message
+from ..helpers.task import complain_if_none, safe_call
 
 IMAGE_LABEL_BINARY = "image_label_binary"
 IMAGE_LABEL_CLASSIFY = "image_label_classify"

@@ -11,8 +11,8 @@ import hikari
 from expirepy import ExpiringList
 
 from ._types import AntiSpamTriggeredEvent, ConfigType, EntitlementsType, KernelType
-from .helpers.binding import complain_if_none, safe_call
 from .helpers.localization import Message
+from .helpers.task import complain_if_none, safe_background_call
 from .mitigations import mitigations, mitigationsd
 
 logger = logging.getLogger(__name__)
@@ -68,7 +68,7 @@ class AntispamService:
                 if delete := complain_if_none(
                     self.kernel.bindings.get("http:delete"), "http:delete"
                 ):
-                    await safe_call(
+                    await safe_background_call(
                         delete(
                             message.id,
                             message.channel_id,
@@ -76,16 +76,14 @@ class AntispamService:
                             True,
                             reason,
                             message,
-                        ),
-                        False,
+                        )
                     )
                 if challenge := complain_if_none(
                     self.kernel.bindings.get("http:challenge"),
                     "http:challenge",
                 ):
-                    await safe_call(
-                        challenge(message.member, config, True, reason, 0),
-                        False,
+                    await safe_background_call(
+                        challenge(message.member, config, True, reason, 0)
                     )
 
                 if track := complain_if_none(
@@ -98,7 +96,7 @@ class AntispamService:
                         "rule": mitigation.name,
                         "id": mitigation.id,
                     }
-                    await safe_call(track(info), True)
+                    await safe_background_call(track(info))
 
                 return True
 
@@ -137,7 +135,7 @@ class AntispamService:
         reason = Message("components_antispam", {"mitigation": mit.name, "id": id})
 
         if log := complain_if_none(self.kernel.bindings.get("log"), "log"):
-            await safe_call(log(message.guild_id, reason, None, message), True)
+            await safe_background_call(log(message.guild_id, reason, None, message))
 
         if track := complain_if_none(self.kernel.bindings.get("track"), "track"):
             info = {
@@ -147,19 +145,21 @@ class AntispamService:
                 "rule": mit.name,
                 "id": id,
             }
-            await safe_call(track(info), True)
+            await safe_background_call(track(info))
 
         if challenge := complain_if_none(
             self.kernel.bindings.get("http:challenge"), "http:challenge"
         ):
-            await safe_call(challenge(message.member, config, True, reason, 0), True)
+            await safe_background_call(
+                challenge(message.member, config, True, reason, 0)
+            )
 
         if delete := complain_if_none(
             self.kernel.bindings.get("http:delete"), "http:delete"
         ):
             for old_message in messages:
                 if mit.match(active_mitigation.data, old_message):
-                    await safe_call(
+                    await safe_background_call(
                         delete(
                             old_message.id,
                             old_message.channel_id,
@@ -167,22 +167,20 @@ class AntispamService:
                             True,
                             reason,
                             message,
-                        ),
-                        True,
+                        )
                     )
 
         if announcement := complain_if_none(
             self.kernel.bindings.get("http:announcement"),
             "http:announcement",
         ):
-            await safe_call(
+            await safe_background_call(
                 announcement(
                     message.guild_id,
                     message.channel_id,
                     Message("components_antispam_announcement"),
                     0,
-                ),
-                True,
+                )
             )
 
         return True

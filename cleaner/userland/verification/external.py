@@ -14,9 +14,9 @@ from .._types import (
     KernelType,
     RPCResponse,
 )
-from ..helpers.binding import complain_if_none
 from ..helpers.localization import Message
 from ..helpers.settings import get_config
+from ..helpers.task import complain_if_none
 
 logger = logging.getLogger(__name__)
 
