@@ -47,6 +47,7 @@ class DashboardService:
                         and top_role_position > role.position > 0
                         and role.permissions & DANGEROUS_PERMISSIONS == 0
                     ),
+                    "flags": self.role_flags(role, top_role_position),
                     "is_managed": role.is_managed or role.position == 0,
                     "permissions": {k.name: True for k in role.permissions},
                 }
@@ -69,3 +70,15 @@ class DashboardService:
             "myself": {"permissions": {k.name: True for k in perms}},
         }
         return {"ok": True, "message": "OK", "data": data}
+
+    def role_flags(self, role: hikari.Role, top_role_position: int) -> list[str]:
+        flags = []
+        if role.is_managed:
+            flags.append("managed")
+        if role.position >= top_role_position:
+            flags.append("higher_pos")
+        if role.position == 0:
+            flags.append("everyone")
+        if role.permissions & DANGEROUS_PERMISSIONS:
+            flags.append("dangerous")
+        return flags
