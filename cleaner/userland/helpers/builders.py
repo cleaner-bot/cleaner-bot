@@ -3,6 +3,7 @@ import typing
 import hikari
 
 # need to import these explicitly because someone forgot to add them to __all__
+# fixed in dev117
 from hikari.components import ChannelSelectMenuComponent, TextSelectMenuComponent
 
 
