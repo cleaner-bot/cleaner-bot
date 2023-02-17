@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import hmac
 import logging
 import typing
+import os
 from base64 import urlsafe_b64encode
 from hashlib import sha256
+from urllib.parse import urlencode
 
 import hikari
 from expirepy import ExpiringSet
@@ -246,12 +249,7 @@ class LinkFilterService:
         ).set_footer(text=str(message.member), icon=message.member.make_avatar_url())
 
         if config["linkfilter_linkpreview"]:
-            # TODO: switch to self-hosted eventually, but I am currently
-            # going insane trying to host this
-            embed.set_image(
-                "https://puppeteer-screenshot-demo.vercel.app/api/screenshot"
-                "?page=https://" + url
-            )
+            embed.set_image(self.generate_webpreview("https://" + url))
 
         components = [self.kernel.bot.rest.build_message_action_row() for _ in range(3)]
         (
@@ -374,3 +372,14 @@ class LinkFilterService:
                 self.kernel, interaction.locale
             )
         }
+
+    def generate_webpreview(self, url: str) -> str:
+        origin = "https://webpreview.cleanerbot.xyz/api?"
+        raw_key = os.getenv("WEBPREVIEW_SECRET")
+        assert raw_key
+        key = bytes.fromhex(raw_key)
+        query = {
+            "url": url,
+            "sig": hmac.digest(key, url.encode(), "sha256").hex()
+        }
+        return origin + urlencode(query)
