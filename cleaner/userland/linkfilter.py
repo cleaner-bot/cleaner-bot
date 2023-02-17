@@ -245,6 +245,14 @@ class LinkFilterService:
             color=0x2F3136,
         ).set_footer(text=str(message.member), icon=message.member.make_avatar_url())
 
+        if config["linkfilter_linkpreview"]:
+            # TODO: switch to self-hosted eventually, but I am currently
+            # going insane trying to host this
+            embed.set_image(
+                "https://puppeteer-screenshot-demo.vercel.app/api/screenshot?page="
+                + url
+            )
+
         components = [self.kernel.bot.rest.build_message_action_row() for _ in range(3)]
         (
             components[0]

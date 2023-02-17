@@ -119,6 +119,7 @@ class ConfigType(typing.TypedDict):
     linkfilter_enabled: bool
     linkfilter_channel: str
     linkfilter_blockunknown: bool
+    linkfilter_linkpreview: bool
     filterrules_enabled: bool
 
 

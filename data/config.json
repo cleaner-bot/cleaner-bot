@@ -84,6 +84,7 @@
     "bansync_subscribed": [],
     "linkfilter_enabled": false,
     "linkfilter_channel": "0",
+    "linkfilter_linkpreview": false,
     "linkfilter_blockunknown": false,
     "filterrules_enabled": false
 }
