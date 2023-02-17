@@ -249,8 +249,8 @@ class LinkFilterService:
             # TODO: switch to self-hosted eventually, but I am currently
             # going insane trying to host this
             embed.set_image(
-                "https://puppeteer-screenshot-demo.vercel.app/api/screenshot?page="
-                + url
+                "https://puppeteer-screenshot-demo.vercel.app/api/screenshot"
+                "?page=https://" + url
             )
 
         components = [self.kernel.bot.rest.build_message_action_row() for _ in range(3)]
