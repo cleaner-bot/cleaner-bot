@@ -68,7 +68,7 @@ class AntispamService:
                 if delete := complain_if_none(
                     self.kernel.bindings.get("http:delete"), "http:delete"
                 ):
-                    await safe_background_call(
+                    safe_background_call(
                         delete(
                             message.id,
                             message.channel_id,
@@ -82,7 +82,7 @@ class AntispamService:
                     self.kernel.bindings.get("http:challenge"),
                     "http:challenge",
                 ):
-                    await safe_background_call(
+                    safe_background_call(
                         challenge(message.member, config, True, reason, 0)
                     )
 
@@ -96,7 +96,7 @@ class AntispamService:
                         "rule": mitigation.name,
                         "id": mitigation.id,
                     }
-                    await safe_background_call(track(info))
+                    safe_background_call(track(info))
 
                 return True
 
@@ -135,7 +135,7 @@ class AntispamService:
         reason = Message("components_antispam", {"mitigation": mit.name, "id": id})
 
         if log := complain_if_none(self.kernel.bindings.get("log"), "log"):
-            await safe_background_call(log(message.guild_id, reason, None, message))
+            safe_background_call(log(message.guild_id, reason, None, message))
 
         if track := complain_if_none(self.kernel.bindings.get("track"), "track"):
             info = {
@@ -145,21 +145,19 @@ class AntispamService:
                 "rule": mit.name,
                 "id": id,
             }
-            await safe_background_call(track(info))
+            safe_background_call(track(info))
 
         if challenge := complain_if_none(
             self.kernel.bindings.get("http:challenge"), "http:challenge"
         ):
-            await safe_background_call(
-                challenge(message.member, config, True, reason, 0)
-            )
+            safe_background_call(challenge(message.member, config, True, reason, 0))
 
         if delete := complain_if_none(
             self.kernel.bindings.get("http:delete"), "http:delete"
         ):
             for old_message in messages:
                 if mit.match(active_mitigation.data, old_message):
-                    await safe_background_call(
+                    safe_background_call(
                         delete(
                             old_message.id,
                             old_message.channel_id,
@@ -174,7 +172,7 @@ class AntispamService:
             self.kernel.bindings.get("http:announcement"),
             "http:announcement",
         ):
-            await safe_background_call(
+            safe_background_call(
                 announcement(
                     message.guild_id,
                     message.channel_id,

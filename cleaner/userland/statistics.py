@@ -79,7 +79,7 @@ class StatisticsService:
                 name += ":" + event["rule"]  # type: ignore
             elif "action" in event:
                 name += ":" + event["action"]  # type: ignore
-            await safe_background_call(clickhouse_track(name, event["guild_id"]))
+            safe_background_call(clickhouse_track(name, event["guild_id"]))
 
     async def save(self) -> None:
         loop = asyncio.get_event_loop()

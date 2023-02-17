@@ -89,7 +89,7 @@ class TimeLimitService:
                         "name": "timelimit",
                         "guild_id": guild.id,
                     }
-                    await safe_background_call(track(info))
+                    safe_background_call(track(info))
 
                 logger.debug(f"verification timelimit for {member_id} in {guild.id}")
                 if challenge := complain_if_none(
@@ -105,6 +105,4 @@ class TimeLimitService:
                         },
                     )
 
-                    await safe_background_call(
-                        challenge(member, config, False, reason, 2)
-                    )
+                    safe_background_call(challenge(member, config, False, reason, 2))

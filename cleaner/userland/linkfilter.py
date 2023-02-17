@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import hmac
 import logging
-import typing
 import os
+import typing
 from base64 import urlsafe_b64encode
 from hashlib import sha256
 from urllib.parse import urlencode
@@ -123,12 +123,12 @@ class LinkFilterService:
                     "guild_id": message.member.guild_id,
                     "url": last_url,
                 }
-                await safe_background_call(track(info))
+                safe_background_call(track(info))
 
             if delete := complain_if_none(
                 self.kernel.bindings.get("http:delete"), "http:delete"
             ):
-                await safe_background_call(
+                safe_background_call(
                     delete(
                         message.id,
                         message.channel_id,
@@ -142,7 +142,7 @@ class LinkFilterService:
             if challenge := complain_if_none(
                 self.kernel.bindings.get("http:challenge"), "http:challenge"
             ):
-                await safe_background_call(
+                safe_background_call(
                     challenge(
                         message.member,
                         config,
@@ -161,7 +161,7 @@ class LinkFilterService:
                     {"user": message.member.id},
                 )
 
-                await safe_background_call(
+                safe_background_call(
                     announcement(
                         message.guild_id, message.channel_id, announcement_message, 20
                     ),
@@ -296,7 +296,7 @@ class LinkFilterService:
 
     async def _error(self, guild_id: int, message: Message) -> None:
         if log := complain_if_none(self.kernel.bindings.get("log"), "log"):
-            await safe_background_call(log(guild_id, message, None, None))
+            safe_background_call(log(guild_id, message, None, None))
 
     async def btn_whitelist_url(
         self, interaction: hikari.ComponentInteraction, url_id: str
@@ -378,8 +378,5 @@ class LinkFilterService:
         raw_key = os.getenv("WEBPREVIEW_SECRET")
         assert raw_key
         key = bytes.fromhex(raw_key)
-        query = {
-            "url": url,
-            "sig": hmac.digest(key, url.encode(), "sha256").hex()
-        }
+        query = {"url": url, "sig": hmac.digest(key, url.encode(), "sha256").hex()}
         return origin + urlencode(query)

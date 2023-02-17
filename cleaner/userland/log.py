@@ -60,7 +60,7 @@ class LogService(AsyncioTaskRunnerMixin):
                     else f"{age.days}d",
                 },
             )
-            await safe_background_call(log(member.guild_id, message, None, None))
+            safe_background_call(log(member.guild_id, message, None, None))
 
     async def member_delete(self, guild_id: int, user_id: int) -> None:
         suppressed = False
@@ -89,7 +89,7 @@ class LogService(AsyncioTaskRunnerMixin):
                     "name": escape_markdown(str(user)) if user is not None else "?",
                 },
             )
-            await safe_background_call(log(guild_id, message, None, None))
+            safe_background_call(log(guild_id, message, None, None))
 
     async def raid_ongoing(
         self,
@@ -112,7 +112,7 @@ class LogService(AsyncioTaskRunnerMixin):
                     "bans": bans,
                 },
             )
-            await safe_background_call(log(guild_id, message, None, None))
+            safe_background_call(log(guild_id, message, None, None))
 
         await self.kernel.bot.rest.create_message(
             RAID_LOGS,
@@ -144,7 +144,7 @@ class LogService(AsyncioTaskRunnerMixin):
                     "bans": bans,
                 },
             )
-            await safe_background_call(log(guild_id, message, None, None))
+            safe_background_call(log(guild_id, message, None, None))
 
         await self.kernel.bot.rest.create_message(
             RAID_LOGS,

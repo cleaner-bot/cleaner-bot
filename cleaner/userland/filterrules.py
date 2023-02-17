@@ -116,7 +116,7 @@ class FilterRulesService:
                     "event": event,
                     "action": matched_rule.action,
                 }
-                await safe_background_call(track(info))
+                safe_background_call(track(info))
 
             reason = Message(
                 "log_filterrule",
@@ -126,7 +126,7 @@ class FilterRulesService:
                     "action": matched_rule.action,
                 },
             )
-            await safe_background_call(
+            safe_background_call(
                 challenge(
                     member, config, False, reason, actions.get(matched_rule.action, 1)
                 )
@@ -167,7 +167,7 @@ class FilterRulesService:
         if delete := complain_if_none(
             self.kernel.bindings.get("http:delete"), "http:delete"
         ):
-            await safe_background_call(
+            safe_background_call(
                 delete(
                     message.id,
                     message.channel_id,
@@ -189,7 +189,7 @@ class FilterRulesService:
                 {"user": message.member.id},
             )
 
-            await safe_background_call(
+            safe_background_call(
                 announcement(
                     message.guild_id, message.channel_id, announcement_message, 20
                 )
@@ -205,9 +205,9 @@ class FilterRulesService:
                     "event": event,
                     "action": matched_rule.action,
                 }
-                await safe_background_call(track(info))
+                safe_background_call(track(info))
 
-            await safe_background_call(
+            safe_background_call(
                 challenge(
                     message.member,
                     config,

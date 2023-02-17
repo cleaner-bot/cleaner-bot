@@ -496,7 +496,7 @@ class DeveloperService:
         if members_timer := complain_if_none(
             self.kernel.bindings.get("members:timer"), "data:save"
         ):
-            await safe_background_call(members_timer())
+            safe_background_call(members_timer())
 
         await message.add_reaction("👍")
 

@@ -81,12 +81,12 @@ class NameService:
                 "detection": detection,
                 "id": member.id,
             }
-            await safe_background_call(track(info))
+            safe_background_call(track(info))
 
         if challenge := complain_if_none(
             self.kernel.bindings.get("http:challenge"), "http:challenge"
         ):
-            await safe_background_call(challenge(member, config, False, reason, 1))
+            safe_background_call(challenge(member, config, False, reason, 1))
 
         return True
 

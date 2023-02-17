@@ -49,7 +49,7 @@ class MembersService:
             self.kernel.longterm["member_counts"][guild.id] = guild.member_count
         if guild.id not in self.kernel.longterm["fetched_member_guilds"]:
             self.kernel.longterm["fetched_member_guilds"].add(guild.id)
-            await safe_background_call(self.request_guild_members(guild))
+            safe_background_call(self.request_guild_members(guild))
 
     async def guild_delete(self, guild_id: int) -> None:
         if guild_id in self.kernel.longterm["member_counts"]:
@@ -159,7 +159,7 @@ class MembersService:
                     index = 0  # shrug
 
                 list_id = config["bansync_subscribed"][index]
-                await safe_background_call(bansync_ban(member, config, list_id))
+                safe_background_call(bansync_ban(member, config, list_id))
                 without_sleep = 0
 
             elif (

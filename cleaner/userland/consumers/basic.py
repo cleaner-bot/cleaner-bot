@@ -289,7 +289,7 @@ class BasicConsumerService(AsyncioTaskRunnerMixin):
                 if dehoist := complain_if_none(
                     self.kernel.bindings.get("dehoist:create"), "dehoist:create"
                 ):
-                    await safe_background_call(dehoist(event.member))
+                    safe_background_call(dehoist(event.member))
 
     async def on_member_update(self, event: hikari.MemberUpdateEvent) -> None:
         config = await get_config(self.kernel, event.guild_id)
@@ -441,32 +441,32 @@ class BasicConsumerService(AsyncioTaskRunnerMixin):
             if slowmode_timer := complain_if_none(
                 self.kernel.bindings.get("slowmode:timer"), "slowmode:timer"
             ):
-                await safe_background_call(slowmode_timer())
+                safe_background_call(slowmode_timer())
 
             # 2. Verification
             if timelimit_timer := complain_if_none(
                 self.kernel.bindings.get("timelimit:timer"),
                 "timelimit:timer",
             ):
-                await safe_background_call(timelimit_timer())
+                safe_background_call(timelimit_timer())
 
             # 3. Raid detection ("radar")
             if radar_timer := complain_if_none(
                 self.kernel.bindings.get("radar:timer"), "radar:timer"
             ):
-                await safe_background_call(radar_timer())
+                safe_background_call(radar_timer())
 
             # 4. Publish stats to radar and statistics
             if clickhouse_timer := complain_if_none(
                 self.kernel.bindings.get("clickhouse:timer"), "clickhouse:timer"
             ):
-                await safe_background_call(clickhouse_timer())
+                safe_background_call(clickhouse_timer())
 
             if sequence % (5 * 6) == 0:  # only run every 5mins
                 if statistics_save := complain_if_none(
                     self.kernel.bindings.get("statistics:save"), "statistics:save"
                 ):
-                    await safe_background_call(statistics_save())
+                    safe_background_call(statistics_save())
 
             # 5. Re-check members in servers etc and save data
             if (
@@ -476,21 +476,19 @@ class BasicConsumerService(AsyncioTaskRunnerMixin):
                 if data_save := complain_if_none(
                     self.kernel.bindings.get("data:save"), "data:save"
                 ):
-                    await safe_background_call(
-                        loop.run_in_executor(None, data_save, None)
-                    )
+                    safe_background_call(loop.run_in_executor(None, data_save, None))
 
                 if members_timer := complain_if_none(
                     self.kernel.bindings.get("members:timer"), "data:save"
                 ):
-                    await safe_background_call(members_timer())
+                    safe_background_call(members_timer())
 
             # 6. Publish stats to integrations
             if sequence % (30 * 6) == 5 * 6:  # only run every 30mins
                 if integration_timer := complain_if_none(
                     self.kernel.bindings.get("integration:timer"), "integration:timer"
                 ):
-                    await safe_background_call(integration_timer())
+                    safe_background_call(integration_timer())
 
             # sleep
             sequence += 1

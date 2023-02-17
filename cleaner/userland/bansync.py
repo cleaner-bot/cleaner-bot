@@ -40,7 +40,7 @@ class BanSyncService:
                     "guild_id": member.guild_id,
                     "list_id": int(list_id),
                 }
-                await safe_background_call(track(info))
+                safe_background_call(track(info))
 
             reason = Message(
                 "components_bansync_reason",
@@ -49,7 +49,7 @@ class BanSyncService:
                     "name": name.decode() if name is not None else "Unnamed",
                 },
             )
-            await safe_background_call(challenge(member, config, False, reason, 3))
+            safe_background_call(challenge(member, config, False, reason, 3))
 
     async def on_member_create(
         self, member: hikari.Member, config: ConfigType, entitlements: EntitlementsType

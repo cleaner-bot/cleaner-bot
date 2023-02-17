@@ -63,12 +63,12 @@ class AutoModService:
                 "guild_id": message.member.guild_id,
                 "rule": matched_rule,
             }
-            await safe_background_call(track(info))
+            safe_background_call(track(info))
 
         if delete := complain_if_none(
             self.kernel.bindings.get("http:delete"), "http:delete"
         ):
-            await safe_background_call(
+            safe_background_call(
                 delete(
                     message.id,
                     message.channel_id,
@@ -82,7 +82,7 @@ class AutoModService:
         if challenge := complain_if_none(
             self.kernel.bindings.get("http:challenge"), "http:challenge"
         ):
-            await safe_background_call(
+            safe_background_call(
                 challenge(
                     message.member,
                     config,
@@ -101,7 +101,7 @@ class AutoModService:
                 {"user": message.member.id},
             )
 
-            await safe_background_call(
+            safe_background_call(
                 announcement(
                     message.guild_id, message.channel_id, announcement_message, 20
                 )
@@ -118,7 +118,7 @@ class AutoModService:
                 self.kernel.bindings.get("radar:phishing:submit"),
                 "radar:phishing:submit",
             ):
-                await safe_background_call(radar_phishing_submit(message, matched_rule))
+                safe_background_call(radar_phishing_submit(message, matched_rule))
 
         if matched_rule.startswith("advertisement.discord.") and isinstance(
             message, hikari.Message
@@ -127,6 +127,6 @@ class AutoModService:
                 self.kernel.bindings.get("radar:unsafeinvite:submit"),
                 "radar:unsafeinvite:submit",
             ):
-                await safe_background_call(radar_unsafeinvite_submit(message))
+                safe_background_call(radar_unsafeinvite_submit(message))
 
         return True

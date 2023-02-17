@@ -71,7 +71,7 @@ class AntiRaidService:
                     member_to_kick is not None
                     and f"{member.guild_id}-{user_id}" not in self.member_kicks
                 ):
-                    await safe_background_call(
+                    safe_background_call(
                         challenge(member_to_kick, config, False, reason, 1)
                     )
 
@@ -82,6 +82,6 @@ class AntiRaidService:
                             "limit": config["antiraid_limit"],
                             "id": member_to_kick.id,
                         }
-                        await safe_background_call(track(info))
+                        safe_background_call(track(info))
 
         return True

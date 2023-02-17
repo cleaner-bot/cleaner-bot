@@ -35,13 +35,13 @@ class SuspensionService:
                 "type": "user",
                 "reason": reason,
             }
-            await safe_background_call(track(info))
+            safe_background_call(track(info))
 
         if challenge := complain_if_none(
             self.kernel.bindings.get("http:challenge"), "http:challenge"
         ):
             log_reason = Message("log_suspension_user")
-            await safe_background_call(challenge(member, config, False, log_reason, 2))
+            safe_background_call(challenge(member, config, False, log_reason, 2))
 
         return True
 
@@ -51,5 +51,5 @@ class SuspensionService:
         if not entitlements["suspended"]:
             return False
 
-        await safe_background_call(self.kernel.bot.rest.leave_guild(guild))
+        safe_background_call(self.kernel.bot.rest.leave_guild(guild))
         return True

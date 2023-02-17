@@ -102,7 +102,7 @@ class RadarService:
                             self.kernel.bindings.get("log:raid:ongoing"),
                             "log:raid:ongoing",
                         ):
-                            await safe_background_call(
+                            safe_background_call(
                                 raid_ongoing(
                                     guild_id,
                                     guild["start"],
@@ -119,7 +119,7 @@ class RadarService:
                 if raid_complete := complain_if_none(
                     self.kernel.bindings.get("log:raid:complete"), "log:raid:complete"
                 ):
-                    await safe_background_call(
+                    safe_background_call(
                         raid_complete(
                             guild_id,
                             guild["start"],
@@ -140,7 +140,7 @@ class RadarService:
                         "kicks": guild["kicks"],
                         "bans": guild["bans"],
                     }
-                    await safe_background_call(track(info))
+                    safe_background_call(track(info))
 
             del self.guilds[guild_id]
 

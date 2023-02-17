@@ -89,7 +89,7 @@ class SuperVerificationService:
                     "log_verified",
                     {"user": str(user.id), "name": escape_markdown(str(user))},
                 )
-                await safe_background_call(log(guild_id, message, None, None))
+                safe_background_call(log(guild_id, message, None, None))
 
         return {"ok": True, "message": "OK", "data": None}
 

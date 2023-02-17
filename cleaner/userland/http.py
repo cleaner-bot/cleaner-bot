@@ -496,7 +496,7 @@ class HTTPService(AsyncioTaskRunnerMixin):
 
         if not can_send:
             if log := complain_if_none(self.kernel.bindings.get("log"), "log"):
-                await safe_background_call(
+                safe_background_call(
                     log(
                         channel.guild_id,
                         Message("log_announcement_failure", {"channel": channel.id}),

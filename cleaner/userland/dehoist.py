@@ -38,10 +38,10 @@ class DehoistService:
                     "name": "dehoist",
                     "guild_id": member.guild_id,
                 }
-                await safe_background_call(track(info))
+                safe_background_call(track(info))
 
             reason = Message("log_dehoist")
-            await safe_background_call(nickname(member, new_nickname, reason))
+            safe_background_call(nickname(member, new_nickname, reason))
 
         return True
 

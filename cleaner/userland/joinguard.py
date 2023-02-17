@@ -42,12 +42,12 @@ class JoinGuardService:
                 "name": "joinguard",
                 "guild_id": member.guild_id,
             }
-            await safe_background_call(track(info))
+            safe_background_call(track(info))
 
         if challenge := complain_if_none(
             self.kernel.bindings.get("http:challenge"), "http:challenge"
         ):
-            await safe_background_call(
+            safe_background_call(
                 challenge(member, config, False, Message("log_joinguard_bypass"), 2)
             )
 
