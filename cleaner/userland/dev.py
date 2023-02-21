@@ -53,6 +53,7 @@ class DeveloperService:
             # "add-rule": self.add_rule,
             # "get-rule": self.get_rule,
             # "remove-rule": self.remove_rule,
+            "matching-members": self.matching_members,
         }
 
     async def message_create(
@@ -561,3 +562,23 @@ class DeveloperService:
         )
 
         await message.add_reaction("👍")
+
+    async def matching_members(self, message:  hikari.Message, *raw_expression: str):
+        assert message.guild_id
+        expression = " ".join(raw_expression)
+        import filterrules
+        from .filterrules import var_user, var_member, functions
+        
+        ast = filterrules.parse(expression.encode())
+        compiled = filterrules.Rule(ast).compile()
+
+        matching = []
+        for member in self.kernel.bot.cache.get_members_view_for_guild(message.guild_id).values():
+            vars = {**var_user(member), **var_member(member)}
+            if compiled(vars, functions):
+                matching.append(member.id)
+
+        await message.respond(
+            f"Found {len(matching)} members.",
+            attachment=", ".join(map(str, matching)).encode()
+        )
