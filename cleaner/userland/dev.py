@@ -579,6 +579,6 @@ class DeveloperService:
                 matching.append(member.id)
 
         await message.respond(
-            f"Found {len(matching)} members.",
-            attachment=", ".join(map(str, matching)).encode()
+            f"Matching members: {len(matching):,}",
+            attachment=hikari.File(", ".join(map(str, matching)), filename="members.txt")
         )
