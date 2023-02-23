@@ -177,7 +177,7 @@ class AntispamService:
                     message.guild_id,
                     message.channel_id,
                     Message("components_antispam_announcement"),
-                    0,
+                    300,
                 )
             )
 
