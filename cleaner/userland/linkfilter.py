@@ -4,12 +4,11 @@ import hmac
 import logging
 import os
 import typing
-from base64 import urlsafe_b64encode
-from hashlib import sha256
 from urllib.parse import urlencode
 
 import hikari
 from expirepy import ExpiringSet
+from httpx import URL
 
 from ._types import (
     ConfigType,
@@ -43,13 +42,15 @@ class LinkFilterService:
         components: dict[
             str, typing.Callable[..., typing.Awaitable[InteractionResponse | None]]
         ] = {
-            "lf-whitelist-u": self.btn_whitelist_url,
-            "lf-whitelist-d": self.btn_whitelist_domain,
-            "lf-blacklist-u": self.btn_blacklist_url,
-            "lf-blacklist-d": self.btn_blacklist_domain,
+            "lf-btn": self.handle_button,
             "lf-dismiss": self.btn_dismiss,
+            "lf-undo": self.btn_undo,
+        }
+        modals = {
+            "lf-modal": self.handle_modal,
         }
         self.kernel.interactions["components"].update(components)
+        self.kernel.interactions["modals"].update(modals)
 
         self.deduplicator = ExpiringSet(300)
 
@@ -68,28 +69,21 @@ class LinkFilterService:
             return False
 
         whitelist = [
-            x.decode()
+            parse_url(x.decode())
             for x in await self.kernel.database.lrange(
                 f"guild:{message.guild_id}:linkfilter:whitelist", 0, -1
             )
         ]
         blacklist = [
-            x.decode()
+            parse_url(x.decode())
             for x in await self.kernel.database.lrange(
                 f"guild:{message.guild_id}:linkfilter:blacklist", 0, -1
             )
         ]
-        urls = []
-        for url in get_urls(message.content):
-            # remove scheme and trailing /
-            url = "/".join(url.split("/")[2:]).strip("/")
-            if url.startswith("www."):
-                url = url[4:]
 
-            urls.append(url)
-
+        urls = list(map(URL, get_urls(message.content)))
         blacklisted = False
-        last_url: str = ""
+        last_url: URL | None = None
         for url in urls:
             if self.matches_url(url, whitelist):
                 pass
@@ -121,7 +115,6 @@ class LinkFilterService:
                 info: LinkFilteredEvent = {
                     "name": "linkfilter",
                     "guild_id": message.member.guild_id,
-                    "url": last_url,
                 }
                 safe_background_call(track(info))
 
@@ -168,30 +161,20 @@ class LinkFilterService:
                 )
 
         key = f"{message.guild_id}-{last_url}"
-        if key not in self.deduplicator:
+        if key not in self.deduplicator and not blacklisted:
             self.deduplicator.add(key)
             await self.send_link_check(message, last_url, config, is_bad)
 
         return is_bad
 
-    def matches_url(self, url: str, collection: list[str]) -> bool:
+    def matches_url(self, url: URL, collection: list[URL]) -> bool:
         for match in collection:
-            any_start = match.startswith("*")
-            any_end = match.endswith("*")
-
-            if any_start and any_end:
-                if match[1:-1] in url:
-                    return True
-
-            elif any_start:
-                if url.endswith(match[1:]):
-                    return True
-
-            elif any_end:
-                if url.startswith(match[:-1]):
-                    return True
-
-            elif url == match:
+            if (
+                (not match.scheme or does_match(url.scheme, match.scheme))
+                and does_match(url.netloc.decode(), match.netloc.decode())
+                and does_match(url.path, match.path)
+                and (not match.query or does_match(str(url.params), str(match.params)))
+            ):
                 return True
 
         return False
@@ -199,7 +182,7 @@ class LinkFilterService:
     async def send_link_check(
         self,
         message: hikari.PartialMessage,
-        url: str,
+        url: URL,
         config: ConfigType,
         is_deleted: bool,
     ) -> None:
@@ -233,150 +216,234 @@ class LinkFilterService:
             )
             return
 
-        url_id = urlsafe_b64encode(sha256(url.encode()).digest()).decode()
-        domain = url.split("/")[0]
-        await self.kernel.database.set(
-            f"linkfilter:url-resolver:{url_id}", url, ex=URL_EXPIRE
-        )
-
         i18n = (self.kernel, guild.preferred_locale)
         embed = hikari.Embed(
             title=Message("linkfilter_embed_title").translate(*i18n),
             description=Message(
-                "linkfilter_embed_description", {"url": url, "domain": domain}
+                "linkfilter_embed_description", {"url": str(url).replace("`", "")}
             ).translate(*i18n),
             color=0x2F3136,
         ).set_footer(text=str(message.member), icon=message.member.make_avatar_url())
 
         if config["linkfilter_linkpreview"]:
-            embed.set_image(self.generate_webpreview("https://" + url))
+            embed.set_image(generate_webpreview(url))
 
-        components = [self.kernel.bot.rest.build_message_action_row() for _ in range(3)]
-        (
-            components[0]
-            .add_button(hikari.ButtonStyle.SUCCESS, f"lf-whitelist-u/{url_id}")
-            .set_label(Message("linkfilter_button_whitelist_url").translate(*i18n))
-            .add_to_container()
+        components = self._build_components(
+            guild.preferred_locale, None if is_deleted else message.make_link(guild)
         )
-        (
-            components[0]
-            .add_button(hikari.ButtonStyle.SUCCESS, f"lf-whitelist-d/{url_id}")
-            .set_label(Message("linkfilter_button_whitelist_domain").translate(*i18n))
-            .add_to_container()
-        )
-        (
-            components[1]
-            .add_button(hikari.ButtonStyle.DANGER, f"lf-blacklist-u/{url_id}")
-            .set_label(Message("linkfilter_button_blacklist_url").translate(*i18n))
-            .add_to_container()
-        )
-        (
-            components[1]
-            .add_button(hikari.ButtonStyle.DANGER, f"lf-blacklist-d/{url_id}")
-            .set_label(Message("linkfilter_button_blacklist_domain").translate(*i18n))
-            .add_to_container()
-        )
-
-        if not is_deleted:
-            (
-                components[2]
-                .add_button(hikari.ButtonStyle.LINK, message.make_link(guild))
-                .set_label(Message("linkfilter_button_jump").translate(*i18n))
-                .add_to_container()
-            )
-
-        (
-            components[2]
-            .add_button(hikari.ButtonStyle.SECONDARY, "lf-dismiss")
-            .set_label(Message("linkfilter_button_dismiss").translate(*i18n))
-            .add_to_container()
-        )
-
         await channel.send(embed=embed, components=components)
 
     async def _error(self, guild_id: int, message: Message) -> None:
         if log := complain_if_none(self.kernel.bindings.get("log"), "log"):
             safe_background_call(log(guild_id, message, None, None))
 
-    async def btn_whitelist_url(
-        self, interaction: hikari.ComponentInteraction, url_id: str
-    ) -> InteractionResponse:
-        return await self.handle_button(interaction, url_id, "whitelist", False)
-
-    async def btn_whitelist_domain(
-        self, interaction: hikari.ComponentInteraction, url_id: str
-    ) -> InteractionResponse:
-        return await self.handle_button(interaction, url_id, "whitelist", True)
-
-    async def btn_blacklist_url(
-        self, interaction: hikari.ComponentInteraction, url_id: str
-    ) -> InteractionResponse:
-        return await self.handle_button(interaction, url_id, "blacklist", False)
-
-    async def btn_blacklist_domain(
-        self, interaction: hikari.ComponentInteraction, url_id: str
-    ) -> InteractionResponse:
-        return await self.handle_button(interaction, url_id, "blacklist", True)
-
     async def handle_button(
         self,
         interaction: hikari.ComponentInteraction,
-        url_id: str,
         category: str,
-        domain: bool,
     ) -> InteractionResponse:
-        raw_url = await self.kernel.database.get(f"linkfilter:url-resolver:{url_id}")
-        if raw_url is None:
-            await interaction.edit_message(
-                interaction.message,
-                content=Message("linkfilter_action_expired").translate(
+        description = interaction.message.embeds[0].description
+        assert description
+        raw_url = description.split("`")[1]
+        url = URL(raw_url, scheme="*")
+
+        component = self.kernel.bot.rest.build_modal_action_row()
+        (
+            component.add_text_input(
+                "url",
+                Message("linkfilter_modal_label_" + category).translate(
                     self.kernel, interaction.locale
                 ),
-                components=[],
             )
-            return {
-                "content": Message("linkfilter_action_expired").translate(
+            .set_style(hikari.TextInputStyle.SHORT)
+            .set_min_length(4)
+            .set_max_length(200)
+            .set_value(str(url)[:128])
+            .set_placeholder(
+                Message("linkfilter_modal_placeholder").translate(
                     self.kernel, interaction.locale
                 )
-            }
-
-        url = raw_url.decode()
-        if domain:
-            the_domain = url[0].split("/")[0]
-            url = f"{the_domain}*"
-
-        await self.kernel.database.rpush(
-            f"guild:{interaction.guild_id}:linkfilter:{category}", (url,)
+            )
+            .add_to_container()
         )
 
-        action = f"linkfilter_action_{category}_" + ("domain" if domain else "url")
-        await interaction.edit_message(
-            interaction.message,
-            content=Message(action).translate(self.kernel, interaction.locale),
-            components=[],
+        await interaction.create_modal_response(
+            Message("report_message_modal_title").translate(
+                self.kernel, interaction.locale
+            ),
+            f"lf-modal/{category}",
+            components=[component],
         )
-        return {"content": Message(action).translate(self.kernel, interaction.locale)}
+
+        return {}
 
     async def btn_dismiss(
         self, interaction: hikari.ComponentInteraction
     ) -> InteractionResponse:
-        await interaction.edit_message(
-            interaction.message,
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_UPDATE,
             content=Message("linkfilter_action_dismiss").translate(
                 self.kernel, interaction.locale
             ),
             components=[],
         )
-        return {
-            "content": Message("linkfilter_action_dismiss").translate(
-                self.kernel, interaction.locale
-            )
-        }
+        return {}
 
-    def generate_webpreview(self, url: str) -> str:
-        origin = "https://webpreview.cleanerbot.xyz/api?"
-        raw_key = os.getenv("WEBPREVIEW_SECRET")
-        assert raw_key
-        key = bytes.fromhex(raw_key)
-        query = {"url": url, "sig": hmac.digest(key, url.encode(), "sha256").hex()}
-        return origin + urlencode(query)
+    async def btn_undo(
+        self, interaction: hikari.ComponentInteraction, category: str
+    ) -> InteractionResponse:
+        content = interaction.message.content
+        assert content
+        url = content.split("`")[1]
+
+        await self.kernel.database.lrem(
+            f"guild:{interaction.guild_id}:linkfilter:{category}", 0, url
+        )
+
+        jump_link = None
+        if len(interaction.message.components[0].components) >= 2:
+            link = typing.cast(
+                hikari.ButtonComponent, interaction.message.components[1][0]
+            )
+            assert link.url
+            jump_link = link.url
+
+        assert interaction.guild_locale
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_UPDATE,
+            content="",
+            components=self._build_components(interaction.guild_locale, jump_link),
+        )
+        return {}
+
+    def _build_components(
+        self, locale: str, jump_link: str | None
+    ) -> list[hikari.api.MessageActionRowBuilder]:
+        components = [self.kernel.bot.rest.build_message_action_row()]
+        (
+            components[0]
+            .add_button(hikari.ButtonStyle.SUCCESS, "lf-btn/whitelist")
+            .set_label(
+                Message("linkfilter_button_whitelist").translate(self.kernel, locale)
+            )
+            .add_to_container()
+        )
+        (
+            components[0]
+            .add_button(hikari.ButtonStyle.DANGER, "lf-btn/blacklist")
+            .set_label(
+                Message("linkfilter_button_blacklist").translate(self.kernel, locale)
+            )
+            .add_to_container()
+        )
+
+        if jump_link:
+            components.append(self.kernel.bot.rest.build_message_action_row())
+            (
+                components[-1]
+                .add_button(hikari.ButtonStyle.LINK, jump_link)
+                .set_label(
+                    Message("linkfilter_button_jump").translate(self.kernel, locale)
+                )
+                .add_to_container()
+            )
+
+        (
+            components[-1]
+            .add_button(hikari.ButtonStyle.SECONDARY, "lf-dismiss")
+            .set_label(
+                Message("linkfilter_button_dismiss").translate(self.kernel, locale)
+            )
+            .add_to_container()
+        )
+
+        return components
+
+    async def handle_modal(
+        self, interaction: hikari.ModalInteraction, category: str
+    ) -> InteractionResponse:
+        assert interaction.message
+
+        url = interaction.components[0].components[0].value.replace("`", "")
+
+        await self.kernel.database.rpush(
+            f"guild:{interaction.guild_id}:linkfilter:{category}", (url,)
+        )
+
+        component = self.kernel.bot.rest.build_message_action_row()
+        if len(interaction.message.components) >= 2:
+            link = typing.cast(
+                hikari.ButtonComponent, interaction.message.components[1][0]
+            )
+            assert link.url and link.label
+            (
+                component.add_button(hikari.ButtonStyle.LINK, link.url)
+                .set_label(link.label)
+                .add_to_container()
+            )
+
+        assert interaction.guild_locale
+        (
+            component.add_button(hikari.ButtonStyle.DANGER, f"lf-undo/{category}")
+            .set_label(
+                Message("linkfilter_button_undo").translate(
+                    self.kernel, interaction.guild_locale
+                )
+            )
+            .add_to_container()
+        )
+
+        action = f"linkfilter_action_{category}"
+        await interaction.create_initial_response(
+            hikari.ResponseType.MESSAGE_UPDATE,
+            content=Message(action, {"url": url}).translate(
+                self.kernel, interaction.guild_locale
+            ),
+            component=component,
+        )
+        await interaction.execute(
+            Message(action).translate(self.kernel, interaction.locale),
+            flags=hikari.MessageFlag.EPHEMERAL,
+        )
+        return {}
+
+
+def parse_url(url: str) -> URL:
+    if "://" not in url:
+        url = "*://" + url
+
+    if url.startswith("*://"):
+        parsed = URL("https" + url[1:])
+        return parsed.copy_with(scheme="*")
+    return URL(url)
+
+
+def generate_webpreview(url: URL) -> str:
+    origin = "https://webpreview.cleanerbot.xyz/api?"
+    raw_key = os.getenv("WEBPREVIEW_SECRET")
+    assert raw_key
+    key = bytes.fromhex(raw_key)
+    query = {"url": url, "sig": hmac.digest(key, str(url).encode(), "sha256").hex()}
+    return origin + urlencode(query)
+
+
+def does_match(source: str, test: str) -> bool:
+    if test == "*":
+        return True
+
+    any_start = test.startswith("*")
+    any_end = test.endswith("*")
+
+    if any_start and any_end:
+        if test[1:-1] in source:
+            return True
+
+    elif any_start:
+        if source.endswith(test[1:]):
+            return True
+
+    elif any_end:
+        if source.startswith(test[:-1]):
+            return True
+
+    return source == test

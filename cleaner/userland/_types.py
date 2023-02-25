@@ -235,7 +235,6 @@ class PunishmentEvent(typing.TypedDict):
 class LinkFilteredEvent(typing.TypedDict):
     name: typing.Literal["linkfilter"]
     guild_id: int
-    url: str
 
 
 class FilterRuleTriggeredEvent(typing.TypedDict):
