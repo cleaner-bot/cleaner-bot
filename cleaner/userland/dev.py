@@ -563,11 +563,14 @@ class DeveloperService:
 
         await message.add_reaction("👍")
 
-    async def matching_members(self, message: hikari.Message, *raw_expression: str):
+    async def matching_members(
+        self, message: hikari.Message, *raw_expression: str
+    ) -> None:
         assert message.guild_id
         expression = " ".join(raw_expression)
         import filterrules
-        from .filterrules import var_user, var_member, functions
+
+        from .filterrules import functions, var_member, var_user
 
         ast = filterrules.parse(expression.encode())
         compiled = filterrules.Rule(ast).compile()
