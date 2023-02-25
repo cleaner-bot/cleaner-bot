@@ -47,13 +47,13 @@ class DehoistService:
 
     def nickname(self, member: hikari.Member) -> hikari.UndefinedNoneOr[str]:
         nickname = member.display_name.lstrip(DEHOIST_CHARS)
-        # empty display_name, contains only "!"
+        # empty display_name, contains only dehoistable
         if not nickname:
             if not any(member.username.startswith(x) for x in DEHOIST_CHARS):
                 # username is ok, so reset nickname
                 return None
             nickname = member.username.lstrip(DEHOIST_CHARS)
-        # empty user_name, contains only "!", so change to "dehoisted"
+        # empty user_name, contains only dehoistable, so change to "dehoisted"
         if not nickname:
             nickname = "dehoisted"
         # return UNDEFINED if no changes are made
