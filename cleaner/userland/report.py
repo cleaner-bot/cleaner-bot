@@ -48,7 +48,7 @@ class ReportService:
         ] = {
             "x-pr-ack": self.acknowldge_phishing_report,
             "x-pr-invalid": self.invalid_phishing_report,
-            "x-ür-ban": self.ban_user_from_phishing_reports,
+            "x-pr-ban": self.ban_user_from_phishing_reports,
             "x-pr-unban": self.unban_user_from_phishing_reports,
             "r-a-delete": self.delete_reported_message,
             "r-a-timeout": self.timeout_reported_person,
