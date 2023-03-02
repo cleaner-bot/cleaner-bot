@@ -54,6 +54,7 @@ class DeveloperService:
             # "get-rule": self.get_rule,
             # "remove-rule": self.remove_rule,
             "matching-members": self.matching_members,
+            "scan-url": self.scan_url,
         }
 
     async def message_create(
@@ -588,4 +589,53 @@ class DeveloperService:
             attachment=hikari.Bytes(
                 ", ".join(map(str, matching)).encode(), "members.txt"
             ),
+        )
+
+    async def scan_url(self, message: hikari.Message, *raw_url: str) -> None:
+        assert message.guild_id
+        url = "/".join(" ".join(raw_url).split("/")[2:])
+        domain = url.split("/")[0]
+
+        import os
+        from datetime import datetime
+
+        from httpx import AsyncClient
+
+        secret = os.getenv("BACKEND_PROXY_SECRET")
+        proxy = AsyncClient(
+            base_url="https://internal-proxy.cleanerbot.xyz",
+            headers={
+                "referer": f"https://internal-firewall.cleanerbot.xyz/{secret}",
+                "user-agent": "CleanerBot (cleanerbot.xyz 0.2.0)",
+            },
+            timeout=30,
+        )
+
+        rdap = (await proxy.get(f"rdap.cloud/api/v1/{domain}")).json()
+        print(rdap)
+
+        domain_info = rdap["results"][domain]
+        if not domain_info["success"]:
+            await message.respond("Domain not found.")
+            return
+
+        response = await proxy.get(url)
+
+        events = {
+            event["eventAction"]: event["eventDate"]
+            for event in domain_info["data"]["events"]
+        }
+        registration = datetime.fromisoformat(events["registration"][:-1])
+
+        await message.respond(
+            f"URL: `{url}`\n"
+            f"Domain: `{url}`\n\n"
+            f"Registration: <t:{registration.timestamp()}:R> "
+            f"(<t:{int(registration.timestamp())}>)\n"
+            f"Redirect: "
+            + (
+                "no"
+                if response.headers["x-fetchinfo-redirected"] == "false"
+                else "yes - " + response.headers["x-fetchinfo-url"]
+            )
         )
