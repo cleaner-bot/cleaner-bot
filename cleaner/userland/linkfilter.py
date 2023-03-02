@@ -402,7 +402,7 @@ class LinkFilterService:
             component=component,
         )
         await interaction.execute(
-            Message(action).translate(self.kernel, interaction.locale),
+            Message(action, {"url": url}).translate(self.kernel, interaction.locale),
             flags=hikari.MessageFlag.EPHEMERAL,
         )
         return {}
