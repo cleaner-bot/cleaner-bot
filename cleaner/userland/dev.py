@@ -629,8 +629,8 @@ class DeveloperService:
 
         await message.respond(
             f"URL: `{url}`\n"
-            f"Domain: `{url}`\n\n"
-            f"Registration: <t:{registration.timestamp()}:R> "
+            f"Domain: `{domain}`\n\n"
+            f"Registration: <t:{int(registration.timestamp())}:R> "
             f"(<t:{int(registration.timestamp())}>)\n"
             f"Redirect: "
             + (
