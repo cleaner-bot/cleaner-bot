@@ -56,10 +56,12 @@ class MembersService:
             del self.kernel.longterm["member_counts"][guild_id]
 
     async def member_create(self, guild_id: int) -> None:
-        self.kernel.longterm["member_counts"][guild_id] += 1
+        if guild_id in self.kernel.longterm["member_counts"]:
+            self.kernel.longterm["member_counts"][guild_id] += 1
 
     async def member_delete(self, guild_id: int) -> None:
-        self.kernel.longterm["member_counts"][guild_id] -= 1
+        if guild_id in self.kernel.longterm["member_counts"]:
+            self.kernel.longterm["member_counts"][guild_id] -= 1
 
     async def request_guild_members(self, guild: hikari.GatewayGuild) -> None:
         member_count = guild.member_count or 1000
