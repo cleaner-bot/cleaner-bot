@@ -392,25 +392,20 @@ class BasicConsumerService(AsyncioTaskRunnerMixin):
     async def on_guild_join(self, event: hikari.GuildJoinEvent) -> None:
         entitlements = await get_entitlements(self.kernel, event.guild_id)
         # 1. Guild suspended check
-        is_suspended = False
         if suspension := complain_if_none(
             self.kernel.bindings.get("suspension:guild"), "suspension:guild"
         ):
             if await safe_call(suspension(event.guild, entitlements)):
-                is_suspended = True
+                return
 
-        if not is_suspended:
-            # 2. Dashboard synchronization
-            pass
-
-        # 3. Analytics (total user count)
+        # 2. Analytics (total user count)
         if members_guild_available := complain_if_none(
             self.kernel.bindings.get("members:guild:available"),
             "members:guild:available",
         ):
             await safe_call(members_guild_available(event.guild))
 
-        # 4. Dev logs
+        # 3. Dev logs
         if log_guild_join := complain_if_none(
             self.kernel.bindings.get("log:guild:join"), "log:guild:join"
         ):
