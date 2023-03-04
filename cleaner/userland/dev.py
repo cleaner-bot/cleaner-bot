@@ -55,6 +55,7 @@ class DeveloperService:
             # "remove-rule": self.remove_rule,
             "matching-members": self.matching_members,
             "scan-url": self.scan_url,
+            "suspension-check": self.suspension_check,
         }
 
     async def message_create(
@@ -639,3 +640,15 @@ class DeveloperService:
                 else "yes - " + response.headers["x-fetchinfo-url"]
             )
         )
+
+    async def suspension_check(self, message: hikari.Message) -> None:
+        from .helpers.task import complain_if_none, safe_background_call
+
+        if suspension_guild := complain_if_none(
+            self.kernel.bindings.get("suspension:guild"), "suspension:guild"
+        ):
+            for guild in tuple(self.kernel.bot.cache.get_guilds_view().values()):
+                entitlements = await get_entitlements(self.kernel, guild.id)
+                await suspension_guild(guild, entitlements)
+
+        await message.add_reaction("👍")
