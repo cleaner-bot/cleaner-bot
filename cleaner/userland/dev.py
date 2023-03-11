@@ -594,13 +594,16 @@ class DeveloperService:
 
     async def scan_url(self, message: hikari.Message, *raw_url: str) -> None:
         assert message.guild_id
-        url = "/".join(" ".join(raw_url).split("/")[2:])
-        domain = url.split("/")[0]
 
         import os
         from datetime import datetime
 
         from httpx import AsyncClient
+        from tldextract.tldextract import extract
+
+        url = "/".join(" ".join(raw_url).split("/")[2:])
+        domain = url.split("/")[0]
+        registered_domain = extract(domain).registered_domain
 
         secret = os.getenv("BACKEND_PROXY_SECRET")
         proxy = AsyncClient(
@@ -612,7 +615,7 @@ class DeveloperService:
             timeout=30,
         )
 
-        # rdap = (await proxy.get(f"rdap.cloud/api/v1/{domain}")).json()
+        # rdap = (await proxy.get(f"rdap.cloud/api/v1/{registered_domain}")).json()
         # print(rdap)
 
         # domain_info = rdap["results"][domain]
@@ -627,20 +630,20 @@ class DeveloperService:
         # if registration_str.endswith(".0"):
         #     registration_str = registration_str[:-2]
         # registration = datetime.fromisoformat(registration_str)
-        whois = (await proxy.get(f"whoisjs.com/api/v1/{domain}")).json()
+        whois = (await proxy.get(f"whoisjs.com/api/v1/{registered_domain}")).json()
         print(whois)
         if not whois["success"]:
             await message.respond("Domain not found.")
             return
-        
+
         registration = datetime.fromisoformat(whois["creation"]["date"].strip("zZ"))
 
         response = await proxy.get(url)
 
-
         await message.respond(
             f"URL: `{url}`\n"
             f"Domain: `{domain}`\n\n"
+            f"Registered Domain: `{registered_domain}`\n\n"
             f"Registration: <t:{int(registration.timestamp())}:R> "
             f"(<t:{int(registration.timestamp())}>)\n"
             f"Redirect: "
