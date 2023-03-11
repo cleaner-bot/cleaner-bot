@@ -47,7 +47,7 @@ class DeveloperService:
             "button": self.button,
             "git-pull": self.git_pull,
             "get-captcha-data": self.get_captcha_data,
-            # "members-scan": self.members_scan,
+            "members-scan": self.members_scan,
             "threads-cache": self.threads_cache,
             # "list-rules": self.list_rules,
             # "add-rule": self.add_rule,
