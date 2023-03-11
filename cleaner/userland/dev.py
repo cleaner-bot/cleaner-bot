@@ -596,6 +596,7 @@ class DeveloperService:
         assert message.guild_id
 
         import os
+        import re
         from datetime import datetime
 
         from httpx import AsyncClient
@@ -641,7 +642,32 @@ class DeveloperService:
             registration_str = registration_str[:-2]
         registration = datetime.fromisoformat(registration_str)
 
+        stops = []
+
         response = await proxy.get(url)
+        current_url = url
+        for _ in range(50):
+            current_url = response.headers["x-fetchinfo-url"]
+
+            redirect = re.findall(
+                r"content=['\"]\d+;[uU][rR][lL]=([^\"']+)", response.text
+            )
+            if not response.headers["x-fetchinfo-redirected"] and not redirect:
+                break
+
+            if response.headers["x-fetchinfo-redirected"]:
+                stops.append(f"{current_url} - redirect")
+            else:
+                stops.append(f"{current_url} - {response.status_code}")
+
+            if redirect:
+                print("redirects -", redirect)
+                goto = redirect[0]
+                if "://" in goto:
+                    goto = goto.split("://")[1]
+                response = await proxy.get(goto)
+
+        stops.append(current_url + " - {response.status_code}")
 
         await message.respond(
             f"URL: `{url}`\n"
@@ -655,7 +681,7 @@ class DeveloperService:
                 if response.headers["x-fetchinfo-redirected"] == "false"
                 else "yes - " + response.headers["x-fetchinfo-url"]
             )
-            + f"\nResponse Status: {response.status_code}"
+            + f"\nResponse status: {response.status_code}"
         )
 
     async def suspension_check(self, message: hikari.Message) -> None:
