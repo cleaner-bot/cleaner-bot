@@ -652,10 +652,10 @@ class DeveloperService:
             redirect = re.findall(
                 r"content=['\"]\d+;[uU][rR][lL]=([^\"']+)", response.text
             )
-            if not response.headers["x-fetchinfo-redirected"] and not redirect:
+            if not response.headers["x-fetchinfo-redirected"] == "true" and not redirect:
                 break
 
-            if response.headers["x-fetchinfo-redirected"]:
+            if response.headers["x-fetchinfo-redirected"] == "true":
                 stops.append(f"{current_url} - redirect")
             else:
                 stops.append(f"{current_url} - {response.status_code}")
