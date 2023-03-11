@@ -646,8 +646,6 @@ class DeveloperService:
         response = await proxy.get(url)
         current_url = url
         for _ in range(50):
-            current_url = response.headers["x-fetchinfo-url"]
-
             redirect = re.findall(
                 r"content=['\"]\d+;[uU][rR][lL]=([^\"']+)", response.text
             )
@@ -658,14 +656,16 @@ class DeveloperService:
                 break
 
             if response.headers["x-fetchinfo-redirected"] == "true":
-                stops.append(f"{response.url} - HTTP redirect")
+                stops.append(f"{current_url} - HTTP redirect")
                 break
             else:
+                current_url = response.headers["x-fetchinfo-url"]
                 stops.append(f"{current_url} - {response.status_code} (HTML redirect)")
 
             if redirect:
                 print("redirects -", redirect)
                 goto = redirect[0]
+                current_url = goto
                 if "://" in goto:
                     goto = goto.split("://")[1]
                 response = await proxy.get(goto)
