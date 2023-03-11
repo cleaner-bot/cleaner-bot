@@ -1,6 +1,7 @@
 import logging
 
 import hikari
+from expirepy import ExpiringDict
 
 from ._types import (
     BanSyncTriggeredEvent,
@@ -18,6 +19,8 @@ USER_LIMIT = 50_000
 
 
 class BanSyncService:
+    cached_names: ExpiringDict[str, bytes | None]
+
     def __init__(self, kernel: KernelType) -> None:
         self.kernel = kernel
 
@@ -27,10 +30,15 @@ class BanSyncService:
         self.kernel.bindings["bansync:ban:create"] = self.on_ban_create
         self.kernel.bindings["bansync:ban:delete"] = self.on_ban_delete
 
+        self.cached_names = ExpiringDict(5)
+
     async def ban_member(
         self, member: hikari.Member, config: ConfigType, list_id: str
     ) -> None:
-        name = await self.kernel.database.hget(f"bansync:banlist:{list_id}", "name")
+        name = self.cached_names.get(list_id)
+        if list_id not in self.cached_names:
+            name = await self.kernel.database.hget(f"bansync:banlist:{list_id}", "name")
+            self.cached_names[list_id] = name
         if challenge := complain_if_none(
             self.kernel.bindings.get("http:challenge"), "http:challenge"
         ):
