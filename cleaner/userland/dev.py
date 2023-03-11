@@ -675,13 +675,7 @@ class DeveloperService:
             f"Registered Domain: `{registered_domain}`\n\n"
             f"Registration: <t:{int(registration.timestamp())}:R> "
             f"(<t:{int(registration.timestamp())}>)\n"
-            f"Redirect: "
-            + (
-                "no"
-                if response.headers["x-fetchinfo-redirected"] == "false"
-                else "yes - " + response.headers["x-fetchinfo-url"]
-            )
-            + f"\nResponse status: {response.status_code}"
+            f"Stops: " + "\n".join(stops)
         )
 
     async def suspension_check(self, message: hikari.Message) -> None:
