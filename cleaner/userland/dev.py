@@ -636,7 +636,10 @@ class DeveloperService:
             await message.respond("Domain not found.")
             return
 
-        registration = datetime.fromisoformat(whois["creation"]["date"].strip("zZ"))
+        registration_str = whois["creation"]["date"].strip("zZ")
+        if registration_str.endswith(".0"):
+            registration_str = registration_str[:-2]
+        registration = datetime.fromisoformat(registration_str)
 
         response = await proxy.get(url)
 
