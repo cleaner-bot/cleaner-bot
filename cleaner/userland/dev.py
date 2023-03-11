@@ -667,7 +667,8 @@ class DeveloperService:
                     goto = goto.split("://")[1]
                 response = await proxy.get(goto)
 
-        stops.append(current_url + " - {response.status_code}")
+        stops.append(current_url + f" - {response.status_code}")
+        print(stops)
 
         await message.respond(
             f"URL: `{url}`\n"
