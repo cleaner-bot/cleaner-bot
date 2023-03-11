@@ -676,7 +676,7 @@ class DeveloperService:
             f"Registered Domain: `{registered_domain}`\n\n"
             f"Registration: <t:{int(registration.timestamp())}:R> "
             f"(<t:{int(registration.timestamp())}>)\n"
-            f"Stops: " + "\n".join(stops)
+            f"Stops:\n " + "\n".join(f" - `{x}`" for x in stops)[:1000]
         )
 
     async def suspension_check(self, message: hikari.Message) -> None:
