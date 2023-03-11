@@ -566,9 +566,8 @@ class DeveloperService:
         await message.add_reaction("👍")
 
     async def matching_members(
-        self, message: hikari.Message, *raw_expression: str
+        self, message: hikari.Message, guild: str, *raw_expression: str
     ) -> None:
-        assert message.guild_id
         expression = " ".join(raw_expression)
         import filterrules
 
@@ -579,7 +578,7 @@ class DeveloperService:
 
         matching = []
         for member in self.kernel.bot.cache.get_members_view_for_guild(
-            message.guild_id
+            int(guild)
         ).values():
             vars = {**var_user(member), **var_member(member)}
             if compiled(vars, functions):
@@ -652,7 +651,10 @@ class DeveloperService:
             redirect = re.findall(
                 r"content=['\"]\d+;[uU][rR][lL]=([^\"']+)", response.text
             )
-            if not response.headers["x-fetchinfo-redirected"] == "true" and not redirect:
+            if (
+                not response.headers["x-fetchinfo-redirected"] == "true"
+                and not redirect
+            ):
                 break
 
             if response.headers["x-fetchinfo-redirected"] == "true":
@@ -676,7 +678,7 @@ class DeveloperService:
             f"Registered Domain: `{registered_domain}`\n\n"
             f"Registration: <t:{int(registration.timestamp())}:R> "
             f"(<t:{int(registration.timestamp())}>)\n"
-            f"Stops:\n " + "\n".join(f" - `{x}`" for x in stops)[:1000]
+            f"Stops:\n" + "\n".join(f" - `{x}`" for x in stops)[:1000]
         )
 
     async def suspension_check(self, message: hikari.Message) -> None:
