@@ -612,24 +612,31 @@ class DeveloperService:
             timeout=30,
         )
 
-        rdap = (await proxy.get(f"rdap.cloud/api/v1/{domain}")).json()
-        print(rdap)
+        # rdap = (await proxy.get(f"rdap.cloud/api/v1/{domain}")).json()
+        # print(rdap)
 
-        domain_info = rdap["results"][domain]
-        if not domain_info["success"]:
+        # domain_info = rdap["results"][domain]
+        # if not domain_info["success"]:
+        #     await message.respond("Domain not found.")
+        #     return
+        # events = {
+        #     event["eventAction"]: event["eventDate"]
+        #     for event in domain_info["data"]["events"]
+        # }
+        # registration_str = events["registration"].strip("Z")
+        # if registration_str.endswith(".0"):
+        #     registration_str = registration_str[:-2]
+        # registration = datetime.fromisoformat(registration_str)
+        whois = (await proxy.get(f"whoisjs.com/api/v1/{domain}")).json()
+        print(whois)
+        if not whois["success"]:
             await message.respond("Domain not found.")
             return
+        
+        registration = datetime.fromisoformat(whois["creation"]["date"].strip("zZ"))
 
         response = await proxy.get(url)
 
-        events = {
-            event["eventAction"]: event["eventDate"]
-            for event in domain_info["data"]["events"]
-        }
-        registration_str = events["registration"].strip("Z")
-        if registration_str.endswith(".0"):
-            registration_str = registration_str[:-2]
-        registration = datetime.fromisoformat(registration_str)
 
         await message.respond(
             f"URL: `{url}`\n"
