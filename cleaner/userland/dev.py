@@ -626,7 +626,10 @@ class DeveloperService:
             event["eventAction"]: event["eventDate"]
             for event in domain_info["data"]["events"]
         }
-        registration = datetime.fromisoformat(events["registration"].strip("Z"))
+        registration_str = events["registration"].strip("Z")
+        if registration_str.endswith(".0"):
+            registration_str = registration_str[:-2]
+        registration = datetime.fromisoformat(registration_str)
 
         await message.respond(
             f"URL: `{url}`\n"
