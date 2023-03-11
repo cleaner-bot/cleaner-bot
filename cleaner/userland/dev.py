@@ -658,7 +658,8 @@ class DeveloperService:
                 break
 
             if response.headers["x-fetchinfo-redirected"] == "true":
-                stops.append(f"{current_url} - HTTP redirect")
+                stops.append(f"{response.url} - HTTP redirect")
+                break
             else:
                 stops.append(f"{current_url} - {response.status_code} (HTML redirect)")
 
