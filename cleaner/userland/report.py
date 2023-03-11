@@ -1129,7 +1129,7 @@ class ReportService:
                 "report_action_ban_auditlog",
                 {"user": interaction.user.id, "name": interaction.user},
             ).translate(self.kernel, interaction.guild_locale),
-            delete_message_days=1,
+            delete_message_seconds=3600,
         )
 
         assert interaction.message.content

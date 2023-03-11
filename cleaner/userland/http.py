@@ -240,7 +240,8 @@ class HTTPService(AsyncioTaskRunnerMixin):
 
         elif challenge == "ban":
             coro = member.ban(
-                reason=reason.translate(self.kernel, locale), delete_message_days=1
+                reason=reason.translate(self.kernel, locale),
+                delete_message_seconds=3600,
             )
 
         self.challenged_members.add(bound_member_id)
