@@ -161,7 +161,7 @@ class MembersService:
                     index = 0  # shrug
 
                 list_id = config["bansync_subscribed"][index]
-                safe_background_call(bansync_ban(member, config, list_id))
+                await safe_call(bansync_ban(member, config, list_id))
                 without_sleep = 0
 
             elif (
