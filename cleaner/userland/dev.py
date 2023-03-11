@@ -655,7 +655,7 @@ class DeveloperService:
         )
 
     async def suspension_check(self, message: hikari.Message) -> None:
-        from .helpers.task import complain_if_none, safe_background_call
+        from .helpers.task import complain_if_none
 
         if suspension_guild := complain_if_none(
             self.kernel.bindings.get("suspension:guild"), "suspension:guild"
