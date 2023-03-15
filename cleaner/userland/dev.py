@@ -57,7 +57,7 @@ class DeveloperService:
             "scan-url": self.scan_url,
             "suspension-check": self.suspension_check,
             "unload-module": self.unload_module,
-            "loadded-modules": self.loaded_modules,
+            "loaded-modules": self.loaded_modules,
         }
 
     async def message_create(
@@ -706,6 +706,6 @@ class DeveloperService:
     async def loaded_modules(self, message: hikari.Message) -> None:
         modules = sorted(x for x in sys.modules.keys() if x.startswith("cleaner."))
         await message.respond(
-            "```" + "\n".join(modules) + "```",
+            embed=hikari.Embed(description="```" + "\n".join(modules)[:4000] + "```"),
             reply=message,
         )
