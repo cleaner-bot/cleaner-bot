@@ -17,7 +17,7 @@ class ImageLabelAnomalyTask(typing.NamedTuple):
 def generate(
     rng: random.Random | None = None,
     prompt: str | None = None,
-    grid: tuple[int, int] = (3, 3),
+    grid: tuple[int, int] = (3, 2),
 ) -> ImageLabelAnomalyTask:
     if rng is None:
         rng = random.Random()
