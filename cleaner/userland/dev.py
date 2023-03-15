@@ -644,7 +644,7 @@ class DeveloperService:
         stops = []
 
         response = await proxy.get(url)
-        current_url = url
+        current_url = "https://" + url
         for _ in range(50):
             redirect = re.findall(
                 r"content=['\"]\d+;[uU][rR][lL]=([^\"']+)", response.text
