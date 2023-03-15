@@ -56,6 +56,8 @@ class DeveloperService:
             "matching-members": self.matching_members,
             "scan-url": self.scan_url,
             "suspension-check": self.suspension_check,
+            "unload-module": self.unload_module,
+            "loadded-modules": self.loaded_modules,
         }
 
     async def message_create(
@@ -693,3 +695,17 @@ class DeveloperService:
                 await suspension_guild(guild, entitlements)
 
         await message.add_reaction("👍")
+
+    async def unload_module(self, message: hikari.Message, name: str) -> None:
+        if name in sys.modules:
+            del sys.modules[name]
+            await message.add_reaction("👍")
+        else:
+            await message.add_reaction("👎")
+
+    async def loaded_modules(self, message: hikari.Message) -> None:
+        modules = sorted(x for x in sys.modules.keys() if x.startswith("cleaner."))
+        await message.respond(
+            "```" + "\n".join(modules) + "```",
+            reply=message,
+        )
