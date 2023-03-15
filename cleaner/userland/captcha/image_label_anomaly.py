@@ -39,12 +39,10 @@ def generate(
     all_images = images + [anomaly_image]
     rng.shuffle(all_images)
 
-    solution = next(
-        filter(lambda x: x[1], ((i, x in images) for i, x in enumerate(all_images)))
-    )
+    (solution,) = (i for i, x in enumerate(all_images) if x not in images)
     collage = Image.new("RGB", (rows * 100, columns * 100))
     for index, image_path in enumerate(all_images):
         image = Image.open(image_path)
         collage.paste(image, ((index % rows) * 100, (index // rows) * 100))
 
-    return ImageLabelAnomalyTask(solution[0], collage)
+    return ImageLabelAnomalyTask(solution, collage)
