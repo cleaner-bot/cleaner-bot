@@ -59,6 +59,8 @@ class ConfigType(typing.TypedDict):
     rules_advertisement_discord_invite_channels: list[str]
     rules_advertisement_discord_unsafeinvite: int
     rules_advertisement_discord_unsafeinvite_channels: list[str]
+    rules_advertisement_unsafelink: int
+    rules_advertisement_unsafelink_channels: list[str]
     rules_emoji_mass: int
     rules_emoji_mass_channels: list[str]
     antispam_similar: bool

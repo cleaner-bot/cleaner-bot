@@ -12,6 +12,7 @@ class AutoModRule(typing.NamedTuple):
 
 
 automod_rules = [
+    AutoModRule("advertisement.unsafelink", advertisement.advertisement_unsafelink),
     AutoModRule(
         "advertisement.discord.unsafeinvite", advertisement.advertisement_unsafediscord
     ),
