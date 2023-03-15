@@ -22,7 +22,7 @@ from ..helpers.task import complain_if_none, safe_call
 
 IMAGE_LABEL_BINARY = "image_label_binary"
 IMAGE_LABEL_CLASSIFY = "image_label_classify"
-IMAGE_LABEL_TRANSCRIBE = "image_transcribe"
+IMAGE_TRANSCRIBE = "image_transcribe"
 
 
 class DiscordVerificationService:
@@ -51,7 +51,7 @@ class DiscordVerificationService:
     async def issue_discord_verification(
         self, member: hikari.Member, solved: int, locale: str
     ) -> InteractionResponse | None:
-        tasks = (IMAGE_LABEL_BINARY, IMAGE_LABEL_CLASSIFY, IMAGE_LABEL_TRANSCRIBE)
+        tasks = (IMAGE_LABEL_BINARY, IMAGE_LABEL_CLASSIFY, IMAGE_TRANSCRIBE)
         task_name = tasks[
             int(member.id + utc_datetime().timestamp()) // 300 % len(tasks)
         ]
@@ -60,8 +60,8 @@ class DiscordVerificationService:
             return await self.issue_image_label_binary(solved, locale)
         elif task_name == IMAGE_LABEL_CLASSIFY:
             return await self.issue_image_label_classify(solved, locale)
-        elif task_name == IMAGE_LABEL_TRANSCRIBE:
-            return await self.issue_image_label_transcribe(solved, locale)
+        elif task_name == IMAGE_TRANSCRIBE:
+            return await self.issue_image_transcribe(solved, locale)
         return None
 
     # image label binary
@@ -287,8 +287,8 @@ class DiscordVerificationService:
             interaction, int(raw_solved), index == secret_index, 1
         )
 
-    # image label transcribe
-    async def issue_image_label_transcribe(
+    # image transcribe
+    async def issue_image_transcribe(
         self, solved: int, locale: str
     ) -> InteractionResponse:
         loop = asyncio.get_running_loop()
@@ -311,20 +311,20 @@ class DiscordVerificationService:
             bytes([x ^ otp[i] for i, x in enumerate(raw_secret)])
         ).decode()
 
-        rows = self.image_label_transcribe_components(
+        rows = self.image_transcribe_components(
             solved, locale, letters, seed, secret
         )
         preview = " ".join(["` `"] * len(raw_secret))
 
         return {
             "content": Message(
-                "image_label_transcribe_task", {"input": preview}
+                "image_transcribe_task", {"input": preview}
             ).translate(self.kernel, locale),
             "components": rows,
             "attachments": [data.getvalue()],
         }
 
-    def image_label_transcribe_components(
+    def image_transcribe_components(
         self, solved: int, locale: str, letters: set[str], seed: str, secret: str
     ) -> list[hikari.api.MessageActionRowBuilder]:
         rows: list[hikari.api.MessageActionRowBuilder] = []
@@ -354,7 +354,7 @@ class DiscordVerificationService:
                 f"v-chl-it-submit/{solved}//{seed}/{secret}",
             )
             .set_label(
-                Message("image_label_transcribe_submit").translate(self.kernel, locale)
+                Message("image_transcribe_submit").translate(self.kernel, locale)
             )
             .set_is_disabled(True)
             .add_to_container()
@@ -405,7 +405,7 @@ class DiscordVerificationService:
         await interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_UPDATE,
             content=Message(
-                "image_label_transcribe_task", {"input": preview}
+                "image_transcribe_task", {"input": preview}
             ).translate(self.kernel, interaction.locale),
             components=components,
         )
@@ -447,7 +447,7 @@ class DiscordVerificationService:
         await interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_UPDATE,
             content=Message(
-                "image_label_transcribe_task", {"input": preview}
+                "image_transcribe_task", {"input": preview}
             ).translate(self.kernel, interaction.locale),
             components=components,
         )
