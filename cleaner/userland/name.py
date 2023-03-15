@@ -39,6 +39,9 @@ class NameService:
         detection: typing.Literal["discord", "custom", None] = None
         reason: Message | None = None
 
+        if set(config["name_roles"]) & set(map(str, member.role_ids)):
+            return False
+
         if (
             config["name_discord_enabled"]
             and (

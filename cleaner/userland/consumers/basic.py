@@ -289,7 +289,7 @@ class BasicConsumerService(AsyncioTaskRunnerMixin):
                 if dehoist := complain_if_none(
                     self.kernel.bindings.get("dehoist:create"), "dehoist:create"
                 ):
-                    safe_background_call(dehoist(event.member))
+                    safe_background_call(dehoist(event.member, config))
 
     async def on_member_update(self, event: hikari.MemberUpdateEvent) -> None:
         config = await get_config(self.kernel, event.guild_id)
@@ -325,7 +325,7 @@ class BasicConsumerService(AsyncioTaskRunnerMixin):
             if dehoist := complain_if_none(
                 self.kernel.bindings.get("dehoist:update"), "dehoist:update"
             ):
-                if await safe_call(dehoist(event)):
+                if await safe_call(dehoist(event, config)):
                     return
 
     async def on_member_delete(self, event: hikari.MemberDeleteEvent) -> None:

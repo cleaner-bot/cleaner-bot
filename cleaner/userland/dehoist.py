@@ -3,7 +3,7 @@ import string
 import hikari
 from hikari.internal.time import utc_datetime
 
-from ._types import DehoistTriggeredEvent, KernelType
+from ._types import ConfigType, DehoistTriggeredEvent, KernelType
 from .helpers.localization import Message
 from .helpers.task import complain_if_none, safe_background_call
 
@@ -17,15 +17,20 @@ class DehoistService:
         self.kernel.bindings["dehoist:create"] = self.dehoist
         self.kernel.bindings["dehoist:update"] = self.member_update
 
-    async def member_update(self, event: hikari.MemberUpdateEvent) -> bool:
+    async def member_update(
+        self, event: hikari.MemberUpdateEvent, config: ConfigType
+    ) -> bool:
         if (
             event.old_member is None
             or event.old_member.display_name == event.member.display_name
         ) and (utc_datetime() - event.member.joined_at).total_seconds() < 5:
             return False
-        return await self.dehoist(event.member)
+        return await self.dehoist(event.member, config)
 
-    async def dehoist(self, member: hikari.Member) -> bool:
+    async def dehoist(self, member: hikari.Member, config: ConfigType) -> bool:
+        if set(config["name_roles"]) & set(map(str, member.role_ids)):
+            return False
+
         new_nickname = self.nickname(member)
         if new_nickname is hikari.UNDEFINED:
             return False

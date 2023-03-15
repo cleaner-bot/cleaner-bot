@@ -66,6 +66,7 @@
     "name_discord_enabled": true,
     "name_advanced_enabled": false,
     "name_advanced_words": [],
+    "name_roles": [],
     "joinguard_enabled": false,
     "joinguard_captcha": false,
     "report_enabled": false,

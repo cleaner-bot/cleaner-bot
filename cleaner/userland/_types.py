@@ -102,6 +102,7 @@ class ConfigType(typing.TypedDict):
     name_discord_enabled: bool
     name_advanced_enabled: bool
     name_advanced_words: list[str]
+    name_roles: list[str]
     joinguard_enabled: bool
     joinguard_captcha: bool
     report_enabled: bool
@@ -362,9 +363,11 @@ Bindings = typing.TypedDict(
         "filterrule:message": typing.Callable[
             [hikari.PartialMessage, ConfigType, str], typing.Awaitable[bool]
         ],
-        "dehoist:create": typing.Callable[[hikari.Member], typing.Awaitable[bool]],
+        "dehoist:create": typing.Callable[
+            [hikari.Member, ConfigType], typing.Awaitable[bool]
+        ],
         "dehoist:update": typing.Callable[
-            [hikari.MemberUpdateEvent], typing.Awaitable[bool]
+            [hikari.MemberUpdateEvent, ConfigType], typing.Awaitable[bool]
         ],
         "bansync:ban": typing.Callable[
             [hikari.Member, ConfigType, str], typing.Awaitable[None]

@@ -174,7 +174,7 @@ class MembersService:
             elif (
                 dehoist_member
                 and config["name_dehoisting_enabled"]
-                and await safe_call(dehoist_member(member))
+                and await safe_call(dehoist_member(member, config))
             ):
                 without_sleep = 0
 
