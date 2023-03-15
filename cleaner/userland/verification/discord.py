@@ -11,6 +11,7 @@ from hikari.internal.time import utc_datetime
 
 from .._types import InteractionResponse, KernelType
 from ..captcha import (
+    image_label_anomaly,
     image_label_binary,
     image_label_classify,
     image_transcribe,
@@ -20,9 +21,17 @@ from ..helpers.builders import components_to_builder
 from ..helpers.localization import Message
 from ..helpers.task import complain_if_none, safe_call
 
+IMAGE_LABEL_ANOMALY = "image_label_anomaly"
 IMAGE_LABEL_BINARY = "image_label_binary"
 IMAGE_LABEL_CLASSIFY = "image_label_classify"
 IMAGE_TRANSCRIBE = "image_transcribe"
+
+CAPTCHA_SCORES = {
+    IMAGE_LABEL_ANOMALY: 2,
+    IMAGE_LABEL_BINARY: 3,
+    IMAGE_LABEL_CLASSIFY: 1,
+    IMAGE_TRANSCRIBE: 2,
+}
 
 
 class DiscordVerificationService:
@@ -32,6 +41,7 @@ class DiscordVerificationService:
         components: dict[
             str, typing.Callable[..., typing.Awaitable[InteractionResponse | None]]
         ] = {
+            "v-chl-ila-select": self.btn_image_label_anomaly_select,
             "v-chl-ilb-select": self.btn_image_label_binary_select,
             "v-chl-ilb-submit": self.btn_image_label_binary_submit,
             "v-chl-ilc-select": self.btn_image_label_classify_select,
@@ -51,18 +61,97 @@ class DiscordVerificationService:
     async def issue_discord_verification(
         self, member: hikari.Member, solved: int, locale: str
     ) -> InteractionResponse | None:
+        tasks: tuple[str, ...]
         tasks = (IMAGE_LABEL_BINARY, IMAGE_LABEL_CLASSIFY, IMAGE_TRANSCRIBE)
+        if self.kernel.is_developer(member.id):
+            tasks = (IMAGE_LABEL_ANOMALY,)
         task_name = tasks[
             int(member.id + utc_datetime().timestamp()) // 300 % len(tasks)
         ]
 
-        if task_name == IMAGE_LABEL_BINARY:
+        if task_name == IMAGE_LABEL_ANOMALY:
+            return await self.issue_image_label_anomaly(solved, locale)
+        elif task_name == IMAGE_LABEL_BINARY:
             return await self.issue_image_label_binary(solved, locale)
         elif task_name == IMAGE_LABEL_CLASSIFY:
             return await self.issue_image_label_classify(solved, locale)
         elif task_name == IMAGE_TRANSCRIBE:
             return await self.issue_image_transcribe(solved, locale)
         return None
+
+    # image label anomaly
+    async def issue_image_label_anomaly(
+        self, solved: int, locale: str
+    ) -> InteractionResponse:
+        loop = asyncio.get_running_loop()
+        task = await loop.run_in_executor(None, image_label_anomaly.generate)
+
+        raw_secret = task.solution.to_bytes(2, "big")
+        seed = "".join(random.choices(string.ascii_letters, k=10))
+        rnd = random.Random()
+        rnd.seed(seed + os.environ["CUSTOM_ID_ENCRYPTION_KEY"])
+        otp = rnd.randbytes(2)
+        secret = urlsafe_b64encode(
+            bytes([x ^ otp[i] for i, x in enumerate(raw_secret)])
+        ).decode()
+
+        rows: list[hikari.api.MessageActionRowBuilder] = []
+        for i in range(6):
+            if i % 3 == 0:
+                rows.append(self.kernel.bot.rest.build_message_action_row())
+            (
+                rows[-1]
+                .add_button(
+                    hikari.ButtonStyle.SECONDARY,
+                    f"v-chl-ila-select/{solved}/{i}/{seed}/{secret}",
+                )
+                .set_label("\u200B")
+                .add_to_container()
+            )
+
+        rows.append(self.kernel.bot.rest.build_message_action_row())
+        (
+            rows[-1]
+            .add_button(hikari.ButtonStyle.SECONDARY, f"v-chl-i-info/{solved}/1")
+            .set_label("?")
+            .add_to_container()
+        )
+
+        mask_image(task.image, random.randint(60, 100))
+        data = io.BytesIO()
+        task.image.save(data, "jpeg", quality=40)
+
+        return {
+            "content": Message("image_label_anomaly_task").translate(
+                self.kernel, locale
+            ),
+            "components": rows,
+            "attachments": [data.getvalue()],
+        }
+
+    async def btn_image_label_anomaly_select(
+        self,
+        interaction: hikari.ComponentInteraction,
+        raw_solved: str,
+        raw_index: str,
+        seed: str,
+        raw_secret: str,
+    ) -> InteractionResponse | None:
+        rnd = random.Random()
+        rnd.seed(seed + os.environ["CUSTOM_ID_ENCRYPTION_KEY"])
+        otp = rnd.randbytes(2)
+        secret = bytes(
+            [x ^ otp[i] for i, x in enumerate(urlsafe_b64decode(raw_secret))]
+        )
+        secret_index = int.from_bytes(secret, "big")
+        index = int(raw_index)
+
+        return await self.on_solve(
+            interaction,
+            int(raw_solved),
+            index == secret_index,
+            CAPTCHA_SCORES[IMAGE_LABEL_ANOMALY],
+        )
 
     # image label binary
     async def issue_image_label_binary(
@@ -207,7 +296,10 @@ class DiscordVerificationService:
                     selected_int |= 1 << (3 * i + j)
 
         return await self.on_solve(
-            interaction, int(raw_solved), selected_int == secret_int, 3
+            interaction,
+            int(raw_solved),
+            selected_int == secret_int,
+            CAPTCHA_SCORES[IMAGE_LABEL_BINARY],
         )
 
     # image label classify
@@ -284,7 +376,10 @@ class DiscordVerificationService:
         index = int(raw_index)
 
         return await self.on_solve(
-            interaction, int(raw_solved), index == secret_index, 1
+            interaction,
+            int(raw_solved),
+            index == secret_index,
+            CAPTCHA_SCORES[IMAGE_LABEL_CLASSIFY],
         )
 
     # image transcribe
@@ -311,15 +406,13 @@ class DiscordVerificationService:
             bytes([x ^ otp[i] for i, x in enumerate(raw_secret)])
         ).decode()
 
-        rows = self.image_transcribe_components(
-            solved, locale, letters, seed, secret
-        )
+        rows = self.image_transcribe_components(solved, locale, letters, seed, secret)
         preview = " ".join(["` `"] * len(raw_secret))
 
         return {
-            "content": Message(
-                "image_transcribe_task", {"input": preview}
-            ).translate(self.kernel, locale),
+            "content": Message("image_transcribe_task", {"input": preview}).translate(
+                self.kernel, locale
+            ),
             "components": rows,
             "attachments": [data.getvalue()],
         }
@@ -404,9 +497,9 @@ class DiscordVerificationService:
 
         await interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_UPDATE,
-            content=Message(
-                "image_transcribe_task", {"input": preview}
-            ).translate(self.kernel, interaction.locale),
+            content=Message("image_transcribe_task", {"input": preview}).translate(
+                self.kernel, interaction.locale
+            ),
             components=components,
         )
         return {}
@@ -446,9 +539,9 @@ class DiscordVerificationService:
 
         await interaction.create_initial_response(
             hikari.ResponseType.MESSAGE_UPDATE,
-            content=Message(
-                "image_transcribe_task", {"input": preview}
-            ).translate(self.kernel, interaction.locale),
+            content=Message("image_transcribe_task", {"input": preview}).translate(
+                self.kernel, interaction.locale
+            ),
             components=components,
         )
         return {}
@@ -468,7 +561,10 @@ class DiscordVerificationService:
         secret = bytes([x ^ otp[i] for i, x in enumerate(secret_bytes)]).decode()
 
         return await self.on_solve(
-            interaction, int(raw_solved), secret.upper() == letters, 3
+            interaction,
+            int(raw_solved),
+            secret.upper() == letters,
+            CAPTCHA_SCORES[IMAGE_TRANSCRIBE],
         )
 
     # general stuff

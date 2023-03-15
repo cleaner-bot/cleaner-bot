@@ -124,6 +124,7 @@
         "verification_external_link": "CAPTCHA",
         "verification_external_info": "The security level of this server requires you to solve a [CAPTCHA](<https://www.cloudflare.com/learning/bots/how-captchas-work/>) to gain access.\nThe CAPTCHA on the website supports options for accessibility users.",
         "verification_external_expired": "This CAPTCHA expired. Press the button again to get a new link.",
+        "image_label_anomaly_task": "Click on the button corresponding to the image that does not fit in.",
         "image_label_binary_task": "Click on all buttons corresponding to an image containing at least one **{prompt}**.",
         "image_label_binary_submit": "Submit",
         "image_label_classify_task": "Identify the correct label for the image.",
