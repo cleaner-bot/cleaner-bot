@@ -69,7 +69,7 @@ class RadarService:
             self.kernel.bindings.get("clickhouse:track:message"),
             "clickhouse:track:message",
         ):
-            safe_background_call(clickhouse_track(message.id, is_bad, scores))
+            safe_background_call(clickhouse_track(int(message.id), is_bad, scores))
 
     async def raid_submit(
         self, member: hikari.Member, field: typing.Literal["kick", "ban"]
