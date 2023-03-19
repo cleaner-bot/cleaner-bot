@@ -28,8 +28,8 @@ def score_message(message: hikari.Message) -> list[int]:
         len(message.attachments),
         len(message.embeds),
         len(message.stickers),
-        message.type,
-        message.flags,
+        int(message.type),
+        int(message.flags),
         int(message.is_tts),
         # member metadata
         (now - message.member.created_at).days,
