@@ -264,14 +264,8 @@ class RadarService:
             if (
                 inv
                 and inv.guild is not None
-                and (
-                    (
-                        hikari.GuildFeature.VERIFIED not in inv.guild.features
-                        and hikari.GuildFeature.PARTNERED not in inv.guild.features
-                        and (inv.approximate_member_count or 0) > 50
-                    )
-                    or inv.guild_id == 718293911235198977
-                )
+                and hikari.GuildFeature.VERIFIED not in inv.guild.features
+                and hikari.GuildFeature.PARTNERED not in inv.guild.features
             ):
                 all_invites.append(inv)
 
@@ -324,6 +318,7 @@ class RadarService:
                 or "sex" in name
                 or "boob" in name
                 or "leaks" in name
+                or invite.guild_id == 718293911235198977
             ):
                 if invite.code in self.kernel.data["discord_invite_blacklist"]:
                     invite_embed.add_field("Blacklisted", "✅ Already blacklisted")
