@@ -21,6 +21,7 @@ class ClickHouseService:
         self.kernel.bindings["clickhouse:timer"] = self.on_timer
         self.kernel.bindings["clickhouse:track:event"] = self.track_event
         self.kernel.bindings["clickhouse:track:stats"] = self.track_stats
+        self.kernel.bindings["clickhouse:track:message"] = self.track_messsage
 
         self.tables = defaultdict(list)
         url = os.getenv("CLICKHOUSE_URL")
@@ -43,6 +44,11 @@ class ClickHouseService:
         timestamp = int(time.time())
         self.track("cleanerbot.stats", guild_count, user_count, timestamp)
 
+    async def track_messsage(
+        self, message_id: int, is_bad: bool, params: list[int]
+    ) -> None:
+        self.track("cleanerbot.messages", message_id, is_bad, params)
+
     async def on_init(self) -> bool:
         if not self.client or not await self.client.is_alive():
             return False
@@ -58,11 +64,11 @@ class ClickHouseService:
             "(guilds UInt32, users UInt32, timestamp DateTime) "
             "ENGINE = MergeTree() PRIMARY KEY (timestamp)"
         )
-        # await self.client.execute(
-        #     "CREATE TABLE IF NOT EXISTS cleanerbot.messages "
-        #     "(timestamp DateTime, ...) "
-        #     "ENGINE = MergeTree() PRIMARY KEY (timestamp)"
-        # )
+        await self.client.execute(
+            "CREATE TABLE IF NOT EXISTS cleanerbot.messages "
+            "(messageId UInt64, isBad Boolean, params Array(UInt16)) "
+            "ENGINE = MergeTree() PRIMARY KEY (messageId)"
+        )
 
         self._inited = True
         return True

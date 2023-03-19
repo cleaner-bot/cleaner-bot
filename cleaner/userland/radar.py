@@ -9,15 +9,10 @@ import hikari
 from decancer_py import parse
 from hikari.internal.time import utc_datetime
 
-from ._types import (
-    ConfigType,
-    EntitlementsType,
-    InteractionResponse,
-    KernelType,
-    RaidDetectedEvent,
-)
+from ._types import InteractionResponse, KernelType, RaidDetectedEvent
 from .helpers.embedize import embedize_guild
 from .helpers.regex import DISCORD_INVITE
+from .helpers.score import score_message
 from .helpers.task import complain_if_none, safe_background_call
 from .helpers.tokenizer import tokenize
 from .helpers.url import domain_in_list, get_urls, remove_urls
@@ -67,13 +62,14 @@ class RadarService:
             }
         )
 
-    async def message_create(
-        self,
-        message: hikari.Message,
-        config: ConfigType,
-        entitlements: EntitlementsType,
-    ) -> None:
-        pass
+    async def message_create(self, is_bad: bool, message: hikari.Message) -> None:
+        scores = score_message(message)
+
+        if clickhouse_track := complain_if_none(
+            self.kernel.bindings.get("clickhouse:track:message"),
+            "clickhouse:track:message",
+        ):
+            safe_background_call(clickhouse_track(message.id, is_bad, scores))
 
     async def raid_submit(
         self, member: hikari.Member, field: typing.Literal["kick", "ban"]

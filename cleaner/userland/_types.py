@@ -381,7 +381,9 @@ Bindings = typing.TypedDict(
         "bansync:member:create": typing.Callable[
             [hikari.Member, ConfigType, EntitlementsType], typing.Awaitable[bool]
         ],
-        "radar:message": MessageCoroutine[None],
+        "radar:message": typing.Callable[
+            [bool, hikari.Message], typing.Awaitable[None]
+        ],
         "radar:timer": typing.Callable[[], typing.Awaitable[None]],
         "radar:raid:submit": typing.Callable[
             [hikari.Member, typing.Literal["kick", "ban"]], typing.Awaitable[None]
@@ -406,6 +408,9 @@ Bindings = typing.TypedDict(
         "clickhouse:timer": typing.Callable[[], typing.Awaitable[None]],
         "clickhouse:track:event": typing.Callable[[str, int], typing.Awaitable[None]],
         "clickhouse:track:stats": typing.Callable[[int, int], typing.Awaitable[None]],
+        "clickhouse:track:message": typing.Callable[
+            [int, bool, list[int]], typing.Awaitable[None]
+        ],
         "http:challenge": typing.Callable[
             [hikari.Member, ConfigType, bool, Message, int],
             typing.Awaitable[None],

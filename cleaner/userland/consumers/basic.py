@@ -58,6 +58,14 @@ class BasicConsumerService(AsyncioTaskRunnerMixin):
             self.kernel.bot.unsubscribe(type, callback)
 
     async def on_message_create(self, event: hikari.GuildMessageCreateEvent) -> None:
+        is_bad = await self._on_message_create(event)
+
+        if radar_message := complain_if_none(
+            self.kernel.bindings.get("radar:message"), "radar:message"
+        ):
+            await safe_call(radar_message(is_bad, event.message))
+
+    async def _on_message_create(self, event: hikari.GuildMessageCreateEvent) -> bool:
         config = await get_config(self.kernel, event.guild_id)
         entitlements = await get_entitlements(self.kernel, event.guild_id)
         guild = event.get_guild()
@@ -69,14 +77,8 @@ class BasicConsumerService(AsyncioTaskRunnerMixin):
                 pass  # todo: interaction antispam
 
         else:
-            # 1. Analytics (traffic metadata)
-            if radar := complain_if_none(
-                self.kernel.bindings.get("radar:message"), "radar:message"
-            ):
-                await safe_call(radar(event.message, config, entitlements))
-
             if not is_mod:
-                # 2. Slowmode
+                # 1. Slowmode
                 if (
                     config["slowmode_enabled"]
                     and entitlements["plan"] >= entitlements["slowmode"]
@@ -86,7 +88,7 @@ class BasicConsumerService(AsyncioTaskRunnerMixin):
                     ):
                         await safe_call(slowmode(event.message, config, entitlements))
 
-                # 3. Anti Spam
+                # 2. Anti Spam
                 if entitlements["plan"] >= entitlements["antispam"]:
                     if antispam := complain_if_none(
                         self.kernel.bindings.get("antispam"), "antispam"
@@ -94,9 +96,9 @@ class BasicConsumerService(AsyncioTaskRunnerMixin):
                         if await safe_call(
                             antispam(event.message, config, entitlements)
                         ):
-                            return
+                            return True
 
-                # 4. Auto Moderator
+                # 3. Auto Moderator
                 if entitlements["plan"] >= entitlements["automod"]:
                     if automod := complain_if_none(
                         self.kernel.bindings.get("automod"), "automod"
@@ -104,9 +106,9 @@ class BasicConsumerService(AsyncioTaskRunnerMixin):
                         if await safe_call(
                             automod(event.message, config, entitlements)
                         ):
-                            return
+                            return True
 
-                # 5. Filter rules
+                # 4. Filter rules
                 if (
                     config["filterrules_enabled"]
                     and entitlements["plan"] >= entitlements["filterrules"]
@@ -118,9 +120,9 @@ class BasicConsumerService(AsyncioTaskRunnerMixin):
                         if await safe_call(
                             message_event(event.message, config, "message_create")
                         ):
-                            return
+                            return True
 
-                # 6. Link Filter
+                # 5. Link Filter
                 if (
                     entitlements["plan"] >= entitlements["linkfilter"]
                     and config["linkfilter_enabled"]
@@ -131,12 +133,14 @@ class BasicConsumerService(AsyncioTaskRunnerMixin):
                         if await safe_call(
                             linkfilter(event.message, config, entitlements)
                         ):
-                            return
+                            return True
 
         # 6. Dev commands
         if self.kernel.is_developer(event.author_id):
             if dev := complain_if_none(self.kernel.bindings.get("dev"), "dev"):
                 await safe_call(dev(event.message, config, entitlements))
+
+        return False
 
     async def on_message_update(self, event: hikari.GuildMessageUpdateEvent) -> None:
         if event.is_bot or not event.member:
