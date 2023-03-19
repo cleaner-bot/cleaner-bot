@@ -58,6 +58,9 @@ class BasicConsumerService(AsyncioTaskRunnerMixin):
             self.kernel.bot.unsubscribe(type, callback)
 
     async def on_message_create(self, event: hikari.GuildMessageCreateEvent) -> None:
+        if not event.is_human:
+            return
+
         is_bad = await self._on_message_create(event)
 
         if radar_message := complain_if_none(
