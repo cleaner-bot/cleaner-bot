@@ -63,6 +63,9 @@ class RadarService:
         )
 
     async def message_create(self, is_bad: bool, message: hikari.Message) -> None:
+        if message.author.is_bot or message.webhook_id:
+            return
+
         scores = score_message(message)
 
         if clickhouse_track := complain_if_none(
