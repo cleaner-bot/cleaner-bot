@@ -310,14 +310,20 @@ class RadarService:
         for invite in all_invites[:5]:
             assert invite.guild is not None, "impossible"
             invite_embed = await embedize_guild(invite.guild, self.kernel.bot, None)
+            invite_embed.add_field("Member count", str(invite.approximate_member_count))
+            invite_embed.add_field(
+                "Online count", str(invite.approximate_active_member_count)
+            )
+            invite_embed.add_field("NSFW level", str(invite.guild.nsfw_level))
             invite_embed.add_field("Invite code", invite.code)
             name = parse(invite.guild.name)
             if (
                 "18+" in name
-                or "nudes" in name
+                or "nude" in name
                 or name.startswith("family")
                 or "sex" in name
                 or "boob" in name
+                or "leaks" in name
             ):
                 if invite.code in self.kernel.data["discord_invite_blacklist"]:
                     invite_embed.add_field("Blacklisted", "✅ Already blacklisted")
