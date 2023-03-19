@@ -62,12 +62,11 @@ class DiscordVerificationService:
         self, member: hikari.Member, solved: int, locale: str
     ) -> InteractionResponse | None:
         tasks = [
+            IMAGE_LABEL_ANOMALY,
             IMAGE_LABEL_BINARY,
             IMAGE_LABEL_CLASSIFY,
             IMAGE_TRANSCRIBE,
         ]
-        if member.id % 5 == 0:
-            tasks.append(IMAGE_LABEL_ANOMALY)
 
         task_name = tasks[
             int(member.id + utc_datetime().timestamp()) // 300 % len(tasks)
