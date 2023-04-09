@@ -48,6 +48,7 @@
         "components_automod_ping_hidden": "Hey <@{user}>, please don't try to ping others while abusing client bugs.",
         "components_automod_advertisement_discord_invite": "Hey <@{user}>, please don't send any Discord invites.",
         "components_automod_advertisement_discord_unsafeinvite": "Hey <@{user}>, please don't send any Discord invites to servers that are flagged to be unsafe.",
+        "components_automod_advertisement_unsafelink": "Hey <@{user}>, please don't send any links that are flagged to be unsafe.",
         "components_automod_emoji_mass": "Hey <@{user}>, please don't send so many emojis.",
         "components_automod_selfbot_embed": "Hey <@{user}>, please don't selfbot.",
         "components_filterrules": "Hey <@{user}>, your message has been deleted because an automated filter deemed it to be inappropriate.",
