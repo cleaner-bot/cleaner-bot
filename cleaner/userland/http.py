@@ -126,7 +126,7 @@ class HTTPService(AsyncioTaskRunnerMixin):
                 or (
                     me is not None
                     and my_top_role is not None
-                    and role.position >= my_top_role.position
+                    and role.position <= my_top_role.position
                 )
             ):
                 role = None
