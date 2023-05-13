@@ -3,7 +3,7 @@
         "log_delete_success": "Deleted message by <@{user}> ({name}) in <#{channel}>.",
         "log_delete_failure": "Failed to delete message by <@{user}> ({name}) in <#{channel}> due to missing permissions.",
         "log_nickname_success": "Changed <@{user}>'s ({name}) nickname to {new_name}.",
-        "log_nickname_failure": "Failed to change <@{user}>'s ({name}) nickname due to missing permissions or ratelimits.",
+        "log_nickname_failure": "Failed to change <@{user}>'s ({name}) nickname due to missing permissions.",
         "log_punishment_failure": "Failed to punish <@{user}> ({name}) due to missing permissions or ratelimits.",
         "log_punishment_timeout-30s": "Put <@{user}> ({name}) in timeout for 30 seconds as punishment.",
         "log_punishment_timeout-5m": "Put <@{user}> ({name}) in timeout for 5 minutes as punishment.",
