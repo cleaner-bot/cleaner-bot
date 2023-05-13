@@ -35,7 +35,7 @@ def advertisement_unsafelink(
     # /invite/i=
 
     for url in get_urls(message.content):
-        if "/invite/i=" in url:
+        if "/invite/i=" in url or "temu.com/u/" in url:
             return True
 
     return False
