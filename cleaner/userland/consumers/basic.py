@@ -456,12 +456,12 @@ class BasicConsumerService(AsyncioTaskRunnerMixin):
                 safe_background_call(radar_timer())
 
             # 4. Publish stats to radar and statistics
-            if clickhouse_timer := complain_if_none(
-                self.kernel.bindings.get("clickhouse:timer"), "clickhouse:timer"
-            ):
-                safe_background_call(clickhouse_timer())
-
             if sequence % (5 * 6) == 0:  # only run every 5mins
+                if clickhouse_timer := complain_if_none(
+                    self.kernel.bindings.get("clickhouse:timer"), "clickhouse:timer"
+                ):
+                    safe_background_call(clickhouse_timer())
+
                 if statistics_save := complain_if_none(
                     self.kernel.bindings.get("statistics:save"), "statistics:save"
                 ):
