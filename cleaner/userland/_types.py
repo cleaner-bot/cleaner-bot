@@ -407,7 +407,9 @@ Bindings = typing.TypedDict(
         "data:changed": typing.Callable[[str], None],
         "clickhouse:timer": typing.Callable[[], typing.Awaitable[None]],
         "clickhouse:track:event": typing.Callable[[str, int], typing.Awaitable[None]],
-        "clickhouse:track:stats": typing.Callable[[int, int], typing.Awaitable[None]],
+        "clickhouse:track:stats": typing.Callable[
+            [int, int, int, int], typing.Awaitable[None]
+        ],
         "clickhouse:track:message": typing.Callable[
             [int, bool, list[int]], typing.Awaitable[None]
         ],

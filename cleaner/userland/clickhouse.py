@@ -40,9 +40,18 @@ class ClickHouseService:
         timestamp = int(time.time())
         self.track("cleanerbot.events", name, timestamp, int(guild_id))
 
-    async def track_stats(self, guild_count: int, user_count: int) -> None:
+    async def track_stats(
+        self, guild_count: int, user_count: int, users_cache: int, members_cache: int
+    ) -> None:
         timestamp = int(time.time())
-        self.track("cleanerbot.stats", guild_count, user_count, timestamp)
+        self.track(
+            "cleanerbot.stats",
+            guild_count,
+            user_count,
+            users_cache,
+            members_cache,
+            timestamp,
+        )
 
     async def track_messsage(
         self, message_id: int, is_bad: bool, params: list[int]
@@ -61,7 +70,8 @@ class ClickHouseService:
         )
         await self.client.execute(
             "CREATE TABLE IF NOT EXISTS cleanerbot.stats "
-            "(guilds UInt32, users UInt32, timestamp DateTime) "
+            "(guilds UInt32, users UInt32, users_cache Uint32,"
+            " members_cache Uint32, timestamp DateTime) "
             "ENGINE = MergeTree() PRIMARY KEY (timestamp)"
         )
         await self.client.execute(

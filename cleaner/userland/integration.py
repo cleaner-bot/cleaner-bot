@@ -73,7 +73,14 @@ class IntegrationService:
         if clickhouse_track := complain_if_none(
             self.kernel.bindings.get("clickhouse:track:stats"), "clickhouse:track:stats"
         ):
-            await safe_call(clickhouse_track(guild_count, user_count))
+            users_cache = len(self.kernel.bot.cache.get_users_view())
+            members_cache = sum(
+                len(self.kernel.bot.cache.get_members_view_for_guild(guild))
+                for guild in self.kernel.bot.cache.get_guilds_view()
+            )
+            await safe_call(
+                clickhouse_track(guild_count, user_count, users_cache, members_cache)
+            )
 
     async def update_dlistgg(self, bot: int, guild_count: int) -> None:
         token = os.getenv("DLIST_API_TOKEN")
