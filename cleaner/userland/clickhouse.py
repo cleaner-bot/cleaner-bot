@@ -70,8 +70,8 @@ class ClickHouseService:
         )
         await self.client.execute(
             "CREATE TABLE IF NOT EXISTS cleanerbot.stats "
-            "(guilds UInt32, users UInt32, users_cache Uint32,"
-            " members_cache Uint32, timestamp DateTime) "
+            "(guilds UInt32, users UInt32, users_cache UInt32,"
+            " members_cache UInt32, timestamp DateTime) "
             "ENGINE = MergeTree() PRIMARY KEY (timestamp)"
         )
         await self.client.execute(
