@@ -4,12 +4,17 @@ import hikari
 
 # need to import these explicitly because someone forgot to add them to __all__
 # fixed in dev117
-from hikari.components import ChannelSelectMenuComponent, TextSelectMenuComponent
+from hikari.components import (
+    ChannelSelectMenuComponent,
+    TextSelectMenuComponent,
+    InteractiveButtonTypesT,
+)
 
 
 def components_to_builder(
     components: typing.Sequence[hikari.PartialComponent], rest: hikari.api.RESTClient
 ) -> list[hikari.api.MessageActionRowBuilder]:
+    kwargs: dict[str, typing.Any]
     rows: list[hikari.api.MessageActionRowBuilder] = []
     for row in typing.cast(
         typing.Sequence[hikari.MessageActionRowComponent],
@@ -18,36 +23,41 @@ def components_to_builder(
         rows.append(rest.build_message_action_row())
         for item in row.components:
             if isinstance(item, hikari.ButtonComponent):
-                btn = rows[-1].add_button(
-                    item.style,
-                    typing.cast(
-                        str,
-                        (
-                            item.url
-                            if item.style == hikari.ButtonStyle.LINK
-                            else item.custom_id
-                        ),
-                    ),
-                )
-                if item.label:
-                    btn.set_label(item.label)
+                kwargs = {}
                 if item.emoji:
-                    btn.set_emoji(item.emoji)
-                btn.set_is_disabled(item.is_disabled)
-                btn.add_to_container()
+                    kwargs["emoji"] = item.emoji
+                if item.label:
+                    kwargs["label"] = item.label
+                kwargs["is_disabled"] = item.is_disabled
+
+                if item.style == hikari.ButtonStyle.LINK:
+                    assert item.url
+                    rows[-1].add_link_button(item.url, **kwargs)
+                else:
+                    assert item.style and item.custom_id
+                    rows[-1].add_interactive_button(
+                        typing.cast(InteractiveButtonTypesT, item.style),
+                        item.custom_id,
+                        **kwargs
+                    )
 
             elif isinstance(item, hikari.SelectMenuComponent):
-                menu = rows[-1].add_select_menu(item.type, item.custom_id)
-                menu.set_min_values(item.min_values)
-                menu.set_max_values(item.max_values)
-                menu.set_is_disabled(item.is_disabled)
-                if isinstance(item, TextSelectMenuComponent):
-                    assert isinstance(menu, TextSelectMenuComponent)
-                    menu.options = item.options
-                elif isinstance(item, ChannelSelectMenuComponent):
-                    assert isinstance(menu, ChannelSelectMenuComponent)
-                    menu.channel_types = item.channel_types
+                kwargs = {
+                    "min_values": item.min_values,
+                    "max_values": item.max_values,
+                    "is_disabled": item.is_disabled,
+                }
+                if item.placeholder:
+                    kwargs["placeholder"] = item.placeholder
 
-                menu.add_to_container()
+                if isinstance(item, TextSelectMenuComponent):
+                    menu = rows[-1].add_text_menu(item.custom_id, **kwargs)
+                    menu.options = item.options  # type: ignore
+                elif isinstance(item, ChannelSelectMenuComponent):
+                    if item.channel_types:
+                        kwargs["channel_types"] = item.channel_types
+                    rows[-1].add_channel_menu(item.custom_id, **kwargs)
+                else:
+                    rows[-1].add_select_menu(item.type, item.custom_id, **kwargs)
 
     return rows

@@ -70,27 +70,17 @@ class VerificationService:
         self, interaction: hikari.ComponentInteraction
     ) -> InteractionResponse:
         component = self.kernel.bot.rest.build_message_action_row()
-        (
-            component.add_button(
-                hikari.ButtonStyle.LINK, generate_invite(self.kernel.bot, True, True)
-            )
-            .set_label(
-                Message("verification_info_protect").translate(
-                    self.kernel, interaction.locale
-                )
-            )
-            .add_to_container()
+        component.add_link_button(
+            generate_invite(self.kernel.bot, True, True),
+            label=Message("verification_info_protect").translate(
+                self.kernel, interaction.locale
+            ),
         )
-        (
-            component.add_button(
-                hikari.ButtonStyle.LINK, "https://docs.cleanerbot.xyz/legal/impressum/"
-            )
-            .set_label(
-                Message("verification_info_legal").translate(
-                    self.kernel, interaction.locale
-                )
-            )
-            .add_to_container()
+        component.add_link_button(
+            "https://docs.cleanerbot.xyz/legal/impressum/",
+            label=Message("verification_info_legal").translate(
+                self.kernel, interaction.locale
+            ),
         )
 
         return {
@@ -171,17 +161,11 @@ class VerificationService:
                 f"failed verification in {guild.id}; role has dangerous permissions"
             )
             component = self.kernel.bot.rest.build_message_action_row()
-            (
-                component.add_button(
-                    hikari.ButtonStyle.LINK,
-                    "https://docs.cleanerbot.xyz/misc/roles/" "#dangerous-permissions",
-                )
-                .set_label(
-                    Message("verification_errors_role_dangerous_link").translate(
-                        self.kernel, locale
-                    )
-                )
-                .add_to_container()
+            component.add_link_button(
+                "https://docs.cleanerbot.xyz/misc/roles/dangerous-permissions",
+                label=Message("verification_errors_role_dangerous_link").translate(
+                    self.kernel, locale
+                ),
             )
             return {
                 "content": Message(
@@ -203,17 +187,11 @@ class VerificationService:
         ) is not None and role.position >= top_role.position:
             logger.debug(f"failed verification in {guild.id}; role is higher than me")
             component = self.kernel.bot.rest.build_message_action_row()
-            (
-                component.add_button(
-                    hikari.ButtonStyle.LINK,
-                    "https://docs.cleanerbot.xyz/misc/roles#role-hierarchy",
-                )
-                .set_label(
-                    Message("verification_errors_hierarchy_link").translate(
-                        self.kernel, locale
-                    )
-                )
-                .add_to_container()
+            component.add_link_button(
+                "https://docs.cleanerbot.xyz/misc/roles#role-hierarchy",
+                label=Message("verification_errors_hierarchy_link").translate(
+                    self.kernel, locale
+                ),
             )
             return {
                 "content": Message(
@@ -372,15 +350,13 @@ class VerificationService:
 
     def build_message(self) -> InteractionResponse:
         component = self.kernel.bot.rest.build_message_action_row()
-        (
-            component.add_button(hikari.ButtonStyle.SECONDARY, "v-verify")
-            .set_label("I am not a robot")
-            .set_emoji("🕵️")
-            .add_to_container()
+        component.add_interactive_button(
+            hikari.ButtonStyle.SECONDARY,
+            "v-verify",
+            label="I am not a robot",
+            emoji="🕵️",
         )
-        (
-            component.add_button(hikari.ButtonStyle.SECONDARY, "v-info")
-            .set_label("?")
-            .add_to_container()
+        component.add_interactive_button(
+            hikari.ButtonStyle.SECONDARY, "v-info", label="?"
         )
         return {"content": "", "embeds": [], "component": component}

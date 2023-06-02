@@ -248,23 +248,18 @@ class LinkFilterService:
         url = URL(raw_url, scheme="*")
 
         component = self.kernel.bot.rest.build_modal_action_row()
-        (
-            component.add_text_input(
-                "url",
-                Message("linkfilter_modal_label_" + category).translate(
-                    self.kernel, interaction.locale
-                ),
-            )
-            .set_style(hikari.TextInputStyle.SHORT)
-            .set_min_length(4)
-            .set_max_length(200)
-            .set_value(str(url)[:128])
-            .set_placeholder(
-                Message("linkfilter_modal_placeholder").translate(
-                    self.kernel, interaction.locale
-                )
-            )
-            .add_to_container()
+        component.add_text_input(
+            "url",
+            Message("linkfilter_modal_label_" + category).translate(
+                self.kernel, interaction.locale
+            ),
+            style=hikari.TextInputStyle.SHORT,
+            min_length=4,
+            max_length=200,
+            value=str(url)[:128],
+            placeholder=Message("linkfilter_modal_placeholder").translate(
+                self.kernel, interaction.locale
+            ),
         )
 
         await interaction.create_modal_response(
@@ -320,41 +315,28 @@ class LinkFilterService:
         self, locale: str, jump_link: str | None
     ) -> list[hikari.api.MessageActionRowBuilder]:
         components = [self.kernel.bot.rest.build_message_action_row()]
-        (
-            components[0]
-            .add_button(hikari.ButtonStyle.SUCCESS, "lf-btn/whitelist")
-            .set_label(
-                Message("linkfilter_button_whitelist").translate(self.kernel, locale)
-            )
-            .add_to_container()
+        components[0].add_interactive_button(
+            hikari.ButtonStyle.SUCCESS,
+            "lf-btn/whitelist",
+            label=Message("linkfilter_button_whitelist").translate(self.kernel, locale),
         )
-        (
-            components[0]
-            .add_button(hikari.ButtonStyle.DANGER, "lf-btn/blacklist")
-            .set_label(
-                Message("linkfilter_button_blacklist").translate(self.kernel, locale)
-            )
-            .add_to_container()
+        components[0].add_interactive_button(
+            hikari.ButtonStyle.DANGER,
+            "lf-btn/blacklist",
+            label=Message("linkfilter_button_blacklist").translate(self.kernel, locale),
         )
 
         if jump_link:
             components.append(self.kernel.bot.rest.build_message_action_row())
-            (
-                components[-1]
-                .add_button(hikari.ButtonStyle.LINK, jump_link)
-                .set_label(
-                    Message("linkfilter_button_jump").translate(self.kernel, locale)
-                )
-                .add_to_container()
+            components[-1].add_link_button(
+                jump_link,
+                label=Message("linkfilter_button_jump").translate(self.kernel, locale),
             )
 
-        (
-            components[-1]
-            .add_button(hikari.ButtonStyle.SECONDARY, "lf-dismiss")
-            .set_label(
-                Message("linkfilter_button_dismiss").translate(self.kernel, locale)
-            )
-            .add_to_container()
+        components[-1].add_interactive_button(
+            hikari.ButtonStyle.SECONDARY,
+            "lf-dismiss",
+            label=Message("linkfilter_button_dismiss").translate(self.kernel, locale),
         )
 
         return components
@@ -376,21 +358,15 @@ class LinkFilterService:
                 hikari.ButtonComponent, interaction.message.components[1][0]
             )
             assert link.url and link.label
-            (
-                component.add_button(hikari.ButtonStyle.LINK, link.url)
-                .set_label(link.label)
-                .add_to_container()
-            )
+            component.add_link_button(link.url, label=link.label)
 
         assert interaction.guild_locale
-        (
-            component.add_button(hikari.ButtonStyle.DANGER, f"lf-undo/{category}")
-            .set_label(
-                Message("linkfilter_button_undo").translate(
-                    self.kernel, interaction.guild_locale
-                )
-            )
-            .add_to_container()
+        component.add_interactive_button(
+            hikari.ButtonStyle.DANGER,
+            f"lf-undo/{category}",
+            label=Message("linkfilter_button_undo").translate(
+                self.kernel, interaction.guild_locale
+            ),
         )
 
         action = f"linkfilter_action_{category}"

@@ -194,10 +194,11 @@ class RadarService:
             embed.add_field("Guild", f"{guild.name} ({message.guild_id})")
 
         row = self.kernel.bot.rest.build_message_action_row()
-        (
-            row.add_button(hikari.ButtonStyle.PRIMARY, "x-p-ban")
-            .set_label("Mark as correct")
-            .set_is_disabled(
+        row.add_interactive_button(
+            hikari.ButtonStyle.PRIMARY,
+            "x-p-ban",
+            label="Mark as correct",
+            is_disabled=(
                 (
                     not fingerprint
                     or fingerprint in self.kernel.data["phishing_domain_blacklist"]
@@ -205,8 +206,7 @@ class RadarService:
                 and all(
                     x in self.kernel.data["phishing_domain_blacklist"] for x in domains
                 )
-            )
-            .add_to_container()
+            ),
         )
 
         embeds = [embed]
@@ -220,18 +220,15 @@ class RadarService:
             url_embed.set_author(name="Detected domains")
             embeds.append(url_embed)
 
-            (
-                row.add_button(hikari.ButtonStyle.DANGER, "x-p-whitelist")
-                .set_label("Mark as false positive")
-                .set_is_disabled(all(v != "unknown" for v in domains.values()))
-                .add_to_container()
+            row.add_interactive_button(
+                hikari.ButtonStyle.DANGER,
+                "x-p-whitelist",
+                label="Mark as false positive",
+                is_disabled=all(v != "unknown" for v in domains.values()),
             )
 
-        (
-            row.add_button(hikari.ButtonStyle.SECONDARY, "x-p-dismiss")
-            .set_label("Dismiss")
-            .set_emoji("❌")
-            .add_to_container()
+        row.add_interactive_button(
+            hikari.ButtonStyle.SECONDARY, "x-p-dismiss", label="Dismiss", emoji="❌"
         )
 
         await self.kernel.bot.rest.create_message(
@@ -327,10 +324,10 @@ class RadarService:
 
             else:
                 invite_embed.add_field("Blacklisted", "❌ Not blacklisted")
-                (
-                    row.add_button(hikari.ButtonStyle.DANGER, f"x-d-ban/{invite.code}")
-                    .set_label(f"Ban {invite.code}")
-                    .add_to_container()
+                row.add_interactive_button(
+                    hikari.ButtonStyle.DANGER,
+                    f"x-d-ban/{invite.code}",
+                    label=f"Ban {invite.code}",
                 )
 
             embeds.append(invite_embed)
@@ -342,10 +339,8 @@ class RadarService:
                 data_changed("discord_invite_blacklist")
 
         if row.components:
-            (
-                row.add_button(hikari.ButtonStyle.SECONDARY, "x-d-dismiss")
-                .set_label("Dismiss")
-                .add_to_container()
+            row.add_interactive_button(
+                hikari.ButtonStyle.SECONDARY, "x-d-dismiss", label="Dismiss"
             )
 
         await self.kernel.bot.rest.create_message(

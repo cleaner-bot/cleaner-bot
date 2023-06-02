@@ -69,13 +69,8 @@ class AuthService:
         )
         if mfa_type is None:
             row = self.kernel.bot.rest.build_message_action_row()
-            (
-                row.add_button(
-                    hikari.ButtonStyle.LINK,
-                    generate_invite(self.kernel.bot, False, True, "mfa"),
-                )
-                .set_label("MFA")
-                .add_to_container()
+            row.add_link_button(
+                generate_invite(self.kernel.bot, False, True, "mfa"), label="MFA"
             )
             return {
                 "content": Message("commands_auth_nomfa").translate(
@@ -88,15 +83,9 @@ class AuthService:
             return self.selected_role(interaction, available_roles[0])
 
         row = self.kernel.bot.rest.build_message_action_row()
-        dropdown = row.add_select_menu("auth-select")
+        dropdown = row.add_text_menu("auth-select", min_values=1, max_values=1)
         for role in available_roles:
-            (
-                dropdown.add_option(role.name, str(role.id))
-                .set_description(str(role.id))
-                .add_to_menu()
-            )
-
-        (dropdown.set_min_values(1).set_max_values(1).add_to_container())
+            dropdown.add_option(role.name, str(role.id), description=str(role.id))
 
         return {
             "content": Message("commands_auth_select").translate(

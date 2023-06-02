@@ -85,21 +85,14 @@ class ExternalVerificationService:
         )
 
         component = self.kernel.bot.rest.build_message_action_row()
-        (
-            component.add_button(
-                hikari.ButtonStyle.LINK, f"https://cleanerbot.xyz/chl#{flow_id}"
-            )
-            .set_label(
-                Message("verification_external_link").translate(
-                    self.kernel, interaction.locale
-                )
-            )
-            .add_to_container()
+        component.add_link_button(
+            f"https://cleanerbot.xyz/chl#{flow_id}",
+            label=Message("verification_external_link").translate(
+                self.kernel, interaction.locale
+            ),
         )
-        (
-            component.add_button(hikari.ButtonStyle.SECONDARY, "v-chl-ext-info")
-            .set_label("?")
-            .add_to_container()
+        component.add_interactive_button(
+            hikari.ButtonStyle.SECONDARY, "v-chl-ext-info", label="?"
         )
 
         return {

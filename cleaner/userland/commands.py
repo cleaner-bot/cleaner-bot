@@ -63,17 +63,11 @@ class CommandsService:
             }
 
         component = self.kernel.bot.rest.build_message_action_row()
-        (
-            component.add_button(
-                hikari.ButtonStyle.LINK,
-                f"https://cleanerbot.xyz/dash#{interaction.guild_id}",
-            )
-            .set_label(
-                Message("commands_dashboard_dashboard").translate(
-                    self.kernel, interaction.locale
-                )
-            )
-            .add_to_container()
+        component.add_link_button(
+            f"https://cleanerbot.xyz/dash#{interaction.guild_id}",
+            label=Message("commands_dashboard_dashboard").translate(
+                self.kernel, interaction.locale
+            ),
         )
 
         return {
@@ -87,14 +81,9 @@ class CommandsService:
         self, interaction: hikari.CommandInteraction
     ) -> InteractionResponse:
         component = interaction.app.rest.build_message_action_row()
-        (
-            component.add_button(
-                hikari.ButtonStyle.LINK, generate_invite(self.kernel.bot, True, True)
-            )
-            .set_label(
-                Message("commands_invite").translate(self.kernel, interaction.locale)
-            )
-            .add_to_container()
+        component.add_link_button(
+            generate_invite(self.kernel.bot, True, True),
+            label=Message("commands_invite").translate(self.kernel, interaction.locale),
         )
 
         return {"component": component}
@@ -103,14 +92,9 @@ class CommandsService:
         self, interaction: hikari.CommandInteraction
     ) -> InteractionResponse:
         component = interaction.app.rest.build_message_action_row()
-        (
-            component.add_button(
-                hikari.ButtonStyle.LINK, generate_invite(self.kernel.bot, False, True)
-            )
-            .set_label(
-                Message("commands_login").translate(self.kernel, interaction.locale)
-            )
-            .add_to_container()
+        component.add_link_button(
+            generate_invite(self.kernel.bot, False, True),
+            label=Message("commands_login").translate(self.kernel, interaction.locale),
         )
 
         return {"component": component}

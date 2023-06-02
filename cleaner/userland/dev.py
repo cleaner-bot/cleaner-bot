@@ -172,13 +172,7 @@ class DeveloperService:
                 return
 
         component = self.kernel.bot.rest.build_message_action_row()
-        (
-            component.add_button(
-                hikari.ButtonStyle.LINK, f"discord://-/users/{user.id}"
-            )
-            .set_label("Show profile")
-            .add_to_container()
-        )
+        component.add_link_button(f"discord://-/users/{user.id}", label="Show profile")
         await message.respond(
             "Found a matching user.",
             embed=embedize_user(user),
@@ -375,10 +369,8 @@ class DeveloperService:
 
     async def button(self, message: hikari.Message, custom_id: str) -> None:
         component = self.kernel.bot.rest.build_message_action_row()
-        (
-            component.add_button(hikari.ButtonStyle.SECONDARY, custom_id)
-            .set_label("?")
-            .add_to_container()
+        component.add_interactive_button(
+            hikari.ButtonStyle.SECONDARY, custom_id, label="?"
         )
         await message.respond(component=component, reply=True)
 
