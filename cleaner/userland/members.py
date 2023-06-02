@@ -47,9 +47,9 @@ class MembersService:
     async def guild_available(self, guild: hikari.GatewayGuild) -> None:
         if guild.member_count is not None:
             self.kernel.longterm["member_counts"][guild.id] = guild.member_count
-        if guild.id not in self.kernel.longterm["fetched_member_guilds"]:
-            self.kernel.longterm["fetched_member_guilds"].add(guild.id)
-            safe_background_call(self.request_guild_members(guild))
+
+        self.kernel.longterm["fetched_member_guilds"].add(guild.id)
+        safe_background_call(self.request_guild_members(guild))
 
     async def guild_delete(self, guild_id: int) -> None:
         if guild_id in self.kernel.longterm["member_counts"]:
