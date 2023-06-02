@@ -712,4 +712,4 @@ class DeveloperService:
         )
 
     async def test_command(self, message: hikari.Message) -> None:
-        print(self.kernel.bot.cache._guild_entries)  # type: ignore
+        print(dict(tuple(self.kernel.bot.cache._guild_entries.items()))  # type: ignore
