@@ -713,3 +713,8 @@ class DeveloperService:
 
     async def test_command(self, message: hikari.Message) -> None:
         print(dict(tuple(self.kernel.bot.cache._guild_entries.items())))  # type: ignore
+        for guild_id, guild_record in self.kernel.bot.cache._guild_entries.items():  # type: ignore
+            print(guild_id, guild_record)
+            print(guild_record.members)
+            print(dict(tuple(guild_record.members)))
+            print({k: (v.ref_count, v.object.has_been_deleted) for k, v in guild_record.members.items()})
