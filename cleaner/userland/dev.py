@@ -58,6 +58,7 @@ class DeveloperService:
             "suspension-check": self.suspension_check,
             "unload-module": self.unload_module,
             "loaded-modules": self.loaded_modules,
+            "test": self.test_command,
         }
 
     async def message_create(
@@ -709,3 +710,6 @@ class DeveloperService:
             embed=hikari.Embed(description="```" + "\n".join(modules)[:4000] + "```"),
             reply=message,
         )
+
+    async def test_command(self, message: hikari.Message) -> None:
+        print(self.kernel.bot.cache._guild_entries)  # type: ignore
