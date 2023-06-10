@@ -64,10 +64,14 @@ class DehoistService:
                 break
         else:
             name = "dehoisted"
-        
-        if name == member.username and member.global_name and member.global_name.startswith(tuple(DEHOIST_CHARS)):
+
+        if (
+            name == member.username
+            and member.global_name
+            and member.global_name.startswith(tuple(DEHOIST_CHARS))
+        ):
             name += "_"
-        
+
         if name == member.display_name:
             return hikari.UNDEFINED
         elif name == (member.global_name or member.username):
