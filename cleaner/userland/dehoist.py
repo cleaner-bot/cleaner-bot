@@ -51,30 +51,25 @@ class DehoistService:
         return True
 
     def nickname(self, member: hikari.Member) -> hikari.UndefinedNoneOr[str]:
-        if not member.display_name.startswith(DEHOIST_CHARS):
-            return hikari.UNDEFINED
+        names = []
+        if member.nickname and member.nickname not in ("dehoisted", "dehoisted_"):
+            names.append(member.nickname)
+        if member.global_name:
+            names.append(member.global_name)
+        names.append(member.username)
 
-        nickname = member.display_name.lstrip(DEHOIST_CHARS)
-
-        # empty display_name, contains only dehoistable
-        if not nickname and member.global_name:
-            if not member.global_name.startswith(DEHOIST_CHARS):
-                # global name is ok, so reset nickname
-                return None
-            nickname = member.global_name.lstrip(DEHOIST_CHARS)
-
-        # empty nickname and global name
-        if not nickname:
-            nickname = member.username.lstrip(DEHOIST_CHARS)
-
-        # empty user_name, contains only dehoistable, so change to "dehoisted"
-        if not nickname or nickname == member.username:
-            nickname = "dehoisted"
-
-        # setting the nickname to the username will reset the nickname and
-        # show the global name instead, which would bypass our filters
-        if nickname == member.username:
-            nickname += "_"
+        for name in names:
+            name = name.lstrip(DEHOIST_CHARS)
+            if name:
+                break
+        else:
+            name = "dehoisted"
+        
+        global_name = member.global_name or member.username
+        if name == global_name:
+            return None
+        elif name == member.username:
+            name += "_"
 
         # return UNDEFINED if no changes are made
-        return hikari.UNDEFINED if nickname == member.display_name else nickname
+        return hikari.UNDEFINED if name == member.display_name else name
