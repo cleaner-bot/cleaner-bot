@@ -51,6 +51,9 @@ class DehoistService:
         return True
 
     def nickname(self, member: hikari.Member) -> hikari.UndefinedNoneOr[str]:
+        if not member.display_name.startswith(DEHOIST_CHARS):
+            return hikari.UNDEFINED
+
         nickname = member.display_name.lstrip(DEHOIST_CHARS)
 
         # empty display_name, contains only dehoistable
