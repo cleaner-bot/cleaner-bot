@@ -29,26 +29,3 @@ automod_rules = [
     AutoModRule("emoji.mass", other.emoji_mass),
     AutoModRule("selfbot.embed", other.selfbot_embed),
 ]
-
-# rules
-automod_rules_v2 = [
-    ("advertisement.unsafelink", "any(message.links[contains($, 'bad')])"),
-    (
-        "advertisement.discord.unsafeinvite",
-        "any(message.discord.invites[$ ~ bad_invites])",
-    ),
-    ("advertisement.discord.invite", "len(message.discord.invites) > 0"),
-    ("phishing.content", "message.phishing.content"),
-    ("phishing.domain.blacklisted", "phishing.domain.blacklisted"),
-    ("phishing.domain.heuristic", "phishing.domain.heuristic"),
-    ("phishing.embed", "phishing.embed"),
-    ("ping.users.many", "len(message.mentions.users) >= 15"),
-    ("ping.users.few", "len(message.mentions.users) >= 5"),
-    ("ping.roles", "len(message.mentions.roles) > 5"),
-    (
-        "ping.broad",
-        "!message.mention.everyone && (contains(message.content, '@everyone') || contains(message.content, '@here'))",
-    ),
-    ("emoji.mass", "len(message.emojis) > 7"),
-    ("selfbot.embed", "len(message.embeds) > 0 && len(message.links) == 0"),
-]
