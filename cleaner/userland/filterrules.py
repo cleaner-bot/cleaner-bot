@@ -45,6 +45,7 @@ def var_user(user: hikari.User) -> dict[str, bytes | int | bool]:
     return {
         "user.id": int(user.id),
         "user.username": user.username.encode(),
+        "user.global_name": user.global_name.encode() if user.global_name else b"",
         "user.discriminator": user.discriminator.encode(),
         "user.created_at": int(user.id.created_at.timestamp()),
         "user.has_avatar": user.avatar_hash is not None,
