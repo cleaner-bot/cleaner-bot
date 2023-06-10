@@ -51,6 +51,9 @@ class DehoistService:
         return True
 
     def nickname(self, member: hikari.Member) -> hikari.UndefinedNoneOr[str]:
+        if True:
+            return hikari.UNDEFINED
+
         names = []
         if member.nickname and member.nickname not in ("dehoisted", "dehoisted_"):
             names.append(member.nickname)
