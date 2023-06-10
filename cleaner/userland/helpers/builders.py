@@ -6,8 +6,8 @@ import hikari
 # fixed in dev117
 from hikari.components import (
     ChannelSelectMenuComponent,
-    TextSelectMenuComponent,
     InteractiveButtonTypesT,
+    TextSelectMenuComponent,
 )
 
 
