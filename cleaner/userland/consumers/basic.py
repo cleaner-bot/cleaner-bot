@@ -455,8 +455,13 @@ class BasicConsumerService(AsyncioTaskRunnerMixin):
             ):
                 safe_background_call(radar_timer())
 
-            # 4. Publish stats to radar and statistics
+            # 4. Publish stats to integrations, radar and statistics
             if sequence % (5 * 6) == 0:  # only run every 5mins
+                if integration_timer := complain_if_none(
+                    self.kernel.bindings.get("integration:timer"), "integration:timer"
+                ):
+                    safe_background_call(integration_timer())
+
                 if clickhouse_timer := complain_if_none(
                     self.kernel.bindings.get("clickhouse:timer"), "clickhouse:timer"
                 ):
@@ -481,13 +486,6 @@ class BasicConsumerService(AsyncioTaskRunnerMixin):
                     self.kernel.bindings.get("members:timer"), "data:save"
                 ):
                     safe_background_call(members_timer())
-
-            # 6. Publish stats to integrations
-            if sequence % (30 * 6) == 5 * 6:  # only run every 30mins
-                if integration_timer := complain_if_none(
-                    self.kernel.bindings.get("integration:timer"), "integration:timer"
-                ):
-                    safe_background_call(integration_timer())
 
             # sleep
             sequence += 1

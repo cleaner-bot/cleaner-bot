@@ -53,6 +53,13 @@ class ClickHouseService:
             timestamp,
         )
 
+    async def track_members(self) -> None:
+        if "member_counts" not in self.kernel.longterm:
+            return
+        timestamp = int(time.time())
+        for guild_id, members in self.kernel.longterm["member_counts"].items():
+            self.track("cleanerbot.members", (guild_id, members, timestamp))
+
     async def track_messsage(
         self, message_id: int, is_bad: bool, params: list[int]
     ) -> None:
@@ -75,6 +82,11 @@ class ClickHouseService:
             "ENGINE = MergeTree() PRIMARY KEY (timestamp)"
         )
         await self.client.execute(
+            "CREATE TABLE IF NOT EXISTS cleanerbot.members "
+            "(guild_id UInt64, users UInt32, timestamp DateTime) "
+            "ENGINE = MergeTree() PRIMARY KEY (guild_id, timestamp)"
+        )
+        await self.client.execute(
             "CREATE TABLE IF NOT EXISTS cleanerbot.messages "
             "(messageId UInt64, isBad Boolean, params Array(UInt16)) "
             "ENGINE = MergeTree() PRIMARY KEY (messageId)"
@@ -87,10 +99,11 @@ class ClickHouseService:
         if not self.tables or self.client is None:
             return
 
-        if not self._inited:
-            if not await self.on_init():
-                logger.warning("connection to clickhouse failed")
-                return
+        if not self._inited and not await self.on_init():
+            logger.warning("connection to clickhouse failed")
+            return
+
+        await self.track_members()
 
         table_copy = list(self.tables.items())
         self.tables.clear()
