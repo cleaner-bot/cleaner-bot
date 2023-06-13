@@ -58,7 +58,7 @@ class ClickHouseService:
             return
         timestamp = int(time.time())
         for guild_id, members in self.kernel.longterm["member_counts"].items():
-            self.track("cleanerbot.members", (guild_id, members, timestamp))
+            self.track("cleanerbot.members", (int(guild_id), members, timestamp))
 
     async def track_messsage(
         self, message_id: int, is_bad: bool, params: list[int]
