@@ -103,7 +103,7 @@ class ClickHouseService:
             logger.warning("connection to clickhouse failed")
             return
 
-        await self.track_members()
+        # await self.track_members()
 
         table_copy = list(self.tables.items())
         self.tables.clear()
