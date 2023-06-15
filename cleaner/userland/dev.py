@@ -58,7 +58,7 @@ class DeveloperService:
             "suspension-check": self.suspension_check,
             "unload-module": self.unload_module,
             "loaded-modules": self.loaded_modules,
-            "member_counts": self.member_counts,
+            "member-counts": self.member_counts,
         }
 
     async def message_create(
@@ -704,4 +704,4 @@ class DeveloperService:
         )
 
     async def member_counts(self, message: hikari.Message) -> None:
-        await message.respond(str(self.kernel.longterm["member_counts"]))
+        await message.respond(str(self.kernel.longterm["member_counts"])[:2000])
