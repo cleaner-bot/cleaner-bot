@@ -58,7 +58,7 @@ class ClickHouseService:
             return
         timestamp = int(time.time())
         for guild_id, members in self.kernel.longterm["member_counts"].items():
-            self.track("cleanerbot.members", int(guild_id), members, timestamp)
+            self.track("cleanerbot.members", int(guild_id), timestamp, members)
 
     async def track_messsage(
         self, message_id: int, is_bad: bool, params: list[int]
@@ -83,7 +83,7 @@ class ClickHouseService:
         )
         await self.client.execute(
             "CREATE TABLE IF NOT EXISTS cleanerbot.members "
-            "(guild_id UInt64, users UInt32, timestamp DateTime) "
+            "(guild_id UInt64, timestamp DateTime, users UInt32) "
             "ENGINE = MergeTree() PRIMARY KEY (guild_id, timestamp)"
         )
         await self.client.execute(
