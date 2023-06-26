@@ -11,6 +11,7 @@ from cleaner.userland.dehoist import DehoistService
     (
         (None, None, "hello", hikari.UNDEFINED),
         (None, "Hello", "hello", hikari.UNDEFINED),
+        (None, "Hello", "!hello", hikari.UNDEFINED),
         ("Hello!", "Hello", "hello", hikari.UNDEFINED),
         (None, None, "!hello", "hello"),
         (None, "!hell", "hello", "hell"),
