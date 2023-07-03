@@ -1,5 +1,6 @@
 import statistics
 import typing
+import logging
 
 import hikari
 from decancer_py import parse
@@ -7,6 +8,7 @@ from decancer_py import parse
 from .._types import ConfigType
 from ..helpers.tokenizer import tokenize
 
+logger = logging.getLogger(__name__)
 MIN_DATA = 10
 
 
@@ -58,5 +60,6 @@ def detection(
         all_tokens &= tokens
 
     if all_tokens:
+        logger.debug(f"tokens: {all_tokens}")
         return TokenMessageMitigation(all_tokens)
     return None
