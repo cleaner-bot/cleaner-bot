@@ -173,7 +173,7 @@ class DeveloperService:
                 return
 
         component = self.kernel.bot.rest.build_message_action_row()
-        component.add_link_button(f"discord://-/users/{user.id}", label="Show profile")
+        component.add_link_button(f"https://discordredirect.discordsafe.com/users/{user.id}", label="Show profile")
         await message.respond(
             "Found a matching user.",
             embed=embedize_user(user),
