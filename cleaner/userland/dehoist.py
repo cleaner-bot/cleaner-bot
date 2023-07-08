@@ -53,7 +53,7 @@ class DehoistService:
     def nickname(self, member: hikari.Member) -> hikari.UndefinedNoneOr[str]:
         names = []
         if member.nickname and member.nickname not in ("dehoisted", "dehoisted_"):
-            names.append(member.nickname)
+            names.append(member.nickname.rstrip("_"))
         if member.global_name:
             names.append(member.global_name)
         names.append(member.username)
@@ -65,12 +65,12 @@ class DehoistService:
         else:
             name = "dehoisted"
 
-        if (
-            name == member.username
-            and member.global_name
-            and member.global_name.startswith(tuple(DEHOIST_CHARS))
-        ):
-            name += "_"
+        # if (
+        #     name == member.username
+        #     and member.global_name
+        #     and member.global_name.startswith(tuple(DEHOIST_CHARS))
+        # ):
+        #     name += "_"
 
         if name == member.display_name:
             return hikari.UNDEFINED
