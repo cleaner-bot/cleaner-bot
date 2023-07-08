@@ -16,7 +16,7 @@ from cleaner.userland.dehoist import DehoistService
         (None, None, "!hello", "hello"),
         (None, "!hell", "hello", "hell"),
         (None, "!hell", "!hello", "hell"),
-        (None, "!", "hello", "hello_"),
+        (None, "!", "hello", "hello"),
         (None, "!", "!hello", "hello"),
         (None, "!", "!!", "dehoisted"),
         ("hello", "!", "!!", hikari.UNDEFINED),
@@ -24,7 +24,7 @@ from cleaner.userland.dehoist import DehoistService
         ("!hello", "hello", "hell", None),
         ("!", "hello", "hell", None),
         ("!", "hello", "hello", None),
-        ("!!", "!!", "dehoisted", "dehoisted_"),
+        ("!!", "!!", "dehoisted", "dehoisted"),
     ),
 )
 def test_nicknames(
