@@ -52,11 +52,8 @@ class DehoistService:
 
     def nickname(self, member: hikari.Member) -> hikari.UndefinedNoneOr[str]:
         names = []
-        if member.nickname and member.nickname not in ("dehoisted", "dehoisted_"):
-            nickname = member.nickname
-            if not ((member.global_name and member.global_name.endswith("_")) or member.username.endswith("_")):
-                nickname = nickname.rstrip("_")
-            names.append(nickname)
+        if member.nickname and member.nickname != "dehoisted":
+            names.append(member.nickname)
         if member.global_name:
             names.append(member.global_name)
         names.append(member.username)
