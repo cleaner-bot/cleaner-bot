@@ -106,13 +106,13 @@ class HTTPService(AsyncioTaskRunnerMixin):
                     elif role.permissions & hikari.Permissions.BAN_MEMBERS:
                         has_ban = True
 
-                    member_top_role = member.get_top_role()
-                    if (
-                        my_top_role is not None
-                        and member_top_role is not None
-                        and my_top_role.position > member_top_role.position
-                    ):
-                        above_in_role_hierarchy = True
+                member_top_role = member.get_top_role()
+                if (
+                    my_top_role is not None
+                    and member_top_role is not None
+                    and my_top_role.position > member_top_role.position
+                ):
+                    above_in_role_hierarchy = True
 
             if (
                 config["verification_enabled"]
