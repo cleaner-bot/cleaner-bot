@@ -4,6 +4,7 @@ import time
 import typing
 from collections import defaultdict
 
+import hikari
 from aiochclient.client import ChClient  # type: ignore
 from httpx import AsyncClient
 
@@ -31,6 +32,11 @@ class ClickHouseService:
             self.client = ChClient(client, url)
 
         self._inited = False
+
+        self.kernel.bot.subscribe(hikari.ShardPayloadEvent, self.track_hikari_event)
+
+    def on_unload(self) -> None:
+        self.kernel.bot.unsubscribe(hikari.ShardPayloadEvent, self.track_hikari_event)
 
     def track(self, table: str, *data: typing.Any) -> None:
         if self.client is not None:
@@ -65,6 +71,15 @@ class ClickHouseService:
     ) -> None:
         self.track("cleanerbot.messages", message_id, is_bad, params)
 
+    async def track_hikari_event(self, event: hikari.ShardPayloadEvent) -> None:
+        timestamp = int(time.time())
+        self.track(
+            "cleanerbot.discord_events",
+            event.name,
+            event.payload.get("guild_id", 0),
+            timestamp,
+        )
+
     async def on_init(self) -> bool:
         if not self.client or not await self.client.is_alive():
             return False
@@ -90,6 +105,11 @@ class ClickHouseService:
             "CREATE TABLE IF NOT EXISTS cleanerbot.messages "
             "(messageId UInt64, isBad Boolean, params Array(UInt16)) "
             "ENGINE = MergeTree() PRIMARY KEY (messageId)"
+        )
+        await self.client.execute(
+            "CREATE TABLE IF NOT EXISTS cleanerbot.discord_events "
+            "(event String, guild_id UInt64, timestamp DateTime) "
+            "ENGINE = MergeTree() PRIMARY KEY (event, timestamp)"
         )
 
         self._inited = True
