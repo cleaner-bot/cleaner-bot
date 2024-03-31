@@ -309,11 +309,16 @@ class RadarService:
             name = parse(invite.guild.name)
             if (
                 "18+" in name
+                or "+18" in name
                 or "nude" in name
                 or name.startswith("family")
                 or "sex" in name
                 or "boob" in name
                 or "leaks" in name
+                or "teen" in name
+                or "nsfw" in name
+                or "porn" in name
+                or "hentai" in name
                 or invite.guild_id == 718293911235198977
             ):
                 if invite.code in self.kernel.data["discord_invite_blacklist"]:
