@@ -173,7 +173,10 @@ class DeveloperService:
                 return
 
         component = self.kernel.bot.rest.build_message_action_row()
-        component.add_link_button(f"https://discordredirect.discordsafe.com/users/{user.id}", label="Show profile")
+        component.add_link_button(
+            f"https://discordredirect.discordsafe.com/users/{user.id}",
+            label="Show profile",
+        )
         await message.respond(
             "Found a matching user.",
             embed=embedize_user(user),
@@ -690,6 +693,17 @@ class DeveloperService:
         await message.add_reaction("👍")
 
     async def unload_module(self, message: hikari.Message, name: str) -> None:
+        if name in self.kernel.extensions:
+            try:
+                self.kernel.unload_extension(name)
+            except Exception as e:
+                logger.error(f"Error unloading {name}", exc_info=e)
+                await message.respond("Failed. Unload error.")
+                return
+
+            await message.add_reaction("⭐️")
+            return
+
         if name in sys.modules:
             del sys.modules[name]
             await message.add_reaction("👍")
